@@ -1,0 +1,11 @@
+{
+  "name": "@brokeros/web-e2e",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.28.5",
+  "scripts": { "test": "playwright test --config playwright.config.ts" },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "1.63.0"
+  }
+}

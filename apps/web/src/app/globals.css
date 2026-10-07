@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens. Paper, ink, acacia (actions), maize (focus, progress, the active marker), line, danger.
+ * The one bold element is the agency's stamp seal; everything else stays quiet.
+ */
+:root {
+  --paper: #f6f7f4;
+  --ink: #17302b;
+  --acacia: #0e6b5c;
+  --maize: #f2b705;
+  --line: #d6ddd8;
+  --danger: #b42318;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: #ffffff;
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--acacia);
+  --primary-foreground: #ffffff;
+  --secondary: #e9eeea;
+  --secondary-foreground: var(--ink);
+  --muted: #edf1ee;
+  --muted-foreground: #4f625d;
+  --accent: #e3ece8;
+  --accent-foreground: var(--ink);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: #c3cec8;
+  --ring: var(--maize);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: #0f1f1c;
+  --foreground: #e8efec;
+  --card: #152a26;
+  --card-foreground: #e8efec;
+  --popover: #152a26;
+  --popover-foreground: #e8efec;
+  --primary: #3fb39d;
+  --primary-foreground: #08201b;
+  --secondary: #1d3631;
+  --secondary-foreground: #e8efec;
+  --muted: #1a312c;
+  --muted-foreground: #a3b8b1;
+  --accent: #21403a;
+  --accent-foreground: #e8efec;
+  --destructive: #f97066;
+  --border: #2b4741;
+  --input: #35544d;
+  --ring: var(--maize);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-maize: var(--maize);
+  --color-acacia: var(--acacia);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --font-sans: var(--font-body), system-ui, sans-serif;
+  --font-heading: var(--font-display), var(--font-body), system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-heading tracking-tight text-balance;
+    font-weight: 650;
+  }
+  /* Visible keyboard focus everywhere, in the maize accent. */
+  :focus-visible {
+    outline: 3px solid var(--maize);
+    outline-offset: 2px;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

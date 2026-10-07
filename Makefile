@@ -51,7 +51,7 @@ audit: ## Dependency vulnerability audit
 check: lint typecheck importlint unit ## Fast local checks (no Docker)
 
 # ---------------------------------------------------------------- tests
-.PHONY: unit test e2e auth-check jobs-shell test-all openapi
+.PHONY: unit test e2e e2e-web web-check auth-check jobs-shell test-all openapi
 unit: ## Unit tests only (no Docker)
 	$(UV) pytest tests/unit -q
 
@@ -61,13 +61,19 @@ test: ## Full backend suite inside Compose (definition of done)
 e2e: ## End-to-end suite against the real auth service, API and Mailpit
 	$(TEST_COMPOSE) --profile e2e run --rm --build e2e-tests; status=$$?; $(TEST_COMPOSE) down -v --remove-orphans; exit $$status
 
+e2e-web: ## Browser end-to-end (Playwright + axe) against the full stack, desktop and 390 px mobile
+	$(TEST_COMPOSE) --profile e2e-web run --rm --build web-e2e-tests; status=$$?; $(TEST_COMPOSE) down -v --remove-orphans; exit $$status
+
+web-check: ## Web app: lint, typecheck, unit tests, API client up to date
+	cd apps/web && pnpm install --frozen-lockfile && pnpm run lint && pnpm run typecheck && pnpm test && pnpm run client && git diff --exit-code -- src/lib/api/generated
+
 auth-check: ## Auth service: typecheck and unit tests
 	cd apps/auth && pnpm install --frozen-lockfile && pnpm run typecheck && pnpm test
 
 jobs-shell: ## Procrastinate shell: list failed jobs (list_jobs --status failed) and retry them
 	$(COMPOSE) exec worker procrastinate --app=app.workers.app.app shell
 
-test-all: test e2e ## Backend suite and end-to-end suite
+test-all: test e2e e2e-web ## Backend, API end-to-end and browser end-to-end suites
 
 openapi: ## Regenerate the committed OpenAPI document
 	$(UV) python -m scripts.export_openapi > $(API_DIR)/openapi.json

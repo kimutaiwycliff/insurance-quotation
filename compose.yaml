@@ -38,7 +38,8 @@ x-app-env: &app-env
 x-auth-env: &auth-env
   ENVIRONMENT: ${ENVIRONMENT:-local}
   PORT: "3001"
-  BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
+  # Public URL of auth = the web app, which proxies /api/auth/* (same-origin cookies, links in emails).
+  BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
   BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-only-secret-change-me-0123456789abcdef}
   AUTH_DATABASE_URL: postgres://auth_owner:${AUTH_OWNER_PASSWORD:-auth_owner_dev}@postgres:5432/${POSTGRES_DB:-app}
   AUTH_TRUSTED_ORIGINS: ${AUTH_TRUSTED_ORIGINS:-http://localhost:3000}
@@ -195,6 +196,24 @@ services:
       timeout: 5s
       retries: 12
       start_period: 5s
+
+  # Next.js web app (BFF): the only thing browsers talk to, apart from presigned storage URLs.
+  web:
+    build: { context: ./apps/web, target: runtime }
+    environment:
+      AUTH_INTERNAL_URL: http://auth:3001
+      API_INTERNAL_URL: http://api:8000
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"
+    depends_on:
+      api: { condition: service_healthy }
+      auth: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/sign-in').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
   worker:
     build: { <<: *api-build, target: worker }

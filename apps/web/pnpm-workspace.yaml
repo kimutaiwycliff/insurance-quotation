@@ -1,0 +1,9 @@
+# pnpm settings for the web app. Packages below ship prebuilt platform binaries (optional deps),
+# so their install scripts are not needed; sharp is allowed for next/image.
+allowBuilds:
+  esbuild: false
+  msw: false
+  "@parcel/watcher": false
+  "@swc/core": false
+  sharp: true
+  unrs-resolver: true

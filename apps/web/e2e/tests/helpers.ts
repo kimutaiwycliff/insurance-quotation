@@ -1,0 +1,39 @@
+import AxeBuilder from "@axe-core/playwright";
+import { expect, type Page } from "@playwright/test";
+
+const MAILPIT = process.env.E2E_MAILPIT_URL ?? "http://localhost:8025";
+
+/** WCAG 2.2 AA via axe: no serious or critical violations (plan W1 acceptance). */
+export async function expectAccessible(page: Page, context: string): Promise<void> {
+  // Sandboxed iframes (document previews) cannot run axe's script and would hang the scan; their content is
+  // generated documents, covered by the template tests.
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+    .exclude("iframe[sandbox]")
+    .analyze();
+  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(
+    serious.flatMap((v) =>
+      v.nodes.map((n) => `${context}: ${v.id} at ${n.target.join(" ")}: ${n.failureSummary?.replace(/\s+/g, " ")}`),
+    ),
+  ).toEqual([]);
+}
+
+/** The newest link in an email to `to` whose URL contains `fragment`. */
+export async function mailLink(page: Page, to: string, fragment: string): Promise<string> {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const search = await page.request.get(`${MAILPIT}/api/v1/search`, { params: { query: `to:${to}` } });
+    const { messages = [] } = (await search.json()) as { messages?: { ID: string }[] };
+    for (const message of messages) {
+      const body = (await (await page.request.get(`${MAILPIT}/api/v1/message/${message.ID}`)).json()) as { Text: string };
+      const match = body.Text.match(new RegExp(`https?://\\S*${fragment.replace(/[/?]/g, "\\$&")}\\S*`));
+      if (match) return match[0];
+    }
+    await page.waitForTimeout(250);
+  }
+  throw new Error(`No email to ${to} containing ${fragment}`);
+}
+
+export function uniqueEmail(prefix: string): string {
+  return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}@example.com`;
+}
