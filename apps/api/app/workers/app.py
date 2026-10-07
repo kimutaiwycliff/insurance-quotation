@@ -30,7 +30,9 @@ def create_job_app() -> procrastinate.App:
         min_size=1,
         max_size=5,
     )
-    return procrastinate.App(connector=connector, import_paths=["app.workers.tasks"])
+    return procrastinate.App(
+        connector=connector, import_paths=["app.workers.tasks", "app.modules.messaging.tasks"]
+    )
 
 
 # Procrastinate's CLI loads the app by import path; the connector only connects when opened.

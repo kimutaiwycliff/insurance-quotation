@@ -13,6 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from app.core import db
 from app.core.config import Settings
 from app.core.security import JwksCache, KeySource, TokenVerifier
+from app.integrations.pdf import PdfRenderer
+from app.integrations.pdf.gotenberg import GotenbergRenderer
 from app.integrations.storage.s3 import S3Storage
 
 if TYPE_CHECKING:
@@ -28,6 +30,7 @@ class Resources:
     storage: S3Storage
     http: httpx.AsyncClient
     token_verifier: TokenVerifier
+    pdf_renderer: PdfRenderer
     # Set by app.main (the tenancy module implements it); core and platform never import modules.
     principal_resolver: PrincipalResolver | None = field(default=None)
 
@@ -54,6 +57,9 @@ class Resources:
             storage=S3Storage(settings),
             http=http,
             token_verifier=TokenVerifier(settings, keys),
+            pdf_renderer=GotenbergRenderer(
+                settings.gotenberg_url, http, timeout=settings.pdf_timeout_seconds
+            ),
         )
 
     async def open(self) -> None:

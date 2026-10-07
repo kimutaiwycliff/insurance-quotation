@@ -1,0 +1,31 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+h1, h2, .h3, .serif { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; }
+.top { text-align: center; padding-bottom: 14px; border-bottom: 1px solid var(--accent); }
+.top h1 { font-size: 26pt; color: var(--primary); margin-top: 6px; letter-spacing: 1px; }
+.meta-row { display: flex; justify-content: space-between; gap: 24px; margin: 18px 0; }
+.meta-row > * { flex: 1; }
+.lines thead th { border-bottom: 1px solid var(--primary); font-family: 'Source Serif 4', Georgia, serif; }
+.lines td { border-bottom: 1px dotted var(--rule); }
+.due { margin: 18px 0 0 auto; width: 46%; text-align: right; border: 1px solid var(--accent); padding: 10px 14px; }
+.due .amount { font-size: 18pt; color: var(--primary); }
+.h3 { font-size: 11pt; color: var(--primary); margin-bottom: 4px; }
+{% endblock %}
+{% block body %}
+<header class="top">
+  {% if brand.logo_data_uri %}<img class="logo" src="{{ brand.logo_data_uri }}" alt="{{ doc.seller.name }} logo">
+  {% else %}<h2 dir="auto">{{ doc.seller.name }}</h2>{% endif %}
+  <h1>{{ title }}</h1>
+</header>
+<div class="meta-row">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "Prepared for") }}<div>{{ b.meta(doc) }}</div></div>
+{{ b.details(doc) }}
+<div class="block">{{ b.lines(doc) }}</div>
+{{ b.totals(doc) }}
+<div class="due serif">
+  <div class="muted small">{% if doc.totals.balance is not none %}Balance due{% else %}Total{% endif %}</div>
+  <div class="amount">{{ (doc.totals.balance if doc.totals.balance is not none else doc.totals.total) | money(doc.currency) }}</div>
+</div>
+{{ b.payment(doc) }}
+{{ b.closing(doc, brand) }}
+{% endblock %}

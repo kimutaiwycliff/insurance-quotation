@@ -23,6 +23,17 @@ x-app-env: &app-env
   AUTH_ISSUER: ${AUTH_ISSUER:-http://localhost:3001}
   AUTH_AUDIENCE: ${AUTH_AUDIENCE:-brokeros-api}
   AUTH_INTERNAL_AUDIENCE: ${AUTH_INTERNAL_AUDIENCE:-brokeros-internal}
+  # Browsers reach storage on the host port; the API reaches it on the internal network.
+  S3_PUBLIC_ENDPOINT_URL: ${S3_PUBLIC_ENDPOINT_URL:-http://localhost:9000}
+  GOTENBERG_URL: http://gotenberg:3000
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+  SMTP_HOST: ${SMTP_HOST:-mailpit}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-notifications@brokeros.local}
+  EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-BrokerOS}
+  PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+  PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://localhost:8000}
+  SIGNING_SECRET: ${SIGNING_SECRET:-dev-only-signing-secret-0123456789abcdef}
 
 x-auth-env: &auth-env
   ENVIRONMENT: ${ENVIRONMENT:-local}
@@ -122,6 +133,8 @@ services:
       - gotenberg
       - --chromium-deny-private-ips=true
       - --chromium-disable-javascript=true
+      # Only Gotenberg's own temp files may be loaded (templates inline everything as data: URIs).
+      - --chromium-allow-list=^file:///tmp/.*
       - --webhook-deny-private-ips=true
       - --api-timeout=30s
       - --log-format=json

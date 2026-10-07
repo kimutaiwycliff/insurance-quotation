@@ -17,7 +17,12 @@ from app.core.logging import configure_logging
 from app.core.middleware import REQUEST_ID_HEADER, RequestContextMiddleware
 from app.core.security import KeySource
 from app.core.telemetry import configure_sentry
+from app.modules.documents import router as documents_router
+from app.modules.messaging import router as messaging_router
+from app.modules.notifications import router as notifications_router
 from app.modules.numbering import router as numbering_router
+from app.modules.public_links import router as public_links_router
+from app.modules.rendering import router as rendering_router
 from app.modules.tenancy import internal as tenancy_internal
 from app.modules.tenancy import router as tenancy_router
 from app.modules.tenancy.service import resolve_principal
@@ -35,6 +40,14 @@ def api_v1_router() -> APIRouter:
     router = APIRouter(prefix=API_V1_PREFIX)
     router.include_router(tenancy_router.router)
     router.include_router(numbering_router.router)
+    router.include_router(documents_router.router)
+    router.include_router(rendering_router.router)
+    router.include_router(public_links_router.router)
+    router.include_router(messaging_router.router)
+    router.include_router(notifications_router.router)
+    router.include_router(messaging_router.public_router)
+    # Anonymous routes (token-scoped, per-IP rate limited); no require_permission by design.
+    router.include_router(public_links_router.public_router)
     router.include_router(audit.router)
     return router
 

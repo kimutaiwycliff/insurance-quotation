@@ -1,0 +1,93 @@
+{% macro party(p, heading) %}
+<section aria-label="{{ heading }}">
+  <div class="muted small">{{ heading }}</div>
+  <div dir="auto"><strong>{{ p.name }}</strong></div>
+  {% for line in p.address_lines %}<div dir="auto">{{ line }}</div>{% endfor %}
+  {% if p.tax_pin %}<div>PIN: {{ p.tax_pin }}</div>{% endif %}
+  {% if p.email %}<div>{{ p.email }}</div>{% endif %}
+  {% if p.phone %}<div>{{ p.phone }}</div>{% endif %}
+</section>
+{% endmacro %}
+
+{% macro meta(doc) %}
+<dl class="kv">
+  {% if doc.number %}<dt>Number</dt><dd>{{ doc.number }}</dd>{% endif %}
+  <dt>Date</dt><dd>{{ doc.issue_date | date }}</dd>
+  {% if doc.due_date %}<dt>Due</dt><dd>{{ doc.due_date | date }}</dd>{% endif %}
+  {% if doc.valid_until %}<dt>Valid until</dt><dd>{{ doc.valid_until | date }}</dd>{% endif %}
+  {% if doc.reference %}<dt>Reference</dt><dd>{{ doc.reference }}</dd>{% endif %}
+</dl>
+{% endmacro %}
+
+{% macro details(doc) %}
+{% if doc.details %}
+<section class="block" aria-label="Details">
+  <dl class="kv">{% for item in doc.details %}<dt>{{ item.label }}</dt><dd dir="auto">{{ item.value }}</dd>{% endfor %}</dl>
+</section>
+{% endif %}
+{% endmacro %}
+
+{% macro lines(doc) %}
+<table class="lines">
+  <caption class="muted small" style="text-align:left">Amounts in {{ doc.currency }}</caption>
+  <thead><tr>
+    <th scope="col">Description</th><th scope="col" class="num">Qty</th>
+    <th scope="col" class="num">Unit price</th><th scope="col" class="num">Amount</th>
+  </tr></thead>
+  <tbody>
+  {% for line in doc.lines %}
+    <tr>
+      <td dir="auto">{{ line.description }}{% if line.details %}<div class="muted small pre">{{ line.details }}</div>{% endif %}</td>
+      <td class="num">{{ line.quantity | qty }}</td>
+      <td class="num">{{ line.unit_price | money(doc.currency) }}</td>
+      <td class="num">{{ line.amount | money(doc.currency) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
+{% macro totals(doc) %}
+<table class="totals" aria-label="Totals">
+  <tr><td>Subtotal</td><td class="num">{{ doc.totals.subtotal | money(doc.currency) }}</td></tr>
+  {% for charge in doc.totals.charges %}
+  <tr><td>{{ charge.label }}</td><td class="num">{{ charge.amount | money(doc.currency) }}</td></tr>
+  {% endfor %}
+  <tr class="grand"><td>Total</td><td class="num">{{ doc.totals.total | money(doc.currency) }}</td></tr>
+  {% if doc.totals.amount_paid is not none %}
+  <tr><td>Paid</td><td class="num">{{ doc.totals.amount_paid | money(doc.currency) }}</td></tr>
+  {% endif %}
+  {% if doc.totals.balance is not none %}
+  <tr><td><strong>Balance due</strong></td><td class="num"><strong>{{ doc.totals.balance | money(doc.currency) }}</strong></td></tr>
+  {% endif %}
+</table>
+{% endmacro %}
+
+{% macro payment(doc) %}
+{% if doc.payment %}
+{% set p = doc.payment %}
+<section class="block" aria-label="How to pay">
+  <h3 class="h3">How to pay</h3>
+  <dl class="kv">
+    {% if p.mpesa_paybill %}<dt>M-Pesa Paybill</dt><dd>{{ p.mpesa_paybill }}{% if p.reference %}, account <strong>{{ p.reference }}</strong>{% endif %}</dd>{% endif %}
+    {% if p.mpesa_till %}<dt>M-Pesa Till</dt><dd>{{ p.mpesa_till }}</dd>{% endif %}
+    {% if p.bank_name %}<dt>Bank</dt><dd>{{ p.bank_name }}{% if p.bank_branch %}, {{ p.bank_branch }}{% endif %}</dd>{% endif %}
+    {% if p.bank_account_name %}<dt>Account name</dt><dd>{{ p.bank_account_name }}</dd>{% endif %}
+    {% if p.bank_account_number %}<dt>Account no.</dt><dd>{{ p.bank_account_number }}</dd>{% endif %}
+    {% if p.swift_code %}<dt>SWIFT</dt><dd>{{ p.swift_code }}</dd>{% endif %}
+    {% if p.reference and not p.mpesa_paybill %}<dt>Reference</dt><dd><strong>{{ p.reference }}</strong></dd>{% endif %}
+  </dl>
+</section>
+{% endif %}
+{% endmacro %}
+
+{% macro closing(doc, brand) %}
+{% if doc.notes %}<section class="block"><h3 class="h3">Notes</h3><div class="pre" dir="auto">{{ doc.notes }}</div></section>{% endif %}
+{% if doc.terms %}<section class="block small"><h3 class="h3">Terms</h3><div class="pre" dir="auto">{{ doc.terms }}</div></section>{% endif %}
+{% if doc.tax_control %}
+<section class="block small" aria-label="Tax control">
+  <dl class="kv">{% for item in doc.tax_control %}<dt>{{ item.label }}</dt><dd>{{ item.value }}</dd>{% endfor %}</dl>
+</section>
+{% endif %}
+{% if brand.footer_text %}<p class="block small muted pre">{{ brand.footer_text }}</p>{% endif %}
+{% endmacro %}

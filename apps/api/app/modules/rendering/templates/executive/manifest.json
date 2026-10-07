@@ -1,0 +1,12 @@
+{
+  "key": "executive",
+  "name": "Executive",
+  "description": "Refined serif typography, generous white space and a prominent total.",
+  "tier": "premium",
+  "version": 1,
+  "doc_types": ["quote", "invoice", "receipt", "credit_note"],
+  "paper": "A4",
+  "font_pair": "serif",
+  "default_primary": "#2B2D42",
+  "default_accent": "#B08D57"
+}

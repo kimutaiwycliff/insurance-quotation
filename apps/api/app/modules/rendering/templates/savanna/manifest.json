@@ -1,0 +1,12 @@
+{
+  "key": "savanna",
+  "name": "Savanna",
+  "description": "Bold colour header and accent rules; strong, modern look for agencies with a brand colour.",
+  "tier": "premium",
+  "version": 1,
+  "doc_types": ["quote", "invoice", "receipt", "credit_note"],
+  "paper": "A4",
+  "font_pair": "sans",
+  "default_primary": "#0F5C4D",
+  "default_accent": "#E8A33D"
+}

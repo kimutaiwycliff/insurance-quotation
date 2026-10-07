@@ -19,6 +19,12 @@ class Perm(StrEnum):
     NUMBERING_READ = "numbering:read"
     NUMBERING_MANAGE = "numbering:manage"
     AUDIT_READ = "audit:read"
+    DOCUMENT_READ = "document:read"
+    DOCUMENT_WRITE = "document:write"
+    BRANDING_MANAGE = "branding:manage"
+    LINK_MANAGE = "link:manage"  # create/revoke public document links
+    MESSAGE_READ = "message:read"  # outbound message log
+    MESSAGE_TEMPLATE_MANAGE = "message_template:manage"
 
 
 class Role(StrEnum):
@@ -33,15 +39,19 @@ class Role(StrEnum):
 
 
 _ALL = frozenset(Perm)
-_READ_BASICS = frozenset({Perm.ORG_READ, Perm.BRANCH_READ, Perm.MEMBER_READ})
+_READ_BASICS = frozenset({Perm.ORG_READ, Perm.BRANCH_READ, Perm.MEMBER_READ, Perm.DOCUMENT_READ})
+# Day-to-day client work: files, sending links, seeing what was sent.
+_CLIENT_WORK = frozenset({Perm.DOCUMENT_WRITE, Perm.LINK_MANAGE, Perm.MESSAGE_READ})
 
 ROLE_PERMISSIONS: dict[Role, frozenset[Perm]] = {
     Role.OWNER: _ALL,
     Role.ADMIN: _ALL,
-    Role.AGENT: _READ_BASICS | {Perm.NUMBERING_READ},
-    Role.ACCOUNTS: _READ_BASICS | {Perm.NUMBERING_READ, Perm.NUMBERING_MANAGE, Perm.AUDIT_READ},
-    Role.ASSISTANT: _READ_BASICS,
-    Role.VIEWER: frozenset({Perm.ORG_READ, Perm.BRANCH_READ}),
+    Role.AGENT: _READ_BASICS | _CLIENT_WORK | {Perm.NUMBERING_READ},
+    Role.ACCOUNTS: _READ_BASICS
+    | _CLIENT_WORK
+    | {Perm.NUMBERING_READ, Perm.NUMBERING_MANAGE, Perm.AUDIT_READ},
+    Role.ASSISTANT: _READ_BASICS | _CLIENT_WORK,
+    Role.VIEWER: frozenset({Perm.ORG_READ, Perm.BRANCH_READ, Perm.DOCUMENT_READ}),
 }
 
 ROLE_DESCRIPTIONS: dict[Role, str] = {

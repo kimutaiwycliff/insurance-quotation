@@ -107,6 +107,12 @@ ENDPOINTS: list[tuple[str, str, Perm]] = [
     ("PATCH", "/api/v1/organization", Perm.ORG_UPDATE),
     ("POST", "/api/v1/branches", Perm.BRANCH_MANAGE),
     ("POST", "/api/v1/numbering-schemes", Perm.NUMBERING_MANAGE),
+    ("GET", "/api/v1/documents", Perm.DOCUMENT_READ),
+    ("POST", "/api/v1/documents", Perm.DOCUMENT_WRITE),
+    ("PATCH", "/api/v1/branding", Perm.BRANDING_MANAGE),
+    ("POST", "/api/v1/public-links", Perm.LINK_MANAGE),
+    ("GET", "/api/v1/messages", Perm.MESSAGE_READ),
+    ("POST", "/api/v1/messages/test-email", Perm.MESSAGE_TEMPLATE_MANAGE),
 ]
 
 

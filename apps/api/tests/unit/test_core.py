@@ -21,8 +21,17 @@ class TestSettings:
             environment=Environment.PRODUCTION,
             s3_access_key_id=SecretStr("AKIAREALKEY"),
             s3_secret_access_key=SecretStr("real-secret"),
+            signing_secret=SecretStr("a-real-production-signing-secret"),
         )
         assert settings.is_production
+
+    def test_production_rejects_development_signing_secret(self) -> None:
+        with pytest.raises(ValidationError, match="SIGNING_SECRET"):
+            Settings(
+                environment=Environment.PRODUCTION,
+                s3_access_key_id=SecretStr("AKIAREALKEY"),
+                s3_secret_access_key=SecretStr("real-secret"),
+            )
 
     def test_secrets_are_not_rendered(self) -> None:
         settings = Settings(s3_secret_access_key=SecretStr("super-secret-value"))

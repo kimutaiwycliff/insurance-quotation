@@ -1,0 +1,27 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+.top { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px;
+  border-bottom: 3px solid var(--primary); }
+.doc-title { font-size: 20pt; color: var(--primary); text-align: right; }
+.parties { display: flex; gap: 24px; justify-content: space-between; margin: 16px 0; }
+.parties > * { flex: 1; }
+.lines thead th { background: var(--wash); border-bottom: 1px solid var(--rule); }
+.lines td { border-bottom: 1px solid var(--rule); }
+.h3 { font-size: 10pt; color: var(--primary); margin-bottom: 4px; }
+{% endblock %}
+{% block body %}
+<header class="top">
+  <div>
+    {% if brand.logo_data_uri %}<img class="logo" src="{{ brand.logo_data_uri }}" alt="{{ doc.seller.name }} logo">
+    {% else %}<h2 dir="auto">{{ doc.seller.name }}</h2>{% endif %}
+  </div>
+  <div><h1 class="doc-title">{{ title }}</h1>{{ b.meta(doc) }}</div>
+</header>
+<div class="parties">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "To") }}</div>
+{{ b.details(doc) }}
+<div class="block">{{ b.lines(doc) }}</div>
+{{ b.totals(doc) }}
+{{ b.payment(doc) }}
+{{ b.closing(doc, brand) }}
+{% endblock %}

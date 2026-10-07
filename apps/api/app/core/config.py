@@ -54,6 +54,37 @@ class Settings(BaseSettings):
     s3_secret_access_key: SecretStr = SecretStr("devsecretkey")
     s3_bucket_documents: str = "documents"
     s3_force_path_style: bool = True
+    # Endpoint browsers use for presigned URLs (the internal one, e.g. http://storage:9000, is not reachable
+    # from outside). Defaults to s3_endpoint_url.
+    s3_public_endpoint_url: str | None = None
+
+    # Documents (ADR-0023)
+    upload_max_bytes: int = 25 * 1024 * 1024
+    upload_url_ttl_seconds: int = 600  # presigned PUT, <= 10 min (spec 5.5)
+    download_url_ttl_seconds: int = 300
+
+    # PDF rendering (Gotenberg, internal network only)
+    gotenberg_url: str = "http://localhost:3000"
+    pdf_timeout_seconds: float = 30.0
+
+    # Email (ADR-0024). "smtp" (Mailpit locally, SES SMTP in production) or "fake" (tests).
+    email_provider: str = "smtp"
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_username: str | None = None
+    smtp_password: SecretStr | None = None
+    smtp_starttls: bool = False
+    # Shared sending identity; tenants appear as "<Agency> via <product>" with Reply-To set to the agency.
+    email_from_address: str = "notifications@brokeros.local"
+    email_from_name: str = "BrokerOS"
+    # HMAC key for unsubscribe tokens and for hashing visitor IPs on public links. Must be set in production.
+    signing_secret: SecretStr = SecretStr("dev-only-signing-secret-0123456789abcdef")
+
+    # Public links (ADR-0014)
+    public_base_url: str = "http://localhost:3000"  # where /d/{token} pages are served (web app)
+    public_api_base_url: str = "http://localhost:8000"  # API origin used in List-Unsubscribe URLs
+    public_rate_limit_per_minute: int = 60  # per client IP
+    public_link_default_ttl_days: int = 30
 
     # HTTP
     cors_allowed_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
@@ -102,6 +133,11 @@ class Settings(BaseSettings):
             and self.s3_access_key_id.get_secret_value() == _DEV_STORAGE_KEY
         ):
             raise ValueError("Development storage credentials must not be used in production")
+        if (
+            self.environment is Environment.PRODUCTION
+            and self.signing_secret.get_secret_value().startswith("dev-only")
+        ):
+            raise ValueError("SIGNING_SECRET must be set in production")
         if not set(self.auth_algorithms) <= _ALLOWED_JWT_ALGORITHMS:
             raise ValueError(
                 f"AUTH_ALGORITHMS must be a subset of {sorted(_ALLOWED_JWT_ALGORITHMS)}"

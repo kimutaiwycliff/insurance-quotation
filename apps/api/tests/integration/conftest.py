@@ -4,6 +4,7 @@ Isolation strategy: every test creates its own organizations (random ids), so te
 never see each other's data; RLS is what keeps them apart, which is exactly what we want to exercise.
 """
 
+import secrets
 from collections.abc import AsyncIterator, Callable
 
 import httpx
@@ -32,10 +33,13 @@ def make_api(
 ) -> Callable[..., AsyncIterator[httpx.AsyncClient]]:
     async def factory(**overrides: object) -> AsyncIterator[httpx.AsyncClient]:
         app = create_app(Settings(**overrides), key_source=StaticKeys(signing_key))  # type: ignore[arg-type]
+        # A distinct client IP per client keeps per-IP rate limits of parallel tests apart.
+        ip = f"10.{secrets.randbelow(250)}.{secrets.randbelow(250)}.{secrets.randbelow(250) + 1}"
         async with (
             app.router.lifespan_context(app),
             httpx.AsyncClient(
-                transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+                transport=httpx.ASGITransport(app=app, client=(ip, 40000)),
+                base_url="http://testserver",
             ) as client,
         ):
             yield client

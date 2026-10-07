@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="{{ doc.locale[:2] }}">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="{{ csp }}">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}{% if doc.number %} {{ doc.number }}{% endif %} · {{ doc.seller.name }}</title>
+<style>
+{{ font_faces | safe }}
+@page { size: {{ paper }}; margin: 14mm 14mm 16mm 14mm; }
+:root {
+  --primary: {{ brand.primary_color }};
+  --accent: {{ brand.accent_color }};
+  --on-primary: {{ on_primary }};
+  --ink: #1b1f24; --muted: #5b6470; --rule: #d9dde3; --wash: #f5f7fa;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; color: var(--ink); font: 9.5pt/1.45 'Inter', 'Noto Sans', Arial, sans-serif; }
+h1, h2, h3 { margin: 0; font-weight: 700; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-weight: 600; }
+td, th { padding: 6px 8px; vertical-align: top; }
+.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 8pt; }
+.lines tbody tr { break-inside: avoid; }
+.lines thead { display: table-header-group; }
+.totals { width: 46%; margin-left: auto; margin-top: 10px; break-inside: avoid; }
+.totals td { padding: 4px 8px; }
+.totals .grand td { font-weight: 700; font-size: 11pt; border-top: 2px solid var(--ink); }
+.block { break-inside: avoid; margin-top: 16px; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+.logo { max-height: 56px; max-width: 200px; }
+.stamp { position: fixed; top: 38%; left: 18%; transform: rotate(-18deg); font-size: 72pt; font-weight: 700;
+  letter-spacing: 6px; opacity: .12; color: var(--ink); }
+.pre { white-space: pre-line; }
+[dir=auto] { unicode-bidi: plaintext; }
+{% block style %}{% endblock %}
+</style>
+</head>
+<body>
+{% if doc.stamp %}<div class="stamp" aria-hidden="true">{{ doc.stamp }}</div>{% endif %}
+{% block body %}{% endblock %}
+</body>
+</html>

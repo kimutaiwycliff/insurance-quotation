@@ -46,6 +46,9 @@ services:
       MAILPIT_API_URL: http://mailpit:8025
       GOTENBERG_URL: http://gotenberg:3000
       AUTH_ISSUER: http://localhost:3001
+      S3_PUBLIC_ENDPOINT_URL: http://storage:9000
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
     command:
       - sh
       - -c
