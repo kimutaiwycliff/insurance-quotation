@@ -17,6 +17,7 @@ dependencies = [
   "structlog>=25",
   "sentry-sdk>=2.40",
   "prometheus-client>=0.22",
+  "pyjwt[crypto]>=2.10",
 ]
 
 [dependency-groups]
@@ -60,7 +61,11 @@ ignore = [
 known-first-party = ["app", "scripts", "tests"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "PLR2004", "S105", "S106"]
+"tests/**" = [
+  "S101", "PLR2004", "S105", "S106",
+  "PT012",   # transaction blocks inside pytest.raises are the point of RLS tests
+  "TRY301", "PERF401",
+]
 "migrations/**" = ["N999"]
 
 # ---------------------------------------------------------------- mypy
@@ -122,3 +127,15 @@ name = "Core does not depend on feature modules"
 type = "forbidden"
 source_modules = ["app.core"]
 forbidden_modules = ["app.modules", "app.integrations"]
+
+[[tool.importlinter.contracts]]
+name = "Platform does not depend on feature modules"
+type = "forbidden"
+source_modules = ["app.platform"]
+forbidden_modules = ["app.modules"]
+
+[[tool.importlinter.contracts]]
+name = "Modules talk to each other only through service.py"
+type = "independence"
+modules = ["app.modules.*"]
+ignore_imports = ["app.modules.** -> app.modules.*.service"]

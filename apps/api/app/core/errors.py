@@ -43,6 +43,7 @@ class AppError(Exception):
     status: ClassVar[HTTPStatus] = HTTPStatus.BAD_REQUEST
     code: ClassVar[str] = "bad_request"
     title: ClassVar[str] = "Bad request"
+    headers: dict[str, str] | None = None
 
     def __init__(self, detail: str | None = None) -> None:
         super().__init__(detail or self.title)
@@ -65,6 +66,58 @@ class PermissionDeniedError(AppError):
     status = HTTPStatus.FORBIDDEN
     code = "permission_denied"
     title = "Permission denied"
+
+
+class AuthenticationError(AppError):
+    """Missing, malformed, expired or otherwise unverifiable credentials."""
+
+    status = HTTPStatus.UNAUTHORIZED
+    code = "unauthenticated"
+    title = "Authentication required"
+
+    def __init__(self, detail: str | None = None) -> None:
+        super().__init__(detail)
+        self.headers = {"WWW-Authenticate": "Bearer"}
+
+
+class MembershipInactiveError(AppError):
+    status = HTTPStatus.FORBIDDEN
+    code = "membership_inactive"
+    title = "You are no longer a member of this organization"
+
+
+class MfaRequiredError(AppError):
+    status = HTTPStatus.FORBIDDEN
+    code = "mfa_required"
+    title = "Two-factor authentication must be enabled for your role"
+
+
+class PreconditionRequiredError(AppError):
+    status = HTTPStatus.PRECONDITION_REQUIRED
+    code = "precondition_required"
+    title = "An If-Match header is required"
+
+
+class PreconditionFailedError(AppError):
+    status = HTTPStatus.PRECONDITION_FAILED
+    code = "version_conflict"
+    title = "The resource was modified by someone else"
+
+
+class IdempotencyKeyReusedError(AppError):
+    status = HTTPStatus.UNPROCESSABLE_CONTENT
+    code = "idempotency_key_reused"
+    title = "Idempotency-Key was already used with a different request"
+
+
+class RateLimitedError(AppError):
+    status = HTTPStatus.TOO_MANY_REQUESTS
+    code = "rate_limited"
+    title = "Too many requests"
+
+    def __init__(self, retry_after_seconds: int) -> None:
+        super().__init__(f"Retry after {retry_after_seconds} seconds")
+        self.headers = {"Retry-After": str(retry_after_seconds)}
 
 
 def _request_id(request: Request) -> str | None:
@@ -103,7 +156,12 @@ def problem_response(
 # Handlers are registered per exception type, so each receives exactly that type.
 async def _handle_app_error(request: Request, exc: AppError) -> JSONResponse:
     return problem_response(
-        request, status=exc.status, code=exc.code, title=exc.title, detail=exc.detail
+        request,
+        status=exc.status,
+        code=exc.code,
+        title=exc.title,
+        detail=exc.detail,
+        headers=exc.headers,
     )
 
 

@@ -5,6 +5,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine, pool
 
+from app.all_models import Base
 from app.core.config import get_settings
 
 APP_SCHEMA = "app"
@@ -13,8 +14,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Feature modules register their tables on this metadata from M1 (see app/core/models.py then).
-target_metadata = None
+# Used by `alembic check` / autogenerate and by the schema-drift test. Migrations themselves are hand-written
+# because autogenerate cannot see RLS policies or grants (ADR-0003).
+target_metadata = Base.metadata
 
 
 def _url() -> str:

@@ -54,3 +54,14 @@ class TestLogScrubbing:
     def test_leaves_ordinary_values_untouched(self) -> None:
         event = scrub_sensitive(None, "info", {"event": "x", "tenant_id": "t1", "status": 200})
         assert event == {"event": "x", "tenant_id": "t1", "status": 200}
+
+
+class TestAuthSettings:
+    def test_list_settings_accept_csv(self) -> None:
+        settings = Settings(mfa_enforced_roles="owner, admin", auth_algorithms="EdDSA,ES256")  # type: ignore[arg-type]
+        assert settings.mfa_enforced_roles == ["owner", "admin"]
+        assert settings.auth_algorithms == ["EdDSA", "ES256"]
+
+    def test_symmetric_algorithms_are_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="AUTH_ALGORITHMS"):
+            Settings(auth_algorithms=["HS256"])

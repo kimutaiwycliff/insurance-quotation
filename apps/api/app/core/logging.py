@@ -26,14 +26,14 @@ _SENSITIVE_KEY_FRAGMENTS = (
 REDACTED = "[REDACTED]"
 
 
-def _is_sensitive(key: str) -> bool:
+def is_sensitive_key(key: str) -> bool:
     lowered = key.lower()
     return any(fragment in lowered for fragment in _SENSITIVE_KEY_FRAGMENTS)
 
 
 def _scrub(value: Any) -> Any:
     if isinstance(value, MutableMapping):
-        return {k: (REDACTED if _is_sensitive(str(k)) else _scrub(v)) for k, v in value.items()}
+        return {k: (REDACTED if is_sensitive_key(str(k)) else _scrub(v)) for k, v in value.items()}
     if isinstance(value, list | tuple):
         return type(value)(_scrub(v) for v in value)
     return value
@@ -46,7 +46,7 @@ def scrub_sensitive(
     for key in list(event_dict):
         if key == "event":
             continue
-        event_dict[key] = REDACTED if _is_sensitive(key) else _scrub(event_dict[key])
+        event_dict[key] = REDACTED if is_sensitive_key(key) else _scrub(event_dict[key])
     return event_dict
 
 

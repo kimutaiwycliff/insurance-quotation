@@ -12,6 +12,8 @@ from pydantic import Field, PostgresDsn, RedisDsn, SecretStr, field_validator, m
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 _DEV_STORAGE_KEY = "devaccesskey"
+# Asymmetric algorithms only: a symmetric algorithm here would let anyone holding the public key forge tokens.
+_ALLOWED_JWT_ALGORITHMS = frozenset({"EdDSA", "ES256", "ES384", "RS256", "PS256"})
 
 
 class Environment(StrEnum):
@@ -61,10 +63,34 @@ class Settings(BaseSettings):
     sentry_dsn: SecretStr | None = None
     metrics_enabled: bool = True
 
-    @field_validator("cors_allowed_origins", mode="before")
+    # Authentication (ADR-0006). Access tokens are issued by the Better Auth service (apps/auth) and verified
+    # here against its JWKS. ``auth_issuer``/``auth_audience`` must match the auth service's jwt plugin config.
+    auth_jwks_url: str = "http://localhost:3001/api/auth/jwks"
+    auth_issuer: str = "http://localhost:3001"
+    auth_audience: str = "brokeros-api"
+    # Audience of service-to-service tokens the auth service sends to /internal/* (organization hooks).
+    auth_internal_audience: str = "brokeros-internal"
+    auth_algorithms: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["EdDSA"])
+    auth_jwks_cache_seconds: int = 600
+    # Minimum seconds between JWKS refetches triggered by an unknown ``kid`` (stops refetch storms).
+    auth_jwks_min_refetch_seconds: int = 30
+    auth_leeway_seconds: int = 30
+    # Roles that must enrol two-factor authentication before using tenant endpoints (ADR-0007).
+    # Empty by default: 2FA is optional for everyone. Set e.g. "owner,accounts" to enforce it.
+    mfa_enforced_roles: Annotated[list[str], NoDecode] = Field(default_factory=list)
+
+    # Rate limiting (Valkey fixed window). Requests per minute per principal for authenticated routes.
+    rate_limit_enabled: bool = True
+    rate_limit_read_per_minute: int = 600
+    rate_limit_write_per_minute: int = 120
+
+    # Idempotency keys are kept this long, then purged by a periodic job (ADR-0011).
+    idempotency_ttl_hours: int = 24
+
+    @field_validator("cors_allowed_origins", "auth_algorithms", "mfa_enforced_roles", mode="before")
     @classmethod
-    def _split_origins(cls, value: object) -> object:
-        """Accept ``CORS_ALLOWED_ORIGINS`` as a comma-separated string."""
+    def _split_csv(cls, value: object) -> object:
+        """Accept list settings (e.g. ``CORS_ALLOWED_ORIGINS``) as comma-separated strings."""
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
@@ -76,6 +102,10 @@ class Settings(BaseSettings):
             and self.s3_access_key_id.get_secret_value() == _DEV_STORAGE_KEY
         ):
             raise ValueError("Development storage credentials must not be used in production")
+        if not set(self.auth_algorithms) <= _ALLOWED_JWT_ALGORITHMS:
+            raise ValueError(
+                f"AUTH_ALGORITHMS must be a subset of {sorted(_ALLOWED_JWT_ALGORITHMS)}"
+            )
         return self
 
     @property

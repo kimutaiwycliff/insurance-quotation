@@ -15,8 +15,13 @@ from app.core.config import Settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import REQUEST_ID_HEADER, RequestContextMiddleware
+from app.core.security import KeySource
 from app.core.telemetry import configure_sentry
-from app.platform import health
+from app.modules.numbering import router as numbering_router
+from app.modules.tenancy import internal as tenancy_internal
+from app.modules.tenancy import router as tenancy_router
+from app.modules.tenancy.service import resolve_principal
+from app.platform import audit, health
 from app.platform.resources import Resources
 
 API_V1_PREFIX = "/api/v1"
@@ -26,14 +31,24 @@ API_VERSION = "1.0.0"
 logger = structlog.get_logger(__name__)
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def api_v1_router() -> APIRouter:
+    router = APIRouter(prefix=API_V1_PREFIX)
+    router.include_router(tenancy_router.router)
+    router.include_router(numbering_router.router)
+    router.include_router(audit.router)
+    return router
+
+
+def create_app(settings: Settings | None = None, *, key_source: KeySource | None = None) -> FastAPI:
+    """Build the app. ``key_source`` replaces the JWKS fetcher (tests sign tokens with their own keys)."""
     settings = settings or get_settings()
     configure_logging(settings)
     configure_sentry(settings)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        resources = Resources.create(settings)
+        resources = Resources.create(settings, key_source=key_source)
+        resources.principal_resolver = resolve_principal
         await resources.open()
         app.state.resources = resources
         logger.info("startup", environment=settings.environment.value, release=settings.release)
@@ -73,7 +88,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestContextMiddleware)
 
     app.include_router(health.router)
-    app.include_router(APIRouter(prefix=API_V1_PREFIX))  # feature routers are mounted here from M1
+    app.include_router(api_v1_router())
+    # Service-to-service routes; the ingress must never route /internal/* (see docs/architecture/auth.md).
+    app.include_router(tenancy_internal.router)
 
     if settings.metrics_enabled:
         # Must only be reachable on the internal network; the ingress never routes /metrics.

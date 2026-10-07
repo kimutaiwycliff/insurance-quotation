@@ -10,10 +10,10 @@ from enum import StrEnum
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, Response, status
 from pydantic import BaseModel
 
-from app.platform.resources import Resources
+from app.platform.resources import Resources, get_resources
 
 router = APIRouter(prefix="/health", tags=["health"])
 logger = structlog.get_logger(__name__)
@@ -31,13 +31,6 @@ class LiveResponse(BaseModel):
 class ReadyResponse(BaseModel):
     status: CheckStatus
     checks: dict[str, CheckStatus]
-
-
-def get_resources(request: Request) -> Resources:
-    resources = request.app.state.resources
-    if not isinstance(resources, Resources):
-        raise TypeError("app.state.resources is not initialised; is the lifespan running?")
-    return resources
 
 
 async def _run_check(
