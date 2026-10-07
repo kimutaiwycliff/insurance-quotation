@@ -9,7 +9,7 @@ to win more business, plus a standalone quotation & invoicing tier for SMEs. Ken
 3. `docs/SPEC_REVIEW.md`: verified Kenyan regulatory facts and the corrections to the original spec
 4. `docs/PROJECT_SPEC.md`: the original product spec
 
-Current milestone: **M0 done → M1 (identity, tenancy & platform core) next.**
+Current milestone: **M0, M1 done → M2 (documents, PDFs, templates, email, public links) or W1 next.**
 **Start every session by reading `docs/PROGRESS.md`** (handoff log); update it and `CHANGELOG.md` before ending.
 
 ## Non-negotiable rules
@@ -40,14 +40,17 @@ Current milestone: **M0 done → M1 (identity, tenancy & platform core) next.**
 | Fast checks (no Docker) | `make check` (ruff, mypy --strict, import-linter, unit tests) |
 | Definition of done | `make test` (migrations up/down/up + full suite + coverage ≥80% in Compose) |
 | Format | `make fmt` |
+| End-to-end (auth + API + Mailpit) | `make e2e` |
+| Auth service checks | `make auth-check` |
 | Regenerate OpenAPI | `make openapi` (CI fails if `apps/api/openapi.json` is stale) |
 | Dependency audit | `make audit` |
 
 ## Layout
 ```
+apps/auth/           Better Auth on Hono (Node 24, pnpm 11): users, orgs, 2FA, JWKS
 apps/api/            FastAPI + Procrastinate (Python 3.14, uv)
   app/core/          config, logging, errors, middleware, db (no feature imports)
-  app/platform/      health, shared resources
+  app/platform/      health, resources, request deps (auth/tenant/permissions), audit, idempotency, events
   app/modules/       domain modules: models, schemas, service, router, tasks, events, README
   app/calc/          pure calculation engine
   app/integrations/  adapters behind Protocols (storage, payments, tax, messaging, pdf)

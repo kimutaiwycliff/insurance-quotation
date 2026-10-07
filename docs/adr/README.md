@@ -7,6 +7,11 @@ Write the ADR when the milestone that needs it starts (backlog in `docs/IMPLEMEN
 |---|---|---|---|
 | [0001](0001-technology-stack.md) | Technology stack | Accepted | 2026-10-07 |
 | [0002](0002-release-sequencing-agent-first.md) | Release sequencing: agent-first, backend-first per slice | Accepted | 2026-10-07 |
-| 0003 | Tenancy & Row-Level Security model | To write in M1 | — |
+| [0003](0003-tenancy-and-rls.md) | Tenancy & Row-Level Security model | Accepted | 2026-10-07 |
 | [0004](0004-job-runner-procrastinate.md) | Job runner: Procrastinate on Postgres | Accepted | 2026-10-07 |
 | [0005](0005-object-storage.md) | Object storage: S3 API, RustFS for dev/CI | Accepted | 2026-10-07 |
+| [0006](0006-auth-topology.md) | Authentication topology & JWT flow | Accepted | 2026-10-07 |
+| [0007](0007-roles-and-permissions.md) | Roles & permissions (agent-first) | Accepted | 2026-10-07 |
+| [0008](0008-money-and-currencies.md) | Money, currencies & rounding | Accepted | 2026-10-07 |
+| [0010](0010-numbering-and-payment-references.md) | Document numbering & payment references | Accepted | 2026-10-07 |
+| [0011](0011-idempotency-and-concurrency.md) | Idempotency keys & optimistic concurrency | Accepted | 2026-10-07 |

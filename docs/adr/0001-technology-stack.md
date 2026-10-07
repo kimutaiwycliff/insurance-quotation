@@ -28,6 +28,11 @@ Stripe cannot serve Kenyan businesses.
 | Payments | Paystack first (tenant's own account), M‑Pesa Daraja as advanced; Stripe only if a non-Kenyan entity exists |
 | CI | GitHub Actions with every action pinned by commit SHA; Trivy, pip-audit, oasdiff |
 
+## Amendments
+- 2026-10-07 (M1): added `pyjwt[crypto]` (JWT verification, ADR-0006). The auth service pins pnpm 11 through
+  `packageManager`, and its default `minimumReleaseAge` supply-chain policy is kept (packages younger than a day
+  are refused).
+
 ## Consequences
 - New dependencies outside this list need an ADR amendment (CLAUDE.md rule 12).
 - Dependabot proposes updates weekly; Next.js, React and Better Auth security releases are applied immediately.
