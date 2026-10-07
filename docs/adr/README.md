@@ -15,3 +15,6 @@ Write the ADR when the milestone that needs it starts (backlog in `docs/IMPLEMEN
 | [0008](0008-money-and-currencies.md) | Money, currencies & rounding | Accepted | 2026-10-07 |
 | [0010](0010-numbering-and-payment-references.md) | Document numbering & payment references | Accepted | 2026-10-07 |
 | [0011](0011-idempotency-and-concurrency.md) | Idempotency keys & optimistic concurrency | Accepted | 2026-10-07 |
+| [0014](0014-template-rendering-and-public-pages.md) | Template rendering & public-page isolation | Accepted | 2026-10-07 |
+| [0023](0023-documents-and-uploads.md) | Documents & uploads | Accepted | 2026-10-07 |
+| [0024](0024-email-delivery.md) | Email delivery | Accepted | 2026-10-07 |

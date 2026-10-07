@@ -5,6 +5,43 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added — M2 Platform services (2026-10-07)
+- **Documents** (ADR-0023):
+  - presigned uploads with signed size and type;
+  - verification on completion (magic bytes vs extension allow-list, size, SHA-256), rejected bytes deleted;
+  - versions, links to any entity, expiry dates, archive;
+  - presigned downloads after the permission check.
+- **PDF and templates** (ADR-0014):
+  - sandboxed Jinja2 with autoescape and self-contained HTML (inline fonts and logo, strict CSP);
+  - Gotenberg renderer with retry and an allow-list;
+  - 3 launch templates: Classic (free), Savanna and Executive (premium);
+  - tenant branding: template per document type, colours, font pair, logo, footer, payment instructions;
+  - live preview, including unsaved changes;
+  - generated PDFs cached per content.
+- **Public links:**
+  - hashed 32-byte tokens, scopes, expiry, immediate revocation;
+  - per-IP rate limits;
+  - sandboxed web view;
+  - beacon-based view counting with bot filtering;
+  - link events;
+  - optional emailing on creation;
+  - the first view notifies the agent.
+- **Email** (ADR-0024):
+  - SMTP adapter (Mailpit locally);
+  - "Agency via BrokerOS" with the agency's Reply-To;
+  - templates per event with tenant overrides;
+  - transactional and reminders streams with RFC 8058 one-click unsubscribe and suppression;
+  - outbound message log;
+  - idempotent send job.
+- **In-app notifications** with per-user preferences (in-app and/or email).
+- **Tests:**
+  - every template × document type rendered to real PDFs and checked with text assertions;
+  - fixture sets (long names, 150 lines, UGX, RTL);
+  - XSS escaping in HTML and PDF;
+  - an SSRF canary on the private network;
+  - presigned upload and download enforcement and expiry;
+  - SMTP delivery checked through Mailpit.
+
 ### Added — M1 Identity, tenancy & platform core (2026-10-07)
 - **Auth service** (`apps/auth`, Better Auth 1.7 on Hono, Node 24):
   - email/password with required verification and password reset;

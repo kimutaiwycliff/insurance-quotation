@@ -3,20 +3,17 @@
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
 ## Current state (2026-10-07)
-- **Done:** M0 Foundations, **M1 Identity, tenancy & platform core**. Committed on branch
-  `feat/m1-identity-tenancy` (3 commits, not merged into `main`; no remote configured).
-  - `make check` green; `make test` green (backend suite, coverage ≈97%); `make e2e` green (2 tests: real sign-up →
-    Mailpit verification → org → hook provisioning → JWT → /me → 2FA → invite/accept → removal).
-- **Next:** W1 web foundation (needs the M1 OpenAPI, now stable) or M2 platform services (documents, PDFs,
-  templates, email, public links). Plan §5.
-- **M1 deviations from the plan (all recorded in ADRs):**
-  - tenant id = uuid5(org_id) (ADR-0003);
-  - membership mirror read per request instead of a 60 s cache (ADR-0006);
-  - tests isolate by fresh orgs instead of per-worker template DBs (ADR-0003);
-  - roles renamed for agents: agent/assistant (ADR-0007);
-  - failed-job replay through `make jobs-shell`, because HTTP replay needs the platform-admin identity
-    (runbook `failed-jobs.md`);
-  - Payment-reference check uses weighted mod 31, not Luhn mod N (ADR-0010).
+- **Done:** M0, M1 (branch `feat/m1-identity-tenancy`, not merged), **M2 platform services** on branch
+  `feat/m2-platform-services` (stacked on M1). `make check`, `make test` (271 passed, 94.6% coverage) and
+  `make e2e` are green.
+- **Next:** W1 web foundation (sign-in/up, org, onboarding, settings incl. branding with live preview), or R1
+  modules (M3+ per Amendment A1: clients, leads, insurers/products, quotes...). Plan §5–6.
+- **M2 deviations (recorded in ADRs):**
+  - 3 launch templates per the plan, not the spec's 8 (ADR-0014);
+  - visual-diff PDF snapshots deferred, because rasterising PDFs needs new tooling;
+  - stale pending uploads are not yet cleaned up (ADR-0023);
+  - SES bounce/complaint webhooks deferred until the webhook ingress exists (ADR-0024);
+  - premium template gating waits for SaaS billing.
 
 ## Decisions made
 | Date | Decision | Where |
@@ -36,6 +33,11 @@ Read this first when resuming work. Update it at the end of every session (newes
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas
+- aiobotocore: iterate the `StreamingBody` wrapper (`body.iter_chunks`), not the value returned by
+  `async with body as x` (that is the raw aiohttp response).
+- Email: build messages with `email.policy.SMTP` and `max_line_length=998`, so long List-Unsubscribe URLs are not
+  folded or encoded.
+- Integration test clients get a random client IP (per-IP rate limits would otherwise collide across tests).
 - Local Postgres host port is **55432** (5432 is used by a Postgres already installed on the dev machine).
 - Docker image sets `PYTHONPATH=/app` (needed by the `procrastinate` CLI).
 - The test environment uses `READINESS_TIMEOUT_SECONDS=5` (cold connections under 8 xdist workers).
@@ -53,6 +55,9 @@ Read this first when resuming work. Update it at the end of every session (newes
   `return` inside `async for` silently rolled the transaction back.
 
 ## Session log
+### 2026-10-07: M2
+- Made 2FA optional (ADR-0007) and committed M1 in 3 commits. Built M2: documents, rendering and templates,
+  public links, email, notifications, migration 0003, ADR-0014/0023/0024, template guide and PDF runbook.
 ### 2026-10-07: M1
 - Built the auth service, API auth/tenancy/RLS, permissions, audit, idempotency, concurrency, rate limiting,
   events, money, numbering, the E2E suite, ADRs and runbooks. Bugs found by tests and fixed: generator-based
