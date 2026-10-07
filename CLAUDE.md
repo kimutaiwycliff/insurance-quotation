@@ -9,7 +9,7 @@ to win more business, plus a standalone quotation & invoicing tier for SMEs. Ken
 3. `docs/SPEC_REVIEW.md`: verified Kenyan regulatory facts and the corrections to the original spec
 4. `docs/PROJECT_SPEC.md`: the original product spec
 
-Current milestone: **M0–M2 done → W1 (web foundation) or R1 agent modules next.**
+Current milestone: **R0 (M0–M2, W1) done → R1 Agent MVP next** (clients, leads, insurers/products, quotes, policies, renewals, commission).
 **Start every session by reading `docs/PROGRESS.md`** (handoff log); update it and `CHANGELOG.md` before ending.
 
 ## Non-negotiable rules
@@ -42,11 +42,13 @@ Current milestone: **M0–M2 done → W1 (web foundation) or R1 agent modules ne
 | Format | `make fmt` |
 | End-to-end (auth + API + Mailpit) | `make e2e` |
 | Auth service checks | `make auth-check` |
+| Web checks / browser E2E | `make web-check` / `make e2e-web` |
 | Regenerate OpenAPI | `make openapi` (CI fails if `apps/api/openapi.json` is stale) |
 | Dependency audit | `make audit` |
 
 ## Layout
 ```
+apps/web/            Next.js 16.3 BFF + UI (pnpm 11): auth screens, onboarding, shell, settings
 apps/auth/           Better Auth on Hono (Node 24, pnpm 11): users, orgs, 2FA, JWKS
 apps/api/            FastAPI + Procrastinate (Python 3.14, uv)
   app/core/          config, logging, errors, middleware, db (no feature imports)

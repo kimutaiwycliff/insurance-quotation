@@ -3,17 +3,22 @@
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
 ## Current state (2026-10-07)
-- **Done:** M0, M1 (branch `feat/m1-identity-tenancy`, not merged), **M2 platform services** on branch
-  `feat/m2-platform-services` (stacked on M1). `make check`, `make test` (271 passed, 94.6% coverage) and
-  `make e2e` are green.
-- **Next:** W1 web foundation (sign-in/up, org, onboarding, settings incl. branding with live preview), or R1
-  modules (M3+ per Amendment A1: clients, leads, insurers/products, quotes...). Plan §5–6.
-- **M2 deviations (recorded in ADRs):**
-  - 3 launch templates per the plan, not the spec's 8 (ADR-0014);
-  - visual-diff PDF snapshots deferred, because rasterising PDFs needs new tooling;
-  - stale pending uploads are not yet cleaned up (ADR-0023);
-  - SES bounce/complaint webhooks deferred until the webhook ingress exists (ADR-0024);
-  - premium template gating waits for SaaS billing.
+- **Done:**
+  - M0;
+  - M1 (`feat/m1-identity-tenancy`);
+  - M2 (`feat/m2-platform-services`);
+  - **W1 web foundation** (`feat/w1-web-foundation`).
+  - Branches are stacked and none is merged into `main` (no remote configured). R0 Foundations is complete.
+- **Green:** `make check`, `make test`, `make e2e`, `make e2e-web` (Playwright and axe, desktop and 390 px),
+  web lint, typecheck and unit tests.
+- **Next:** R1 Agent MVP (Amendment A1): clients and households, leads, insurers and products, insurance
+  quotes with KE levies (needs adviser-approved pack values, D4), policies, renewals, commission. Each slice
+  goes backend first, then web.
+- **W1 deviations:**
+  - API client generated inside `apps/web`; `packages/api-client` and Turborepo come when mobile arrives
+    (ADR-0022);
+  - template tier gating waits for billing;
+  - Microsoft, passkey and magic-link sign-in deferred to R2.
 
 ## Decisions made
 | Date | Decision | Where |
@@ -33,6 +38,13 @@ Read this first when resuming work. Update it at the end of every session (newes
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas
+- Web: never use `crypto.randomUUID()` (missing on plain-HTTP origins such as http://web:3000 in E2E); use
+  `randomId()`.
+- Web: next-intl messages use ICU, so escape literal braces with apostrophes (`'{YYYY}'`).
+- Web: axe cannot scan sandboxed iframes; the E2E helper excludes `iframe[sandbox]`.
+- shadcn CLI once rewrote the `cn` import to an npm package named `cn` and installed it. Check `package.json`
+  after running `shadcn add`.
+- Docker Desktop disk: prune old build cache (`docker builder prune --filter until=72h`) if builds hit ENOSPC.
 - aiobotocore: iterate the `StreamingBody` wrapper (`body.iter_chunks`), not the value returned by
   `async with body as x` (that is the raw aiohttp response).
 - Email: build messages with `email.policy.SMTP` and `max_line_length=998`, so long List-Unsubscribe URLs are not
@@ -55,6 +67,10 @@ Read this first when resuming work. Update it at the end of every session (newes
   `return` inside `async for` silently rolled the transaction back.
 
 ## Session log
+### 2026-10-07: W1
+- Built the web app (auth, onboarding, shell, settings, branding preview), the BFF, the orval client, Vitest/MSW
+  tests and the Playwright and axe golden path. Fixed along the way: creating an organization did not set it
+  active; `randomUUID` on insecure origins; Sonner toast contrast; axe hanging on sandboxed iframes.
 ### 2026-10-07: M2
 - Made 2FA optional (ADR-0007) and committed M1 in 3 commits. Built M2: documents, rendering and templates,
   public links, email, notifications, migration 0003, ADR-0014/0023/0024, template guide and PDF runbook.

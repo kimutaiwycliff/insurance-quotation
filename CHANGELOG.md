@@ -5,6 +5,30 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added — W1 Web foundation (2026-10-07)
+- **Web app** (`apps/web`, Next.js 16.3, React 19, Tailwind 4, shadcn/Radix, TanStack Query, next-intl):
+  - sign in and sign up with email confirmation, two-step sign-in, password reset, invitation acceptance;
+  - onboarding: create agency, then details, then brand, with a live document preview;
+  - app shell with sidebar, mobile menu, ⌘K jump menu, notification bell and agency switcher;
+  - settings: agency profile, team (invite, change role, remove), documents & brand (template, colours, logo
+    upload, footer, payment details, live preview, sample PDF), document numbers (live preview), security
+    (optional TOTP with QR code and backup codes).
+- **BFF** (ADR-0021): same-origin `/api/auth` proxy and `/bff/api/v1` proxy that attaches the API token
+  server-side; the token never reaches the browser.
+- **Generated API client** (orval, ADR-0022) with RFC 9457 error mapping, automatic Idempotency-Key and If-Match.
+- **Design:** paper, ink, acacia and maize tokens; Bricolage Grotesque and Atkinson Hyperlegible; the agency's
+  stamp seal; light and dark themes.
+- **Tests:**
+  - Vitest and MSW unit and component tests;
+  - Playwright golden path in Compose (`make e2e-web`) on desktop and a 390 px phone, with axe WCAG 2.2 AA
+    checks.
+- **CI:** web checks, generated-client drift, web image scan, browser E2E on `main`.
+
+### Changed
+- `BETTER_AUTH_URL` is now the web origin (the web app proxies `/api/auth/*`).
+- API schemas renamed for unique names in the contract: `MessageTemplateOut`, `DocumentLinkOut`,
+  `NumberingPreviewRequest`/`NumberingPreviewOut`, `TemplatePreviewRequest`.
+
 ### Added — M2 Platform services (2026-10-07)
 - **Documents** (ADR-0023):
   - presigned uploads with signed size and type;
