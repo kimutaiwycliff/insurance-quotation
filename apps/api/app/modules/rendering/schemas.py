@@ -65,7 +65,7 @@ class BrandingUpdate(BaseModel):
     payment_instructions: PaymentDefaults | None = None
 
 
-class PreviewRequest(BaseModel):
+class TemplatePreviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     doc_type: DocType = "invoice"

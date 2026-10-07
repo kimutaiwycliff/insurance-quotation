@@ -10,8 +10,8 @@ from app.core.concurrency import etag
 from app.core.permissions import Perm
 from app.modules.numbering import service
 from app.modules.numbering.schemas import (
-    PreviewOut,
-    PreviewRequest,
+    NumberingPreviewOut,
+    NumberingPreviewRequest,
     SchemeCreate,
     SchemeOut,
     SchemeUpdate,
@@ -59,8 +59,8 @@ async def update_scheme(
 
 
 @router.post("/preview", operation_id="numbering_schemes_preview")
-async def preview(ctx: ReadCtx, body: PreviewRequest) -> PreviewOut:
-    return PreviewOut(
+async def preview(ctx: ReadCtx, body: NumberingPreviewRequest) -> NumberingPreviewOut:
+    return NumberingPreviewOut(
         examples=service.preview(
             body.pattern, body.on or datetime.now(UTC).date(), body.branch_code
         )

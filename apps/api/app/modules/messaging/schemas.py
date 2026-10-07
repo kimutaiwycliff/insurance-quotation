@@ -25,7 +25,7 @@ class MessageOut(BaseModel):
     sent_at: datetime | None
 
 
-class TemplateOut(BaseModel):
+class MessageTemplateOut(BaseModel):
     event: str
     description: str
     stream: str

@@ -57,7 +57,7 @@ class SchemeUpdate(BaseModel):
         return None if value is None else _valid_pattern(value)
 
 
-class PreviewRequest(BaseModel):
+class NumberingPreviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     pattern: str
@@ -67,5 +67,5 @@ class PreviewRequest(BaseModel):
     _pattern = field_validator("pattern")(_valid_pattern)
 
 
-class PreviewOut(BaseModel):
+class NumberingPreviewOut(BaseModel):
     examples: list[str] = Field(description="The first three numbers the pattern would produce")

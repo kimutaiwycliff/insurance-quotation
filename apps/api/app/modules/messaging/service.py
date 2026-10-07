@@ -25,7 +25,7 @@ from app.integrations.email.fake import FakeSender
 from app.integrations.email.smtp import SmtpSender
 from app.modules.messaging import catalog
 from app.modules.messaging.models import EmailSuppression, MessageTemplate, OutboundMessage
-from app.modules.messaging.schemas import TemplateOut, TemplateOverride
+from app.modules.messaging.schemas import MessageTemplateOut, TemplateOverride
 from app.modules.tenancy import service as tenancy
 from app.platform import audit, events
 from app.platform.deps import TenantContext
@@ -126,12 +126,12 @@ async def _template(
     return base, base.subject, base.body, False
 
 
-async def list_templates(session: AsyncSession, locale: str = "en") -> list[TemplateOut]:
+async def list_templates(session: AsyncSession, locale: str = "en") -> list[MessageTemplateOut]:
     out = []
     for event in catalog.CATALOG:
         base, subject, body, customised = await _template(session, event, locale)
         out.append(
-            TemplateOut(
+            MessageTemplateOut(
                 event=event,
                 description=base.description,
                 stream=base.stream,
@@ -147,7 +147,7 @@ async def list_templates(session: AsyncSession, locale: str = "en") -> list[Temp
 
 async def set_override(
     ctx: TenantContext, event: str, locale: str, data: TemplateOverride
-) -> TemplateOut:
+) -> MessageTemplateOut:
     base = catalog.CATALOG.get(event)
     if base is None:
         raise UnknownEventError(f"No message template for {event!r}")

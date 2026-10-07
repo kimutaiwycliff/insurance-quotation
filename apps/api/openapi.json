@@ -670,7 +670,7 @@
           },
           "links": {
             "items": {
-              "$ref": "#/components/schemas/app__modules__documents__schemas__LinkOut"
+              "$ref": "#/components/schemas/DocumentLinkOut"
             },
             "title": "Links",
             "type": "array"
@@ -708,6 +708,31 @@
           "links"
         ],
         "title": "DocumentDetail",
+        "type": "object"
+      },
+      "DocumentLinkOut": {
+        "properties": {
+          "entity_id": {
+            "format": "uuid",
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "entity_type": {
+            "title": "Entity Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entity_type",
+          "entity_id"
+        ],
+        "title": "DocumentLinkOut",
         "type": "object"
       },
       "DocumentOut": {
@@ -1087,6 +1112,82 @@
         "title": "LinkEventOut",
         "type": "object"
       },
+      "LinkOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "entity_id": {
+            "format": "uuid",
+            "title": "Entity Id",
+            "type": "string"
+          },
+          "entity_type": {
+            "title": "Entity Type",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_viewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Viewed At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          },
+          "view_count": {
+            "title": "View Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "entity_type",
+          "entity_id",
+          "scopes",
+          "expires_at",
+          "revoked_at",
+          "created_at",
+          "view_count",
+          "last_viewed_at"
+        ],
+        "title": "LinkOut",
+        "type": "object"
+      },
       "LiveResponse": {
         "properties": {
           "status": {
@@ -1312,6 +1413,57 @@
         "title": "MessageOut",
         "type": "object"
       },
+      "MessageTemplateOut": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "customised": {
+            "title": "Customised",
+            "type": "boolean"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "event": {
+            "title": "Event",
+            "type": "string"
+          },
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          },
+          "stream": {
+            "title": "Stream",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Variables",
+            "type": "array"
+          }
+        },
+        "required": [
+          "event",
+          "description",
+          "stream",
+          "locale",
+          "subject",
+          "body",
+          "variables",
+          "customised"
+        ],
+        "title": "MessageTemplateOut",
+        "type": "object"
+      },
       "NotificationOut": {
         "properties": {
           "body": {
@@ -1370,6 +1522,61 @@
           "created_at"
         ],
         "title": "NotificationOut",
+        "type": "object"
+      },
+      "NumberingPreviewOut": {
+        "properties": {
+          "examples": {
+            "description": "The first three numbers the pattern would produce",
+            "items": {
+              "type": "string"
+            },
+            "title": "Examples",
+            "type": "array"
+          }
+        },
+        "required": [
+          "examples"
+        ],
+        "title": "NumberingPreviewOut",
+        "type": "object"
+      },
+      "NumberingPreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "branch_code": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z0-9]{1,10}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch Code"
+          },
+          "on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On"
+          },
+          "pattern": {
+            "title": "Pattern",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pattern"
+        ],
+        "title": "NumberingPreviewRequest",
         "type": "object"
       },
       "OrganizationOut": {
@@ -2021,23 +2228,6 @@
         "title": "Preference",
         "type": "object"
       },
-      "PreviewOut": {
-        "properties": {
-          "examples": {
-            "description": "The first three numbers the pattern would produce",
-            "items": {
-              "type": "string"
-            },
-            "title": "Examples",
-            "type": "array"
-          }
-        },
-        "required": [
-          "examples"
-        ],
-        "title": "PreviewOut",
-        "type": "object"
-      },
       "PublicLinkView": {
         "description": "What an anonymous visitor may learn about a link. No internal ids.",
         "properties": {
@@ -2328,6 +2518,61 @@
         "title": "SendTo",
         "type": "object"
       },
+      "TemplateOut": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "doc_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Doc Types",
+            "type": "array"
+          },
+          "font_pair": {
+            "title": "Font Pair",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "paper": {
+            "title": "Paper",
+            "type": "string"
+          },
+          "tier": {
+            "enum": [
+              "free",
+              "premium"
+            ],
+            "title": "Tier",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "description",
+          "tier",
+          "version",
+          "doc_types",
+          "paper",
+          "font_pair"
+        ],
+        "title": "TemplateOut",
+        "type": "object"
+      },
       "TemplateOverride": {
         "additionalProperties": false,
         "properties": {
@@ -2349,6 +2594,55 @@
           "body"
         ],
         "title": "TemplateOverride",
+        "type": "object"
+      },
+      "TemplatePreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "branding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BrandingUpdate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "doc_type": {
+            "default": "invoice",
+            "enum": [
+              "quote",
+              "invoice",
+              "receipt",
+              "credit_note"
+            ],
+            "title": "Doc Type",
+            "type": "string"
+          },
+          "format": {
+            "default": "pdf",
+            "enum": [
+              "pdf",
+              "html"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "variant": {
+            "default": "standard",
+            "enum": [
+              "standard",
+              "long_names",
+              "many_lines",
+              "zero_dp",
+              "rtl"
+            ],
+            "title": "Variant",
+            "type": "string"
+          }
+        },
+        "title": "TemplatePreviewRequest",
         "type": "object"
       },
       "TenantSummary": {
@@ -2574,300 +2868,6 @@
           "finalized_at"
         ],
         "title": "VersionOut",
-        "type": "object"
-      },
-      "app__modules__documents__schemas__LinkOut": {
-        "properties": {
-          "entity_id": {
-            "format": "uuid",
-            "title": "Entity Id",
-            "type": "string"
-          },
-          "entity_type": {
-            "title": "Entity Type",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "entity_type",
-          "entity_id"
-        ],
-        "title": "LinkOut",
-        "type": "object"
-      },
-      "app__modules__messaging__schemas__TemplateOut": {
-        "properties": {
-          "body": {
-            "title": "Body",
-            "type": "string"
-          },
-          "customised": {
-            "title": "Customised",
-            "type": "boolean"
-          },
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "event": {
-            "title": "Event",
-            "type": "string"
-          },
-          "locale": {
-            "title": "Locale",
-            "type": "string"
-          },
-          "stream": {
-            "title": "Stream",
-            "type": "string"
-          },
-          "subject": {
-            "title": "Subject",
-            "type": "string"
-          },
-          "variables": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Variables",
-            "type": "array"
-          }
-        },
-        "required": [
-          "event",
-          "description",
-          "stream",
-          "locale",
-          "subject",
-          "body",
-          "variables",
-          "customised"
-        ],
-        "title": "TemplateOut",
-        "type": "object"
-      },
-      "app__modules__numbering__schemas__PreviewRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "branch_code": {
-            "anyOf": [
-              {
-                "pattern": "^[A-Z0-9]{1,10}$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Branch Code"
-          },
-          "on": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "On"
-          },
-          "pattern": {
-            "title": "Pattern",
-            "type": "string"
-          }
-        },
-        "required": [
-          "pattern"
-        ],
-        "title": "PreviewRequest",
-        "type": "object"
-      },
-      "app__modules__public_links__schemas__LinkOut": {
-        "properties": {
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "entity_id": {
-            "format": "uuid",
-            "title": "Entity Id",
-            "type": "string"
-          },
-          "entity_type": {
-            "title": "Entity Type",
-            "type": "string"
-          },
-          "expires_at": {
-            "format": "date-time",
-            "title": "Expires At",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "last_viewed_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Viewed At"
-          },
-          "revoked_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Revoked At"
-          },
-          "scopes": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Scopes",
-            "type": "array"
-          },
-          "view_count": {
-            "title": "View Count",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "entity_type",
-          "entity_id",
-          "scopes",
-          "expires_at",
-          "revoked_at",
-          "created_at",
-          "view_count",
-          "last_viewed_at"
-        ],
-        "title": "LinkOut",
-        "type": "object"
-      },
-      "app__modules__rendering__schemas__PreviewRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "branding": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/BrandingUpdate"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "doc_type": {
-            "default": "invoice",
-            "enum": [
-              "quote",
-              "invoice",
-              "receipt",
-              "credit_note"
-            ],
-            "title": "Doc Type",
-            "type": "string"
-          },
-          "format": {
-            "default": "pdf",
-            "enum": [
-              "pdf",
-              "html"
-            ],
-            "title": "Format",
-            "type": "string"
-          },
-          "variant": {
-            "default": "standard",
-            "enum": [
-              "standard",
-              "long_names",
-              "many_lines",
-              "zero_dp",
-              "rtl"
-            ],
-            "title": "Variant",
-            "type": "string"
-          }
-        },
-        "title": "PreviewRequest",
-        "type": "object"
-      },
-      "app__modules__rendering__schemas__TemplateOut": {
-        "properties": {
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "doc_types": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Doc Types",
-            "type": "array"
-          },
-          "font_pair": {
-            "title": "Font Pair",
-            "type": "string"
-          },
-          "key": {
-            "title": "Key",
-            "type": "string"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "paper": {
-            "title": "Paper",
-            "type": "string"
-          },
-          "tier": {
-            "enum": [
-              "free",
-              "premium"
-            ],
-            "title": "Tier",
-            "type": "string"
-          },
-          "version": {
-            "title": "Version",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "key",
-          "name",
-          "description",
-          "tier",
-          "version",
-          "doc_types",
-          "paper",
-          "font_pair"
-        ],
-        "title": "TemplateOut",
         "type": "object"
       }
     }
@@ -3686,7 +3686,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__documents__schemas__LinkOut"
+                  "$ref": "#/components/schemas/DocumentLinkOut"
                 }
               }
             },
@@ -3938,7 +3938,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/app__modules__messaging__schemas__TemplateOut"
+                    "$ref": "#/components/schemas/MessageTemplateOut"
                   },
                   "title": "Response Message Templates List",
                   "type": "array"
@@ -4046,7 +4046,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__messaging__schemas__TemplateOut"
+                  "$ref": "#/components/schemas/MessageTemplateOut"
                 }
               }
             },
@@ -4548,7 +4548,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/app__modules__numbering__schemas__PreviewRequest"
+                "$ref": "#/components/schemas/NumberingPreviewRequest"
               }
             }
           },
@@ -4559,7 +4559,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PreviewOut"
+                  "$ref": "#/components/schemas/NumberingPreviewOut"
                 }
               }
             },
@@ -4784,7 +4784,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/app__modules__public_links__schemas__LinkOut"
+                    "$ref": "#/components/schemas/LinkOut"
                   },
                   "title": "Response Public Links List",
                   "type": "array"
@@ -4935,7 +4935,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__public_links__schemas__LinkOut"
+                  "$ref": "#/components/schemas/LinkOut"
                 }
               }
             },
@@ -5263,7 +5263,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/app__modules__rendering__schemas__TemplateOut"
+                    "$ref": "#/components/schemas/TemplateOut"
                   },
                   "title": "Response Templates List",
                   "type": "array"
@@ -5308,7 +5308,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/app__modules__rendering__schemas__PreviewRequest"
+                "$ref": "#/components/schemas/TemplatePreviewRequest"
               }
             }
           },

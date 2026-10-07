@@ -13,12 +13,12 @@ from app.modules.documents import service
 from app.modules.documents.schemas import (
     DocumentCreate,
     DocumentDetail,
+    DocumentLinkOut,
     DocumentOut,
     DocumentUpdate,
     DownloadUrl,
     EntityRef,
     EntityType,
-    LinkOut,
     UploadRequest,
     UploadStarted,
     VersionOut,
@@ -113,7 +113,7 @@ async def get_document(ctx: ReadCtx, document_id: uuid.UUID, response: Response)
     return DocumentDetail(
         **DocumentOut.model_validate(document).model_dump(),
         versions=[VersionOut.model_validate(v) for v in versions],
-        links=[LinkOut.model_validate(link) for link in links],
+        links=[DocumentLinkOut.model_validate(link) for link in links],
     )
 
 
@@ -150,8 +150,8 @@ async def download(
 
 
 @router.post("/{document_id}/links", operation_id="documents_link", status_code=201)
-async def add_link(ctx: WriteCtx, document_id: uuid.UUID, body: EntityRef) -> LinkOut:
-    return LinkOut.model_validate(await service.add_link(ctx, document_id, body))
+async def add_link(ctx: WriteCtx, document_id: uuid.UUID, body: EntityRef) -> DocumentLinkOut:
+    return DocumentLinkOut.model_validate(await service.add_link(ctx, document_id, body))
 
 
 @router.delete("/{document_id}/links/{link_id}", operation_id="documents_unlink", status_code=204)

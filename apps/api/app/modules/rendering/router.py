@@ -9,7 +9,12 @@ from app.core.errors import NotFoundError
 from app.core.permissions import Perm
 from app.modules.rendering import engine, service
 from app.modules.rendering.fixtures import sample_view
-from app.modules.rendering.schemas import BrandingOut, BrandingUpdate, PreviewRequest, TemplateOut
+from app.modules.rendering.schemas import (
+    BrandingOut,
+    BrandingUpdate,
+    TemplateOut,
+    TemplatePreviewRequest,
+)
 from app.modules.tenancy import service as tenancy
 from app.platform.deps import ResourcesDep, TenantContext, require_permission
 
@@ -29,7 +34,7 @@ async def list_templates(ctx: ReadCtx) -> list[TemplateOut]:
     responses={200: {"content": {"application/pdf": {}, "text/html": {}}}},
 )
 async def preview(
-    key: str, body: PreviewRequest, ctx: ReadCtx, resources: ResourcesDep
+    key: str, body: TemplatePreviewRequest, ctx: ReadCtx, resources: ResourcesDep
 ) -> Response:
     """Render sample data with this template and the tenant's branding (or unsaved `branding` overrides)."""
     if key not in engine.catalog():

@@ -10,7 +10,7 @@ from app.core.db import tenant_scope
 from app.core.pagination import Page, PageParams, build_page, page_params
 from app.core.permissions import Perm
 from app.modules.messaging import service
-from app.modules.messaging.schemas import MessageOut, TemplateOut, TemplateOverride
+from app.modules.messaging.schemas import MessageOut, MessageTemplateOut, TemplateOverride
 from app.modules.tenancy import service as tenancy
 from app.platform.deps import ResourcesDep, TenantContext, require_permission
 
@@ -60,14 +60,14 @@ async def test_email(ctx: ManageCtx) -> MessageOut:
 
 
 @router.get("/message-templates", operation_id="message_templates_list")
-async def list_templates(ctx: ReadCtx) -> list[TemplateOut]:
+async def list_templates(ctx: ReadCtx) -> list[MessageTemplateOut]:
     return await service.list_templates(ctx.session)
 
 
 @router.put("/message-templates/{event}/{locale}", operation_id="message_templates_set")
 async def set_template(
     ctx: ManageCtx, event: str, locale: Locale, body: TemplateOverride
-) -> TemplateOut:
+) -> MessageTemplateOut:
     return await service.set_override(ctx, event, locale, body)
 
 

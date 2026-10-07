@@ -66,7 +66,7 @@ class VersionOut(BaseModel):
     finalized_at: datetime | None
 
 
-class LinkOut(BaseModel):
+class DocumentLinkOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
@@ -89,7 +89,7 @@ class DocumentOut(BaseModel):
 
 class DocumentDetail(DocumentOut):
     versions: list[VersionOut]
-    links: list[LinkOut]
+    links: list[DocumentLinkOut]
 
 
 class UploadTicket(BaseModel):
