@@ -1,0 +1,114 @@
+# Continuous integration. Every third-party action is pinned to a full commit SHA (supply-chain hardening
+# after the March 2026 trivy-action compromise, CVE-2026-33634). Dependabot proposes SHA bumps.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.12.23"
+  PYTHON_VERSION: "3.14"
+
+jobs:
+  quality:
+    name: Lint, types, unit tests
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Ruff lint
+        run: uv run ruff check --output-format=github .
+      - name: Ruff format
+        run: uv run ruff format --check .
+      - name: mypy --strict
+        run: uv run mypy app tests scripts
+      - name: Module boundaries (import-linter)
+        run: uv run lint-imports
+      - name: Unit tests
+        run: uv run pytest tests/unit -q
+      - name: OpenAPI document is up to date
+        run: |
+          uv run python -m scripts.export_openapi > /tmp/openapi.json
+          diff -u openapi.json /tmp/openapi.json || { echo "::error::openapi.json is stale; run 'make openapi'"; exit 1; }
+      - name: Dependency vulnerability audit
+        run: |
+          uv export --frozen --no-dev --format requirements-txt --no-hashes > /tmp/requirements.txt
+          uv run pip-audit -r /tmp/requirements.txt --strict
+
+  openapi-breaking:
+    name: OpenAPI breaking changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Compare against base branch
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if ! git show "origin/${BASE_REF}:apps/api/openapi.json" > /tmp/base.json 2>/dev/null; then
+            echo "No openapi.json on base branch yet; skipping."; exit 0
+          fi
+          docker run --rm -v /tmp:/base -v "$PWD/apps/api":/head tufin/oasdiff:v1.33.0 \
+            breaking /base/base.json /head/openapi.json --fail-on ERR
+
+  integration:
+    name: Full suite in Docker Compose
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: make test
+        run: make test
+
+  images:
+    name: Build and scan images
+    needs: quality
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build API image
+        run: docker build --target api -t brokeros-api:${{ github.sha }} apps/api
+      - name: Scan image (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: brokeros-api:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Scan repository for secrets and misconfiguration (Trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret,misconfig
+          severity: CRITICAL,HIGH
+          exit-code: "1"

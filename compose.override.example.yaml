@@ -1,0 +1,11 @@
+# Copy to compose.override.yaml (gitignored) for hot reload while developing the API.
+services:
+  api:
+    command: ["uvicorn", "app.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./apps/api/app:/app/app
+    environment:
+      LOG_JSON: "false"
+  worker:
+    volumes:
+      - ./apps/api/app:/app/app

@@ -1,0 +1,56 @@
+"""Unit tests for configuration and log scrubbing."""
+
+import pytest
+from pydantic import SecretStr, ValidationError
+
+from app.core.config import Environment, Settings
+from app.core.logging import REDACTED, scrub_sensitive
+
+
+class TestSettings:
+    def test_cors_origins_accept_comma_separated_string(self) -> None:
+        settings = Settings(cors_allowed_origins="https://a.example, https://b.example,")  # type: ignore[arg-type]
+        assert settings.cors_allowed_origins == ["https://a.example", "https://b.example"]
+
+    def test_production_rejects_development_storage_credentials(self) -> None:
+        with pytest.raises(ValidationError, match="Development storage credentials"):
+            Settings(environment=Environment.PRODUCTION)
+
+    def test_production_accepts_real_credentials(self) -> None:
+        settings = Settings(
+            environment=Environment.PRODUCTION,
+            s3_access_key_id=SecretStr("AKIAREALKEY"),
+            s3_secret_access_key=SecretStr("real-secret"),
+        )
+        assert settings.is_production
+
+    def test_secrets_are_not_rendered(self) -> None:
+        settings = Settings(s3_secret_access_key=SecretStr("super-secret-value"))
+        assert "super-secret-value" not in repr(settings)
+
+
+class TestLogScrubbing:
+    def test_redacts_sensitive_top_level_keys(self) -> None:
+        event = scrub_sensitive(
+            None, "info", {"event": "x", "password": "p", "Authorization": "Bearer t"}
+        )
+        assert event["password"] == REDACTED
+        assert event["Authorization"] == REDACTED
+        assert event["event"] == "x"
+
+    def test_redacts_nested_keys_and_lists(self) -> None:
+        event = scrub_sensitive(
+            None,
+            "info",
+            {
+                "event": "x",
+                "client": {"name": "Wanjiku", "id_number": "12345678"},
+                "items": [{"api_key": "k"}, {"amount": "100.00"}],
+            },
+        )
+        assert event["client"] == {"name": "Wanjiku", "id_number": REDACTED}
+        assert event["items"] == [{"api_key": REDACTED}, {"amount": "100.00"}]
+
+    def test_leaves_ordinary_values_untouched(self) -> None:
+        event = scrub_sensitive(None, "info", {"event": "x", "tenant_id": "t1", "status": 200})
+        assert event == {"event": "x", "tenant_id": "t1", "status": 200}

@@ -1,0 +1,34 @@
+# Install once: `uvx pre-commit install`. Hooks run the project's pinned tools via uv (no third-party hook repos).
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: bash -c 'cd apps/api && uv run ruff format .'
+        language: system
+        files: ^apps/api/.*\.py$
+        pass_filenames: false
+      - id: ruff-check
+        name: ruff check
+        entry: bash -c 'cd apps/api && uv run ruff check --fix .'
+        language: system
+        files: ^apps/api/.*\.py$
+        pass_filenames: false
+      - id: mypy
+        name: mypy --strict
+        entry: bash -c 'cd apps/api && uv run mypy app tests scripts'
+        language: system
+        files: ^apps/api/.*\.py$
+        pass_filenames: false
+      - id: import-linter
+        name: module boundaries
+        entry: bash -c 'cd apps/api && uv run lint-imports'
+        language: system
+        files: ^apps/api/app/.*\.py$
+        pass_filenames: false
+      - id: no-env-files
+        name: never commit .env files
+        entry: .env files must not be committed
+        language: fail
+        files: (^|/)\.env(\..+)?$
+        exclude: \.env\.example$

@@ -1,0 +1,155 @@
+# Local development stack. Every service the product needs runs here (ADR-0001).
+# Usage: `make up` (or `docker compose up -d --build`). Copy .env.example to .env to override defaults.
+# Defaults below are DEVELOPMENT-ONLY credentials.
+
+name: brokeros
+
+x-app-env: &app-env
+  ENVIRONMENT: ${ENVIRONMENT:-local}
+  RELEASE: ${RELEASE:-dev}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_JSON: ${LOG_JSON:-false}
+  DATABASE_URL: postgresql+psycopg://app_user:${APP_USER_PASSWORD:-app_user_dev}@postgres:5432/${POSTGRES_DB:-app}
+  VALKEY_URL: redis://valkey:6379/0
+  S3_ENDPOINT_URL: http://storage:9000
+  S3_REGION: ${S3_REGION:-us-east-1}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-devaccesskey}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-devsecretkey}
+  S3_BUCKET_DOCUMENTS: ${S3_BUCKET_DOCUMENTS:-documents}
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+  SENTRY_DSN: ${SENTRY_DSN:-}
+
+x-api-build: &api-build
+  context: ./apps/api
+  dockerfile: Dockerfile
+
+services:
+  postgres:
+    image: postgres:18.6-bookworm
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      APP_OWNER_PASSWORD: ${APP_OWNER_PASSWORD:-app_owner_dev}
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD:-app_user_dev}
+      APP_SCANNER_PASSWORD: ${APP_SCANNER_PASSWORD:-app_scanner_dev}
+      AUTH_OWNER_PASSWORD: ${AUTH_OWNER_PASSWORD:-auth_owner_dev}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"  # non-standard host port avoids clashing with a local Postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  valkey:
+    image: valkey/valkey:9.1-alpine
+    command: ["valkey-server", "--appendonly", "yes"]
+    volumes:
+      - valkeydata:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # S3-compatible storage (MinIO is archived; see ADR-0005).
+  storage:
+    image: rustfs/rustfs:1.0.1
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY_ID:-devaccesskey}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_ACCESS_KEY:-devsecretkey}
+      RUSTFS_VOLUMES: /data
+    volumes:
+      - storagedata:/data
+    ports:
+      - "127.0.0.1:${STORAGE_PORT:-9000}:9000"
+      - "127.0.0.1:${STORAGE_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  storage-init:
+    build: { <<: *api-build, target: api }
+    command: ["python", "-m", "scripts.storage_init"]
+    environment: *app-env
+    depends_on:
+      storage: { condition: service_healthy }
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:v1.31.4
+    ports:
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # HTML -> PDF. Internal only; hardened against SSRF (SPEC_REVIEW §4.5).
+  gotenberg:
+    image: gotenberg/gotenberg:8.37.0
+    command:
+      - gotenberg
+      - --chromium-deny-private-ips=true
+      - --chromium-disable-javascript=true
+      - --webhook-deny-private-ips=true
+      - --api-timeout=30s
+      - --log-format=json
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    build: { <<: *api-build, target: api }
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      <<: *app-env
+      MIGRATIONS_DATABASE_URL: postgresql+psycopg://app_owner:${APP_OWNER_PASSWORD:-app_owner_dev}@postgres:5432/${POSTGRES_DB:-app}
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  api:
+    build: { <<: *api-build, target: api }
+    environment: *app-env
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      storage-init: { condition: service_completed_successfully }
+      valkey: { condition: service_healthy }
+      gotenberg: { condition: service_healthy }
+      mailpit: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  worker:
+    build: { <<: *api-build, target: worker }
+    environment: *app-env
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      valkey: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "procrastinate", "--app=app.workers.app.app", "healthchecks"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  pgdata:
+  valkeydata:
+  storagedata:

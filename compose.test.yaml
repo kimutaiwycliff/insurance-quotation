@@ -1,0 +1,62 @@
+# Test overrides. Always used together with compose.yaml under a separate project name:
+#   docker compose -p brokeros-test -f compose.yaml -f compose.test.yaml run --rm api-tests
+# Postgres and storage use tmpfs so every run starts clean and fast.
+
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: app_test
+    volumes: !override
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    tmpfs:
+      - /var/lib/postgresql:size=1g
+    ports: !reset []
+
+  valkey:
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    volumes: !reset []
+
+  storage:
+    volumes: !reset []
+    tmpfs:
+      - /data:size=512m,uid=10001,gid=10001  # RustFS runs as uid 10001
+    ports: !reset []
+
+  mailpit:
+    ports: !reset []
+
+  api-tests:
+    profiles: ["test"]
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: test
+    environment:
+      ENVIRONMENT: test
+      LOG_JSON: "false"
+      # Cold first connections under 8 parallel xdist workers can exceed the 2 s production probe budget.
+      READINESS_TIMEOUT_SECONDS: "5"
+      DATABASE_URL: postgresql+psycopg://app_user:app_user_dev@postgres:5432/app_test
+      MIGRATIONS_DATABASE_URL: postgresql+psycopg://app_owner:app_owner_dev@postgres:5432/app_test
+      VALKEY_URL: redis://valkey:6379/0
+      S3_ENDPOINT_URL: http://storage:9000
+      S3_ACCESS_KEY_ID: devaccesskey
+      S3_SECRET_ACCESS_KEY: devsecretkey
+      S3_BUCKET_DOCUMENTS: documents
+      MAILPIT_API_URL: http://mailpit:8025
+      GOTENBERG_URL: http://gotenberg:3000
+    command:
+      - sh
+      - -c
+      - >-
+        alembic upgrade head
+        && alembic downgrade base
+        && alembic upgrade head
+        && python -m scripts.storage_init
+        && pytest -n auto --cov=app --cov-report=term-missing --cov-fail-under=80
+    depends_on:
+      postgres: { condition: service_healthy }
+      valkey: { condition: service_healthy }
+      storage: { condition: service_healthy }
+      mailpit: { condition: service_healthy }
+      gotenberg: { condition: service_healthy }
