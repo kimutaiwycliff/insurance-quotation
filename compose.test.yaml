@@ -45,6 +45,7 @@ services:
       S3_BUCKET_DOCUMENTS: documents
       MAILPIT_API_URL: http://mailpit:8025
       GOTENBERG_URL: http://gotenberg:3000
+      AUTH_ISSUER: http://localhost:3001
     command:
       - sh
       - -c
@@ -60,3 +61,41 @@ services:
       storage: { condition: service_healthy }
       mailpit: { condition: service_healthy }
       gotenberg: { condition: service_healthy }
+
+  auth-migrate:
+    environment:
+      AUTH_DATABASE_URL: postgres://auth_owner:auth_owner_dev@postgres:5432/app_test
+
+  auth:
+    environment:
+      AUTH_DATABASE_URL: postgres://auth_owner:auth_owner_dev@postgres:5432/app_test
+      AUTH_RATE_LIMIT_ENABLED: "false"
+    ports: !reset []
+
+  api:
+    environment:
+      DATABASE_URL: postgresql+psycopg://app_user:app_user_dev@postgres:5432/app_test
+    ports: !reset []
+
+  migrate:
+    environment:
+      DATABASE_URL: postgresql+psycopg://app_user:app_user_dev@postgres:5432/app_test
+      MIGRATIONS_DATABASE_URL: postgresql+psycopg://app_owner:app_owner_dev@postgres:5432/app_test
+
+  # End-to-end: real auth service + API + Mailpit (`make e2e`).
+  e2e-tests:
+    profiles: ["e2e"]
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: test
+    environment:
+      ENVIRONMENT: test
+      E2E_AUTH_URL: http://auth:3001
+      E2E_API_URL: http://api:8000
+      E2E_MAILPIT_URL: http://mailpit:8025
+      E2E_ORIGIN: http://localhost:3000
+    command: ["pytest", "-q", "-p", "no:cacheprovider", "tests/e2e"]
+    depends_on:
+      api: { condition: service_healthy }
+      auth: { condition: service_healthy }

@@ -18,6 +18,29 @@ x-app-env: &app-env
   S3_BUCKET_DOCUMENTS: ${S3_BUCKET_DOCUMENTS:-documents}
   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
   SENTRY_DSN: ${SENTRY_DSN:-}
+  # Tokens are issued by the auth service; the API fetches its JWKS over the internal network.
+  AUTH_JWKS_URL: http://auth:3001/api/auth/jwks
+  AUTH_ISSUER: ${AUTH_ISSUER:-http://localhost:3001}
+  AUTH_AUDIENCE: ${AUTH_AUDIENCE:-brokeros-api}
+  AUTH_INTERNAL_AUDIENCE: ${AUTH_INTERNAL_AUDIENCE:-brokeros-internal}
+
+x-auth-env: &auth-env
+  ENVIRONMENT: ${ENVIRONMENT:-local}
+  PORT: "3001"
+  BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-only-secret-change-me-0123456789abcdef}
+  AUTH_DATABASE_URL: postgres://auth_owner:${AUTH_OWNER_PASSWORD:-auth_owner_dev}@postgres:5432/${POSTGRES_DB:-app}
+  AUTH_TRUSTED_ORIGINS: ${AUTH_TRUSTED_ORIGINS:-http://localhost:3000}
+  AUTH_ISSUER: ${AUTH_ISSUER:-http://localhost:3001}
+  AUTH_AUDIENCE: ${AUTH_AUDIENCE:-brokeros-api}
+  AUTH_INTERNAL_AUDIENCE: ${AUTH_INTERNAL_AUDIENCE:-brokeros-internal}
+  API_INTERNAL_URL: http://api:8000
+  EMAIL_FROM: ${EMAIL_FROM:-BrokerOS <no-reply@brokeros.local>}
+  SMTP_HOST: ${SMTP_HOST:-mailpit}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+  AUTH_RATE_LIMIT_ENABLED: ${AUTH_RATE_LIMIT_ENABLED:-true}
 
 x-api-build: &api-build
   context: ./apps/api
@@ -135,6 +158,30 @@ services:
       timeout: 5s
       retries: 12
       start_period: 10s
+
+  # Better Auth tables in schema "auth" (as auth_owner). One-shot, like `migrate`.
+  auth-migrate:
+    build: { context: ./apps/auth, target: runtime }
+    command: ["node", "dist/migrate.js"]
+    environment: *auth-env
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  auth:
+    build: { context: ./apps/auth, target: runtime }
+    environment: *auth-env
+    ports:
+      - "127.0.0.1:${AUTH_PORT:-3001}:3001"
+    depends_on:
+      auth-migrate: { condition: service_completed_successfully }
+      mailpit: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health/ready').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
 
   worker:
     build: { <<: *api-build, target: worker }

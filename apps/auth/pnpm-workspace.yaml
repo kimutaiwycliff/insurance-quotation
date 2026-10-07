@@ -1,0 +1,4 @@
+# pnpm settings for the auth service (becomes the monorepo workspace file in W1).
+# esbuild ships platform binaries as optional dependencies, so its postinstall is not needed.
+allowBuilds:
+  esbuild: false
