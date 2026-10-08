@@ -10,8 +10,13 @@ Read this first when resuming work. Update it at the end of every session (newes
   - module `app/modules/policies` (README), migration 0007, ADR-0019;
   - web: `/policies`, `/policies/new` (from a quote, by hand, or as a renewal), `/policies/[id]`, `/renewals`;
     renewal mode in the new-quote form; client Policies tab; dashboard stats.
-- **Next: R1.5** commission tracking (expected vs received, 10% WHT), spreadsheet import of the book,
-  dashboard v2.
+- **Done: R1.5 commission, book import, dashboard v2** on `feat/r1-5-commission` (stacked, not merged):
+  - modules `app/modules/commissions` and `app/modules/imports` (READMEs), `app/calc/commission.py`;
+  - migration 0008;
+  - web: `/commission`, `/policies/import`, the commission panel on policies, the home "This year" section.
+- **R1 (agent MVP) is complete.** Next: pilot hardening, then R2 (invoicing tier, online payments, eTIMS) per
+  Plan A1. Open question to the product owner: add `openpyxl` (ADR-0001) so agents can import `.xlsx`
+  directly?
 - **Done: R1.2** (insurers, premium engine, KE pack pending sign-off, calculator) on `feat/r1-2-insurers-calc`
   (stacked, not merged, no remote). The notes below describe what it contains.
   - Backend done and tested, not yet committed at the time of writing:
@@ -93,6 +98,9 @@ Read this first when resuming work. Update it at the end of every session (newes
   `return` inside `async for` silently rolled the transaction back.
 
 ## Session log
+### 2026-10-08: R1.5
+- Commission (expected vs received, WHT, certificates), CSV book import with preview, dashboard v2.
+- Fixed: activation evidence pack reference; renewal commission rate on renewal quotes.
 ### 2026-10-08: R1.3 and R1.4
 - R1.3 quotes committed (API, web, docs).
 - R1.4:

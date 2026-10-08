@@ -5,6 +5,29 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: R1.5 Commission, book import, dashboard v2 (2026-10-08)
+- **Commission tracking:**
+  - expected commission on each policy (from the quote, the product's rate, or set by hand);
+  - commission received recorded per insurer receipt and split across policies, with WHT at the pack rate
+    (10% for resident agents) or the insurer's figure, and the KRA WHT certificate number;
+  - receipts are voided, never deleted;
+  - statement of expected, received and owed; yearly summary by month and insurer; WHT certificates list.
+  - New page **Commission**, shown only to members who can see commission. New permission
+    `commission:manage` (owners, admins, accounts).
+- **Import the book from a spreadsheet (CSV):**
+  - column detection from agents' own headings;
+  - Kenyan date and amount formats, class matching;
+  - client matching by phone, email, PIN or ID; duplicate policies skipped;
+  - preview of every row, then a single-transaction import with an import log;
+  - imported policies are active (basis `imported`, ADR-0019).
+- **Dashboard v2:** this year's premium written, premium still owed, commission expected vs received,
+  renewal retention and premium by month.
+- `app/calc/commission.py`: commission and WHT arithmetic shared by quotes, policies and receipts.
+
+### Fixed
+- Activation evidence recorded the agency's intermediary type and timezone instead of the pack version.
+- Renewal quotes now use the product's renewal commission rate.
+
 ### Added: R1.4 Policy book & renewals (2026-10-08)
 - **Policies** from an accepted quote (or "accepted by phone": the agent picks the option) or entered by hand:
   - insurer's policy number, what is covered, cover dates, premium, breakdown and expected commission;

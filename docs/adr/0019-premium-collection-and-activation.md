@@ -32,6 +32,10 @@ intermediaries from receiving premium, was nullified in 2021. Whether the decisi
 - The **exceptions are pack data** (`premium_exceptions` in `ke/2026.1`, pending sign-off D4/D5), never code.
   The generic pack has none.
 
+- **Imported book (R1.5):** policies brought in from the agent's spreadsheet are existing cover the insurer has
+  already confirmed. They are activated with basis `imported` and the import id. The gate applies to new
+  business, not to records of cover that already exists.
+
 ## Consequences
 - An agent cannot mark unpaid motor cover as active. If an insurer grants credit outside r.43, the agent records
   a payment once it is made. This is deliberate.

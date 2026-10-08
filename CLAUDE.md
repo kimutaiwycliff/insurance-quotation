@@ -9,7 +9,7 @@ to win more business, plus a standalone quotation & invoicing tier for SMEs. Ken
 3. `docs/SPEC_REVIEW.md`: verified Kenyan regulatory facts and the corrections to the original spec
 4. `docs/PROJECT_SPEC.md`: the original product spec
 
-Current milestone: **R0, R1.1 (CRM), R1.2 (insurers, premium engine), R1.3 (quotes) and R1.4 (policies & renewals) done → R1.5 commission & import next.** Slices: plan Amendment A1.1.
+Current milestone: **R0 and R1.1–R1.5 done: the R1 agent MVP is complete** (CRM, insurers & premium engine, quotes, policies & renewals, commission & import). Next: pilot hardening, then R2. Slices: plan Amendment A1.1.
 **Start every session by reading `docs/PROGRESS.md`** (handoff log); update it and `CHANGELOG.md` before ending.
 
 ## Non-negotiable rules
