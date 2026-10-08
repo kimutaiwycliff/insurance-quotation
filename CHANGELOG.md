@@ -5,6 +5,10 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Security
+- Runtime images apply Debian security updates and no longer ship package managers: npm, corepack and yarn
+  are gone from the web and auth images, and the system pip from the API image. The CI Trivy scan is clean.
+
 ### Added: R1.5 Commission, book import, dashboard v2 (2026-10-08)
 - **Commission tracking:**
   - expected commission on each policy (from the quote, the product's rate, or set by hand);

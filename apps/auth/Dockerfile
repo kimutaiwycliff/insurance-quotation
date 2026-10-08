@@ -14,7 +14,14 @@ COPY tsconfig.json ./
 COPY src ./src
 RUN pnpm run build && pnpm prune --prod
 
-FROM base AS runtime
+FROM ${NODE_IMAGE} AS runtime
+# Security updates from Debian, and no package managers in production: npm, corepack and yarn are build tools
+# whose bundled dependencies (tar, undici...) only add CVEs to an image that runs `node` alone.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-* \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
+ENV NODE_ENV=production
+WORKDIR /app
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --chown=node:node package.json ./

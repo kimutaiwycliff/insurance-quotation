@@ -16,6 +16,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PYTHONPATH=/app \
     PATH="/opt/venv/bin:${PATH}"
+# Debian security updates (the slim base image lags behind them). The system pip and ensurepip go too:
+# dependencies are installed by uv into /opt/venv, and pip's vendored urllib3/msgpack only add CVEs.
+RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+ && python -m pip uninstall -y pip \
+ && rm -rf /usr/local/lib/python3.*/ensurepip /usr/local/bin/pip*
 RUN groupadd --system --gid 10001 app \
  && useradd --system --uid 10001 --gid app --home-dir /app --no-create-home app
 WORKDIR /app

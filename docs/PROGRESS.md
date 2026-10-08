@@ -63,6 +63,11 @@ Read this first when resuming work. Update it at the end of every session (newes
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas
+- Runtime images apply Debian security updates and drop the package managers (npm/corepack/yarn in the Node
+  images, the system pip/ensurepip in the Python image); CI's Trivy scan fails on fixable HIGH/CRITICAL CVEs in
+  them. Scan locally: `docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.70.0 image
+  --severity CRITICAL,HIGH --ignore-unfixed <image>`.
+- zsh: write `${name}:tag`, not `$name:tag` (`:s` is a zsh modifier), and `set -- $var` does not split words.
 - SQLAlchemy 2.1 deprecates `Result.tuples()`, and tests treat warnings as errors: iterate rows directly.
 - YAML 1.1: keys like `on`, `yes` and `no` parse as booleans (the pack field is `signed_on`, not `on`).
 - Money and rates never accept JSON numbers: `AmountStr`/`RateStr` carry `NoFloat` (422 on floats).
@@ -98,6 +103,9 @@ Read this first when resuming work. Update it at the end of every session (newes
   `return` inside `async for` silently rolled the transaction back.
 
 ## Session log
+### 2026-10-08: public repo and CI
+- Repo: https://github.com/kimutaiwycliff/insurance-quotation (public, `main` = M0..R1.5, fast-forwarded).
+- First CI run failed on the image scan (base-image CVEs); fixed by hardening the runtime images.
 ### 2026-10-08: R1.5
 - Commission (expected vs received, WHT, certificates), CSV book import with preview, dashboard v2.
 - Fixed: activation evidence pack reference; renewal commission rate on renewal quotes.
