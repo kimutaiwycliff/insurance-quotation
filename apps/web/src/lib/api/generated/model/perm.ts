@@ -5,40 +5,4 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type Perm = typeof Perm[keyof typeof Perm];
-
-
-export const Perm = {
-  'org:read': 'org:read',
-  'org:update': 'org:update',
-  'branch:read': 'branch:read',
-  'branch:manage': 'branch:manage',
-  'member:read': 'member:read',
-  'numbering:read': 'numbering:read',
-  'numbering:manage': 'numbering:manage',
-  'audit:read': 'audit:read',
-  'document:read': 'document:read',
-  'document:write': 'document:write',
-  'branding:manage': 'branding:manage',
-  'link:manage': 'link:manage',
-  'message:read': 'message:read',
-  'message_template:manage': 'message_template:manage',
-  'client:read:all': 'client:read:all',
-  'client:read:own': 'client:read:own',
-  'client:write': 'client:write',
-  'lead:read:all': 'lead:read:all',
-  'lead:read:own': 'lead:read:own',
-  'lead:write': 'lead:write',
-  'task:read:all': 'task:read:all',
-  'task:write': 'task:write',
-  'insurer:read': 'insurer:read',
-  'insurer:manage': 'insurer:manage',
-  'commission:read:own': 'commission:read:own',
-  'commission:read:all': 'commission:read:all',
-  'commission:manage': 'commission:manage',
-  'premium:write': 'premium:write',
-  'invoice:write': 'invoice:write',
-  'invoice:issue': 'invoice:issue',
-  'payment:write': 'payment:write',
-  'catalog:manage': 'catalog:manage',
-} as const;
+export type Perm = string;

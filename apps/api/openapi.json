@@ -8070,7 +8070,9 @@
         "type": "object"
       },
       "Perm": {
-        "enum": [
+        "title": "Perm",
+        "type": "string",
+        "x-extensible-enum": [
           "org:read",
           "org:update",
           "branch:read",
@@ -8103,9 +8105,7 @@
           "invoice:issue",
           "payment:write",
           "catalog:manage"
-        ],
-        "title": "Perm",
-        "type": "string"
+        ]
       },
       "Pipeline": {
         "properties": {
