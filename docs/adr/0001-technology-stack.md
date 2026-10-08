@@ -33,6 +33,10 @@ Stripe cannot serve Kenyan businesses.
   `packageManager`, and its default `minimumReleaseAge` supply-chain policy is kept (packages younger than a day
   are refused).
 
+- 2026-10-08 (R1.5 follow-up, approved by the product owner): `openpyxl` reads Excel (.xlsx) uploads for
+  book imports, with `defusedxml`, which openpyxl uses to refuse XML bombs and external entities. The
+  reader checks `openpyxl.DEFUSEDXML` and refuses to run without it.
+
 ## Consequences
 - New dependencies outside this list need an ADR amendment (CLAUDE.md rule 12).
 - Dependabot proposes updates weekly; Next.js, React and Better Auth security releases are applied immediately.

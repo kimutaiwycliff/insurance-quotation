@@ -1,6 +1,7 @@
 # Pricing proposal (decision D8)
 
-Status: **proposal for the product owner**, researched 2026-10-08. Prices are monthly, in KES, paid by
+Status: **approved by the product owner on 2026-10-08** (to be revisited when real usage data warrants it).
+Researched 2026-10-08. Prices are monthly, in KES, paid by
 M-Pesa, VAT-inclusive.
 
 ## What the market looks like

@@ -51,7 +51,9 @@ Read this first when resuming work. Update it at the end of every session (newes
 | 2026-10-08 | Payments by M-Pesa Daraja only (tenant's own shortcode); cards "coming soon"; Paystack on hold | ADR-0015 |
 | 2026-10-08 | eTIMS optional at launch (manual reference); KRA integration later | ADR-0017 |
 | 2026-10-08 | Hosting: one VM with Docker Compose (Caddy, off-site backups) | ADR-0020 |
-| 2026-10-08 | Pricing proposal: Free / Agent KES 1,500 / Agency KES 4,500 / Business KES 999 (awaiting sign-off) | docs/PRICING.md |
+| 2026-10-08 | Prices approved: Free / Agent KES 1,500 / Agency KES 4,500 (5 users) / Business KES 999; 30-day trial; founding 50% off | docs/PRICING.md |
+| 2026-10-08 | Excel (.xlsx) imports with openpyxl + defusedxml | ADR-0001 amendment |
+| 2026-10-08 | Daraja sandbox credentials: local `.env` (git-ignored) and GitHub Actions secrets `DARAJA_SANDBOX_*`, never in the repo | ADR-0015 |
 | 2026-10-08 | R1 delivered in slices R1.1–R1.5; agents see only their own clients, leads and tasks | Plan A1.1, ADR-0007 |
 | 2026-10-08 | ID/passport numbers encrypted in the application with keyed-hash lookup | ADR-0018 |
 | 2026-10-07 | 2FA is **optional** for all roles (enforcement available through `MFA_ENFORCED_ROLES`, empty by default) | ADR-0007 |
@@ -64,7 +66,6 @@ Read this first when resuming work. Update it at the end of every session (newes
 - D4 tax adviser sign-off on KE pack values
 - D5 lawyer opinion, including: may an agent represent several insurers per class?
 - D7 brand, name and domain
-- D8 prices and trial model: proposal in `docs/PRICING.md`, awaiting sign-off
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas

@@ -8,9 +8,14 @@ silently: anything ambiguous becomes a row error the agent sees before anything 
 import csv
 import io
 import re
+import zipfile
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import Decimal, InvalidOperation
+from typing import Any
+
+import openpyxl
+from openpyxl import load_workbook
 
 MAX_ROWS = 1000
 
@@ -228,6 +233,57 @@ def read_csv(text: str) -> tuple[list[str], list[dict[str, str]]]:
     return headers, [
         {h: (r[i].strip() if i < len(r) else "") for i, h in enumerate(headers)} for r in body
     ]
+
+
+def _cell_text(value: Any) -> str:
+    """Excel cells as the text an agent would have typed: dates as ISO, whole numbers without '.0'."""
+    text = ""
+    if isinstance(value, datetime):
+        text = value.date().isoformat()
+    elif isinstance(value, date):
+        text = value.isoformat()
+    elif isinstance(value, bool):
+        text = "yes" if value else "no"
+    elif isinstance(value, float):
+        number = Decimal(
+            repr(value)
+        )  # repr round-trips the float Excel stored; never used in maths
+        text = (
+            format(number.normalize(), "f") if number == number.to_integral_value() else repr(value)
+        )
+    elif value is not None and not isinstance(value, time):
+        text = str(value).strip()
+    return text
+
+
+def read_xlsx(data: bytes) -> tuple[list[str], list[dict[str, str]]]:
+    """Headers and rows from the first worksheet of an .xlsx file (values, not formulas)."""
+    if (
+        not openpyxl.DEFUSEDXML
+    ):  # openpyxl only refuses XML bombs and external entities with defusedxml
+        raise RuntimeError("defusedxml must be installed to read uploaded spreadsheets")
+    try:
+        workbook = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+    except (zipfile.BadZipFile, KeyError, OSError, ValueError) as exc:
+        raise ImportFileError("This is not an Excel (.xlsx) file; save it as .xlsx or CSV") from exc
+    try:
+        sheet = workbook.worksheets[0]
+        rows: list[list[str]] = []
+        for raw in sheet.iter_rows(values_only=True):
+            cells = [_cell_text(v) for v in raw]
+            if any(cells):
+                rows.append(cells)
+            if len(rows) > MAX_ROWS + 1:
+                raise ImportFileError(f"Import up to {MAX_ROWS} rows at a time; split the file")
+    finally:
+        workbook.close()
+    if not rows:
+        raise ImportFileError("The first sheet is empty")
+    width = max(len(r) for r in rows)
+    text = io.StringIO()
+    csv.writer(text).writerows(r + [""] * (width - len(r)) for r in rows)
+    headers, body = read_csv(text.getvalue())
+    return headers, body
 
 
 def detect_mapping(headers: list[str]) -> dict[str, str]:

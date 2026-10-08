@@ -4695,10 +4695,17 @@
             "type": "boolean"
           },
           "csv": {
+            "anyOf": [
+              {
+                "maxLength": 2000000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "description": "The spreadsheet saved as CSV (UTF-8)",
-            "maxLength": 2000000,
-            "title": "Csv",
-            "type": "string"
+            "title": "Csv"
           },
           "filename": {
             "maxLength": 200,
@@ -4726,11 +4733,23 @@
             "description": "Import the good rows, skip the rest",
             "title": "Skip Errors",
             "type": "boolean"
+          },
+          "xlsx_base64": {
+            "anyOf": [
+              {
+                "maxLength": 2800000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Or an Excel .xlsx file, base64-encoded (first sheet; up to 2 MB)",
+            "title": "Xlsx Base64"
           }
         },
         "required": [
-          "filename",
-          "csv"
+          "filename"
         ],
         "title": "ImportRequest",
         "type": "object"
