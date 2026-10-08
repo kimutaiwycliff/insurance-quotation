@@ -27,6 +27,8 @@ import type {
   ActionResult,
   Beacon,
   HTTPValidationError,
+  PayBody,
+  PaymentAttemptOut,
   PublicLinkAcceptBody,
   PublicLinkDeclineBody,
   PublicLinkView
@@ -610,6 +612,204 @@ export function usePublicLinkHtml<TData = Awaited<ReturnType<typeof publicLinkHt
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getPublicLinkHtmlQueryOptions(token,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getPublicLinkPayUrl = (token: string,) => {
+
+
+
+
+  return `/api/v1/public/links/${token}/pay`
+}
+
+/**
+ * Send a payment prompt to the client's phone (the link needs the `pay` scope).
+ * @summary Pay
+ */
+export const publicLinkPay = async (token: string,
+    payBody: PayBody, options?: Parameters<typeof apiFetch>[1]): Promise<PaymentAttemptOut> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<PaymentAttemptOut>(getPublicLinkPayUrl(token),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(payBody)
+  }
+);}
+
+
+
+
+
+export const getPublicLinkPayMutationKey = () => ['publicLinkPay'] as const;
+
+export const getPublicLinkPayMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicLinkPay>>, TError,PublicLinkPayMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof publicLinkPay>>, TError,PublicLinkPayMutationVariables, TContext> => {
+
+const mutationKey = getPublicLinkPayMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publicLinkPay>>, PublicLinkPayMutationVariables> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  publicLinkPay(token,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublicLinkPayMutationResult = NonNullable<Awaited<ReturnType<typeof publicLinkPay>>>
+    export type PublicLinkPayMutationBody = PayBody
+    export type PublicLinkPayMutationError = HTTPValidationError
+    export type PublicLinkPayMutationVariables = {token: string;data: PayBody}
+
+    /**
+ * @summary Pay
+ */
+export const usePublicLinkPay = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicLinkPay>>, TError,PublicLinkPayMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publicLinkPay>>,
+        TError,
+        PublicLinkPayMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublicLinkPayMutationOptions(options), queryClient);
+    }
+    export const getPublicLinkPayStatusUrl = (token: string,
+    attemptId: string,) => {
+
+
+
+
+  return `/api/v1/public/links/${token}/pay/${attemptId}`
+}
+
+/**
+ * Poll a payment prompt; asks M-Pesa directly when its callback is late.
+ * @summary Pay Status
+ */
+export const publicLinkPayStatus = async (token: string,
+    attemptId: string, options?: Parameters<typeof apiFetch>[1]): Promise<PaymentAttemptOut> => {
+
+  return apiFetch<PaymentAttemptOut>(getPublicLinkPayStatusUrl(token,attemptId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPublicLinkPayStatusQueryKey = (token: string,
+    attemptId: string,) => {
+    return [
+    `/api/v1/public/links/${token}/pay/${attemptId}`
+    ] as const;
+    }
+
+
+export const getPublicLinkPayStatusQueryOptions = <TData = Awaited<ReturnType<typeof publicLinkPayStatus>>, TError = HTTPValidationError>(token: string,
+    attemptId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicLinkPayStatus>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPublicLinkPayStatusQueryKey(token,attemptId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof publicLinkPayStatus>>> = ({ signal }) => publicLinkPayStatus(token,attemptId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined && attemptId !== null && attemptId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof publicLinkPayStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PublicLinkPayStatusQueryResult = NonNullable<Awaited<ReturnType<typeof publicLinkPayStatus>>>
+export type PublicLinkPayStatusQueryError = HTTPValidationError
+
+
+export function usePublicLinkPayStatus<TData = Awaited<ReturnType<typeof publicLinkPayStatus>>, TError = HTTPValidationError>(
+ token: string,
+    attemptId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicLinkPayStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicLinkPayStatus>>,
+          TError,
+          Awaited<ReturnType<typeof publicLinkPayStatus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicLinkPayStatus<TData = Awaited<ReturnType<typeof publicLinkPayStatus>>, TError = HTTPValidationError>(
+ token: string,
+    attemptId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicLinkPayStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof publicLinkPayStatus>>,
+          TError,
+          Awaited<ReturnType<typeof publicLinkPayStatus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePublicLinkPayStatus<TData = Awaited<ReturnType<typeof publicLinkPayStatus>>, TError = HTTPValidationError>(
+ token: string,
+    attemptId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicLinkPayStatus>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Pay Status
+ */
+
+export function usePublicLinkPayStatus<TData = Awaited<ReturnType<typeof publicLinkPayStatus>>, TError = HTTPValidationError>(
+ token: string,
+    attemptId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof publicLinkPayStatus>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPublicLinkPayStatusQueryOptions(token,attemptId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

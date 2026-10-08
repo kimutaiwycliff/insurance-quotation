@@ -7,7 +7,8 @@ import type { NextRequest } from "next/server";
 import { serverEnv } from "@/lib/server/env";
 import { forwardRequestHeaders, forwardResponse } from "@/lib/server/proxy";
 
-const SAFE = /^\/(links|unsubscribe)\/[A-Za-z0-9_\-.]{10,400}(\/(html|download|beacon|accept|decline))?$/;
+const SAFE =
+  /^\/(links|unsubscribe)\/[A-Za-z0-9_\-.]{10,400}(\/(html|download|beacon|accept|decline|pay(\/[0-9a-f-]{36})?))?$/;
 const FORWARDED = new Set(["accept", "content-type", "user-agent"]);
 
 async function handle(request: NextRequest): Promise<Response> {

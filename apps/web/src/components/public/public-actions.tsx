@@ -4,6 +4,7 @@ import { Download } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
+import { PublicPay } from "@/components/public/public-pay";
 import { Input } from "@/components/ui/input";
 import type { PublicLinkView } from "@/lib/api/generated/model";
 import { formatMoney } from "@/lib/format";
@@ -73,6 +74,7 @@ export function PublicActions({ token, view }: { token: string; view: PublicLink
         <div><Button asChild variant="outline"><a href={`/public-api/links/${token}/download`}><Download aria-hidden="true" /> Download PDF</a></Button></div>
       )}
       {state && STATE_TEXT[state] && <p role="status" className="rounded-md border border-primary bg-accent px-3 py-2 font-bold">{STATE_TEXT[state]}</p>}
+      {view.payment && state !== "paid" && <PublicPay token={token} offer={view.payment} onPaid={() => setState("paid")} />}
       {canAnswer && !declining && (
         <form onSubmit={accept} className="grid gap-4 rounded-lg border bg-card p-4">
           {addons.length > 0 && (

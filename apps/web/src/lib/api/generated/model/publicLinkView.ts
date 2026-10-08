@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { Choice } from './choice';
+import type { PaymentOfferOut } from './paymentOfferOut';
 import type { PublicTenant } from './publicTenant';
 
 /**
@@ -16,6 +17,8 @@ export interface PublicLinkView {
   has_download: boolean;
   has_web_view: boolean;
   kind: string;
+  /** Present when this document can be paid from the link */
+  payment?: PaymentOfferOut | null;
   scopes: string[];
   state?: string | null;
   tenant: PublicTenant;

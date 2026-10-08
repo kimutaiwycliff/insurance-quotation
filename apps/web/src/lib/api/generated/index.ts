@@ -14,6 +14,7 @@ export * from './insurers/insurers';
 export * from './leads/leads';
 export * from './members/members';
 export * from './messaging/messaging';
+export * from './mpesa/mpesa';
 export * from './notifications/notifications';
 export * from './numbering/numbering';
 export * from './organization/organization';
