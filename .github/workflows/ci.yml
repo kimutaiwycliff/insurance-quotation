@@ -116,7 +116,6 @@ jobs:
 
   e2e-web:
     name: Browser end-to-end (Playwright + axe, desktop and mobile)
-    if: github.event_name == 'push'
     needs: [integration, web]
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -130,7 +129,6 @@ jobs:
 
   e2e:
     name: End-to-end (auth + API + Mailpit)
-    if: github.event_name == 'push'
     needs: [integration, auth]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
