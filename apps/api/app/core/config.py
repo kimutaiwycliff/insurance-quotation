@@ -77,6 +77,11 @@ class Settings(BaseSettings):
     # Shared sending identity; tenants appear as "<Agency> via <product>" with Reply-To set to the agency.
     email_from_address: str = "notifications@brokeros.local"
     email_from_name: str = "BrokerOS"
+    # PII encryption (ADR-0018): "key_id:base64(32 bytes)" entries, comma-separated; the first encrypts,
+    # all decrypt (rotation). The lookup key makes exact-match search possible without decrypting.
+    pii_encryption_keys: SecretStr = SecretStr("dev1:ZGV2LW9ubHktcGlpLWtleS0wMTIzNDU2Nzg5YWJjZGU=")
+    pii_lookup_key: SecretStr = SecretStr("dev-only-pii-lookup-key-0123456789abcdef")
+
     # HMAC key for unsubscribe tokens and for hashing visitor IPs on public links. Must be set in production.
     signing_secret: SecretStr = SecretStr("dev-only-signing-secret-0123456789abcdef")
 
@@ -138,6 +143,11 @@ class Settings(BaseSettings):
             and self.signing_secret.get_secret_value().startswith("dev-only")
         ):
             raise ValueError("SIGNING_SECRET must be set in production")
+        if self.environment is Environment.PRODUCTION and (
+            self.pii_encryption_keys.get_secret_value().startswith("dev1:")
+            or self.pii_lookup_key.get_secret_value().startswith("dev-only")
+        ):
+            raise ValueError("PII_ENCRYPTION_KEYS and PII_LOOKUP_KEY must be set in production")
         if not set(self.auth_algorithms) <= _ALLOWED_JWT_ALGORITHMS:
             raise ValueError(
                 f"AUTH_ALGORITHMS must be a subset of {sorted(_ALLOWED_JWT_ALGORITHMS)}"

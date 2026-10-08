@@ -25,6 +25,15 @@ class Perm(StrEnum):
     LINK_MANAGE = "link:manage"  # create/revoke public document links
     MESSAGE_READ = "message:read"  # outbound message log
     MESSAGE_TEMPLATE_MANAGE = "message_template:manage"
+    # Record-level scoping: ":own" sees records the member owns or is assigned; ":all" sees the agency's.
+    CLIENT_READ_ALL = "client:read:all"
+    CLIENT_READ_OWN = "client:read:own"
+    CLIENT_WRITE = "client:write"
+    LEAD_READ_ALL = "lead:read:all"
+    LEAD_READ_OWN = "lead:read:own"
+    LEAD_WRITE = "lead:write"
+    TASK_READ_ALL = "task:read:all"
+    TASK_WRITE = "task:write"
 
 
 class Role(StrEnum):
@@ -40,18 +49,41 @@ class Role(StrEnum):
 
 _ALL = frozenset(Perm)
 _READ_BASICS = frozenset({Perm.ORG_READ, Perm.BRANCH_READ, Perm.MEMBER_READ, Perm.DOCUMENT_READ})
-# Day-to-day client work: files, sending links, seeing what was sent.
-_CLIENT_WORK = frozenset({Perm.DOCUMENT_WRITE, Perm.LINK_MANAGE, Perm.MESSAGE_READ})
+# Day-to-day client work: files, sending links, seeing what was sent, own tasks.
+_CLIENT_WORK = frozenset(
+    {Perm.DOCUMENT_WRITE, Perm.LINK_MANAGE, Perm.MESSAGE_READ, Perm.TASK_WRITE}
+)
+_OWN_BOOK = frozenset(
+    {Perm.CLIENT_READ_OWN, Perm.CLIENT_WRITE, Perm.LEAD_READ_OWN, Perm.LEAD_WRITE}
+)
+_AGENCY_BOOK = frozenset(
+    {
+        Perm.CLIENT_READ_ALL,
+        Perm.CLIENT_WRITE,
+        Perm.LEAD_READ_ALL,
+        Perm.LEAD_WRITE,
+        Perm.TASK_READ_ALL,
+    }
+)
 
 ROLE_PERMISSIONS: dict[Role, frozenset[Perm]] = {
     Role.OWNER: _ALL,
     Role.ADMIN: _ALL,
-    Role.AGENT: _READ_BASICS | _CLIENT_WORK | {Perm.NUMBERING_READ},
+    Role.AGENT: _READ_BASICS | _CLIENT_WORK | _OWN_BOOK | {Perm.NUMBERING_READ},
     Role.ACCOUNTS: _READ_BASICS
     | _CLIENT_WORK
-    | {Perm.NUMBERING_READ, Perm.NUMBERING_MANAGE, Perm.AUDIT_READ},
-    Role.ASSISTANT: _READ_BASICS | _CLIENT_WORK,
-    Role.VIEWER: frozenset({Perm.ORG_READ, Perm.BRANCH_READ, Perm.DOCUMENT_READ}),
+    | {Perm.NUMBERING_READ, Perm.NUMBERING_MANAGE, Perm.AUDIT_READ, Perm.CLIENT_READ_ALL},
+    Role.ASSISTANT: _READ_BASICS | _CLIENT_WORK | _AGENCY_BOOK,
+    Role.VIEWER: frozenset(
+        {
+            Perm.ORG_READ,
+            Perm.BRANCH_READ,
+            Perm.DOCUMENT_READ,
+            Perm.CLIENT_READ_ALL,
+            Perm.LEAD_READ_ALL,
+            Perm.TASK_READ_ALL,
+        }
+    ),
 }
 
 ROLE_DESCRIPTIONS: dict[Role, str] = {

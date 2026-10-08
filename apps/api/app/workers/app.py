@@ -31,7 +31,12 @@ def create_job_app() -> procrastinate.App:
         max_size=5,
     )
     return procrastinate.App(
-        connector=connector, import_paths=["app.workers.tasks", "app.modules.messaging.tasks"]
+        connector=connector,
+        import_paths=[
+            "app.workers.tasks",
+            "app.modules.messaging.tasks",
+            "app.modules.tasks.tasks",
+        ],
     )
 
 

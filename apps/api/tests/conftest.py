@@ -10,11 +10,16 @@ from collections.abc import AsyncIterator
 import httpx
 import pytest
 from fastapi import FastAPI
+from hypothesis import settings as hypothesis_settings
 
 from app.core.config import Environment, Settings
 from app.main import create_app
 
 INFRA_AVAILABLE = os.environ.get("ENVIRONMENT") == Environment.TEST.value
+
+# Property tests check correctness, not speed: no per-example deadline (CI machines can be slow and shared).
+hypothesis_settings.register_profile("default", deadline=None)
+hypothesis_settings.load_profile("default")
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:

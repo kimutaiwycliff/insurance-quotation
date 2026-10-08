@@ -67,7 +67,8 @@ def other_org(signing_key: SigningKey) -> Org:
 
 @pytest.fixture
 def service_headers(signing_key: SigningKey) -> dict[str, str]:
-    return {"Authorization": f"Bearer {signing_key.sign(service_claims())}"}
+    # Long-lived for tests only (production hook tokens live 60 s): slow CI runs must not expire it mid-test.
+    return {"Authorization": f"Bearer {signing_key.sign(service_claims(ttl=900))}"}
 
 
 async def provision(api: httpx.AsyncClient, org: Org) -> None:

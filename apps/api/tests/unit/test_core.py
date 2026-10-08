@@ -22,6 +22,8 @@ class TestSettings:
             s3_access_key_id=SecretStr("AKIAREALKEY"),
             s3_secret_access_key=SecretStr("real-secret"),
             signing_secret=SecretStr("a-real-production-signing-secret"),
+            pii_encryption_keys=SecretStr("k2026:" + "A" * 43 + "="),
+            pii_lookup_key=SecretStr("x" * 40),
         )
         assert settings.is_production
 

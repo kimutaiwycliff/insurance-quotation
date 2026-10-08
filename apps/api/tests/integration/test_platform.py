@@ -4,6 +4,8 @@ They prove the platform guarantees later milestones build on: dependencies are r
 database role is least-privilege, and jobs can be enqueued by the API role (transactional outbox).
 """
 
+import asyncio
+
 import httpx
 import psycopg
 import pytest
@@ -18,7 +20,12 @@ def settings() -> Settings:
 
 
 async def test_ready_when_all_dependencies_are_up(client: httpx.AsyncClient) -> None:
-    response = await client.get("/health/ready")
+    # Poll like an orchestrator would: one probe can exceed its time budget on a loaded CI machine.
+    for _ in range(10):
+        response = await client.get("/health/ready")
+        if response.status_code == 200:
+            break
+        await asyncio.sleep(1)
     assert response.status_code == 200, response.text
     assert response.json()["checks"] == {"database": "ok", "valkey": "ok", "storage": "ok"}
 

@@ -62,6 +62,18 @@ async def record(
     )
 
 
+async def events_for(
+    ctx: TenantContext, entity_type: str, entity_id: str, *, limit: int = 100
+) -> list[AuditEvent]:
+    stmt = (
+        select(AuditEvent)
+        .where(AuditEvent.entity_type == entity_type, AuditEvent.entity_id == entity_id)
+        .order_by(AuditEvent.id.desc())
+        .limit(limit)
+    )
+    return list((await ctx.session.scalars(stmt)).all())
+
+
 class AuditEventOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

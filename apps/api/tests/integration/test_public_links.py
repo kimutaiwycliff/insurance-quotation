@@ -177,10 +177,12 @@ async def test_public_routes_are_rate_limited_per_ip(
     async for limited in make_api(public_rate_limit_per_minute=3):
         codes = [
             (await limited.get(f"/api/v1/public/links/{link['token']}")).status_code
-            for _ in range(5)
+            for _ in range(8)
         ]
-    assert codes[:3] == [200, 200, 200]
-    assert codes[3] == 429
+    # Fixed one-minute windows: even a run straddling a window boundary passes at most 2 x 3 requests.
+    assert codes[0] == 200
+    assert 429 in codes
+    assert codes.count(200) <= 6
 
 
 @pytest.mark.parametrize("role", ["viewer"])

@@ -42,17 +42,23 @@ class TestAccessTokens:
     @pytest.mark.parametrize(
         ("overrides", "message"),
         [
-            ({"exp": int(time.time()) - 120}, "expired"),
+            # Times are offsets from "now" at test run time (not collection time: suites can run long).
+            ({"exp": -120}, "expired"),
             ({"aud": "someone-else"}, "InvalidAudience"),
             ({"iss": "http://evil.test"}, "InvalidIssuer"),
-            ({"nbf": int(time.time()) + 600}, "ImmatureSignature"),
+            ({"nbf": 600}, "ImmatureSignature"),
             ({"email": None}, "missing required claims"),
         ],
     )
     async def test_rejects_bad_claims(
         self, verifier: TokenVerifier, key: SigningKey, overrides: dict[str, object], message: str
     ) -> None:
-        claims = access_claims(user_id="u1", org_id="o1") | overrides
+        now = int(time.time())
+        resolved = {
+            k: now + v if k in {"exp", "nbf"} and isinstance(v, int) else v
+            for k, v in overrides.items()
+        }
+        claims = access_claims(user_id="u1", org_id="o1") | resolved
         with pytest.raises(AuthenticationError, match=message):
             await verifier.verify_access_token(key.sign(claims))
 

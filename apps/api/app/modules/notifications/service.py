@@ -20,6 +20,8 @@ KINDS: dict[str, tuple[str, bool, bool]] = {
     "link.viewed": ("A client opened a document you shared", True, False),
     "document.expiring": ("A client document is about to expire", True, False),
     "member.joined": ("Someone joined your agency", True, False),
+    "task.due": ("A task assigned to you is due", True, False),
+    "lead.assigned": ("A lead was assigned to you", True, False),
 }
 
 

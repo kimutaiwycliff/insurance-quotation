@@ -19,6 +19,9 @@ from app.modules.rendering.fixtures import VARIANTS, sample_view
 from tests.integration.m2_helpers import PDF_BYTES, PNG_BYTES, pdf_text, upload
 from tests.support import Org
 
+# One Gotenberg serves the whole suite: keep its renders on a single xdist worker (--dist loadgroup).
+pytestmark = pytest.mark.xdist_group("gotenberg")
+
 
 async def _preview(api: httpx.AsyncClient, org: Org, key: str, **body: object) -> httpx.Response:
     response = await api.post(f"/api/v1/templates/{key}/preview", json=body, headers=org.headers())

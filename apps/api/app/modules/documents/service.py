@@ -32,7 +32,14 @@ from app.modules.documents.sniff import UnsupportedFileError, type_for_filename,
 from app.platform import audit
 from app.platform.deps import TenantContext
 
-__all__ = ["Document", "EntityRef", "find_by_source_key", "read_current", "store_bytes"]
+__all__ = [
+    "Document",
+    "EntityRef",
+    "find_by_source_key",
+    "list_documents",
+    "read_current",
+    "store_bytes",
+]
 
 READY = "ready"
 PENDING = "pending"

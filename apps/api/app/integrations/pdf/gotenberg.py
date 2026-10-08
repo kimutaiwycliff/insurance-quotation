@@ -31,16 +31,21 @@ class GotenbergRenderer:
         if footer_html is not None:
             multipart.append(("files", ("footer.html", footer_html.encode(), "text/html")))
         response: httpx.Response | None = None
-        for _attempt in range(2):  # Chromium occasionally fails a render under load; retry once
+        # Chromium occasionally fails or stalls a render (cold start after a deploy, load): retry once.
+        for attempt in range(2):
             try:
                 response = await self._http.post(
                     self._url, data=_FORM, files=multipart, timeout=self._timeout
                 )
+            except httpx.TimeoutException as exc:
+                if attempt == 0:
+                    continue
+                raise PdfRenderError("Gotenberg timed out") from exc
             except httpx.HTTPError as exc:
                 raise PdfRenderError(f"Gotenberg unreachable ({type(exc).__name__})") from exc
             if response.status_code < httpx.codes.INTERNAL_SERVER_ERROR:
                 break
-        assert response is not None  # noqa: S101 - the loop runs at least once
+        assert response is not None  # noqa: S101 - a timeout on the last attempt raised above
         if response.status_code != httpx.codes.OK:
             raise PdfRenderError(
                 f"Gotenberg returned {response.status_code}: {response.text[:200]}"

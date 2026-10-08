@@ -68,6 +68,8 @@ known-first-party = ["app", "scripts", "tests"]
   "TRY301", "PERF401",
 ]
 "migrations/**" = ["N999"]
+# FastAPI endpoints take their dependencies as parameters.
+"app/**/router.py" = ["PLR0917"]
 
 # ---------------------------------------------------------------- mypy
 [tool.mypy]

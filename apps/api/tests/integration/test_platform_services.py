@@ -20,12 +20,12 @@ async def test_rate_limit_returns_429_with_retry_after(
     make_api: Callable[..., AsyncIterator[httpx.AsyncClient]], org: Org
 ) -> None:
     async for api in make_api(rate_limit_read_per_minute=3):
-        statuses = [
-            (await api.get("/api/v1/me", headers=org.headers())).status_code for _ in range(5)
-        ]
-        assert statuses[:3] == [200, 200, 200]
-        assert statuses[3] == 429
-        response = await api.get("/api/v1/me", headers=org.headers())
+        responses = [await api.get("/api/v1/me", headers=org.headers()) for _ in range(8)]
+        statuses = [r.status_code for r in responses]
+        # Fixed one-minute windows: even a run straddling a window boundary passes at most 2 x 3 requests.
+        assert statuses[0] == 200
+        assert statuses.count(200) <= 6
+        response = next(r for r in responses if r.status_code == 429)
         assert response.json()["code"] == "rate_limited"
         assert 1 <= int(response.headers["Retry-After"]) <= 60
 

@@ -63,6 +63,11 @@ class PrincipalResolver(Protocol):
     ) -> Coroutine[Any, Any, Principal]: ...
 
 
+def own_scope(principal: Principal, read_all: Perm) -> str | None:
+    """``None`` if the member sees every record, else their user id (they see only what they own)."""
+    return None if read_all in principal.permissions else principal.user_id
+
+
 @dataclass(frozen=True, slots=True)
 class TenantContext:
     session: AsyncSession
@@ -127,12 +132,14 @@ async def _tenant_context(
 
 
 def require_permission(
-    permission: Perm | None, *, allow_without_mfa: bool = False
+    permission: Perm | tuple[Perm, ...] | None, *, allow_without_mfa: bool = False
 ) -> Callable[..., Coroutine[Any, Any, TenantContext]]:
     """Dependency factory: the endpoint's tenant context, after checking MFA policy and ``permission``.
 
+    A tuple means "any of" (e.g. ``client:read:own`` or ``client:read:all``; the service then scopes rows).
     ``permission=None`` is reserved for endpoints every member may call (``/me``).
     """
+    required = permission if isinstance(permission, tuple) else (permission,) if permission else ()
 
     async def dependency(
         ctx: Annotated[TenantContext, Depends(_tenant_context, scope="function")],
@@ -145,8 +152,8 @@ def require_permission(
             and not principal.mfa_enrolled
         ):
             raise MfaRequiredError()
-        if permission is not None and permission not in principal.permissions:
-            raise PermissionDeniedError(f"Requires the '{permission}' permission")
+        if required and not any(p in principal.permissions for p in required):
+            raise PermissionDeniedError(f"Requires the '{' or '.join(required)}' permission")
         return ctx
 
     dependency.required_permission = permission  # type: ignore[attr-defined]
