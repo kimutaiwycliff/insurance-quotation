@@ -8,9 +8,17 @@ Record-level scoping ("own" vs "all") is applied in service queries, not here.
 """
 
 from enum import StrEnum
+from typing import Any
 
 
 class Perm(StrEnum):
+    """Permission keys. The set grows with every feature, so the OpenAPI schema declares it extensible
+    (``x-extensible-enum``): clients must accept keys they do not know yet."""
+
+    @classmethod
+    def __get_pydantic_json_schema__(cls, core_schema: Any, handler: Any) -> dict[str, Any]:
+        return {"type": "string", "title": "Perm", "x-extensible-enum": [p.value for p in cls]}
+
     ORG_READ = "org:read"
     ORG_UPDATE = "org:update"
     BRANCH_READ = "branch:read"
