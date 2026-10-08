@@ -5,6 +5,28 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: R1.4 Policy book & renewals (2026-10-08)
+- **Policies** from an accepted quote (or "accepted by phone": the agent picks the option) or entered by hand:
+  - insurer's policy number, what is covered, cover dates, premium, breakdown and expected commission;
+  - client tab, list with search and filters, policy page.
+- **No premium, no cover** (ADR-0019): a policy activates only when the insurer confirms cover and either the
+  premium is paid in full or a Regs r.43 exception from the jurisdiction pack applies. The KE pack gains
+  `premium_exceptions`, pending sign-off.
+- **Premium payments, recorded, never held:**
+  - void with a reason, never deleted;
+  - premium the agent collects opens a same-day "remit to the insurer" task (Regs r.42), closed when it is
+    marked as remitted;
+  - new permission `premium:write` (agents, accounts, owners and admins; not assistants).
+- **Renewal board:**
+  - stages: to contact, contacted, quoted, renewed, lost (with a reason);
+  - WhatsApp click-to-chat and email reminders, logged on the client timeline;
+  - renewal quote prefilled from the policy; "record renewal" for cover renewed elsewhere.
+- **Daily renewal reminders** at the agency's offsets (default 30/14/7 days): owner notified, client emailed
+  only if the agency turns it on. Settings on the board.
+- **Dashboard:** renewals due in 30 days, premiums to pass on, active policies.
+- Migration 0007: `policies`, `policy_payments` and `renewal_reminders` (RLS forced, no deletes); tenant
+  reminder settings; the cross-tenant scan as a SECURITY DEFINER function.
+
 ### Added — R1.3 Insurance quotes (2026-10-08)
 - **Quotes** for clients with up to 8 insurer options, cheapest first. Each option freezes the calculation
   (breakdown, pack version, sources); commission stays internal.

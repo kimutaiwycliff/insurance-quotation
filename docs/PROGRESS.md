@@ -6,7 +6,12 @@ Read this first when resuming work. Update it at the end of every session (newes
 - **Done:**
   - R0 (M0–M2, W1);
   - **R1.1 agent CRM**, committed on `feat/r1-clients-leads`.
-- **Next: R1.4** policy book (insurer-direct collection), renewal board, reminders (email + WhatsApp click-to-chat).
+- **Done: R1.4 policy book & renewals** on `feat/r1-4-policies` (stacked on R1.3, not merged):
+  - module `app/modules/policies` (README), migration 0007, ADR-0019;
+  - web: `/policies`, `/policies/new` (from a quote, by hand, or as a renewal), `/policies/[id]`, `/renewals`;
+    renewal mode in the new-quote form; client Policies tab; dashboard stats.
+- **Next: R1.5** commission tracking (expected vs received, 10% WHT), spreadsheet import of the book,
+  dashboard v2.
 - **Done: R1.2** (insurers, premium engine, KE pack pending sign-off, calculator) on `feat/r1-2-insurers-calc`
   (stacked, not merged, no remote). The notes below describe what it contains.
   - Backend done and tested, not yet committed at the time of writing:
@@ -53,6 +58,7 @@ Read this first when resuming work. Update it at the end of every session (newes
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas
+- SQLAlchemy 2.1 deprecates `Result.tuples()`, and tests treat warnings as errors: iterate rows directly.
 - YAML 1.1: keys like `on`, `yes` and `no` parse as booleans (the pack field is `signed_on`, not `on`).
 - Money and rates never accept JSON numbers: `AmountStr`/`RateStr` carry `NoFloat` (422 on floats).
 - Pydantic `StringConstraints(to_upper=True, pattern=...)` checks the pattern *before* upper-casing; patterns
@@ -87,6 +93,12 @@ Read this first when resuming work. Update it at the end of every session (newes
   `return` inside `async for` silently rolled the transaction back.
 
 ## Session log
+### 2026-10-08: R1.3 and R1.4
+- R1.3 quotes committed (API, web, docs).
+- R1.4:
+  - policy book with the "no premium, no cover" gate, recorded payments and the r.42 remittance task;
+  - renewal board and the daily reminder job;
+  - browser journeys: quote → policy, and the renewal board.
 ### 2026-10-08: R1.1
 - Agent CRM backend (clients, households, contacts, activities, leads, tasks, dashboard, migration 0004,
   PII crypto, phone normalisation) and screens (clients, client 360°, leads board, tasks, dashboard).
