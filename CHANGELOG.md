@@ -5,6 +5,26 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added — R1.3 Insurance quotes (2026-10-08)
+- **Quotes** for clients with up to 8 insurer options, cheapest first. Each option freezes the calculation
+  (breakdown, pack version, sources); commission stays internal.
+- **Send:**
+  - quote number;
+  - branded comparison PDF (the templates gain an options table);
+  - tracked link with view and accept;
+  - email to the client, a WhatsApp share link, and the lead moved to "quoted".
+- **Client page** `/d/[token]`: view the quotation (sandboxed), download the PDF, accept an option (name,
+  phone, terms) or decline. A view is counted by beacon, and acceptance evidence is recorded.
+- **Agent screens:** quotes list, new quote from a client, quote page (options, commission, send dialog,
+  withdraw, PDF, client response).
+- **Per-agency switch** for multi-insurer quotes (pending legal opinion D5).
+- **Tests prove commission never appears** in the public JSON, HTML or PDF; there is a Playwright journey from
+  agent to client acceptance.
+
+### Fixed
+- `proxy.ts` no longer redirects the anonymous `/public-api/*` calls to sign-in.
+- Validation errors raised inside services return 422 problems instead of 500s.
+
 ### Added — R1.2 Insurers, premium engine and Kenya pack (2026-10-08)
 - **Jurisdiction packs** (ADR-0013): versioned YAML, validated on load.
   - `ke` 2026.1, **pending adviser sign-off**: training levy 0.2% (general), PCF 0.25% (client) plus the

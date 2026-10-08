@@ -6,6 +6,7 @@ Read this first when resuming work. Update it at the end of every session (newes
 - **Done:**
   - R0 (M0–M2, W1);
   - **R1.1 agent CRM**, committed on `feat/r1-clients-leads`.
+- **Next: R1.4** policy book (insurer-direct collection), renewal board, reminders (email + WhatsApp click-to-chat).
 - **Done: R1.2** (insurers, premium engine, KE pack pending sign-off, calculator) on `feat/r1-2-insurers-calc`
   (stacked, not merged, no remote). The notes below describe what it contains.
   - Backend done and tested, not yet committed at the time of writing:
@@ -16,7 +17,19 @@ Read this first when resuming work. Update it at the end of every session (newes
       `/premium/compare`; commission hidden without `commission:read:*`);
     - migration 0005.
   - Web: Settings → Insurers & products, Premium calculator (Playwright journey green).
-- **Then:** R1.3 insurance quotes (snapshot calculator results into quotes, send by tracked link, accept).
+- **Done: R1.3 insurance quotes** on `feat/r1-3-quotes` (stacked, not merged). Built as planned:
+  - **Backend** `app/modules/quotes`: Quote (client, class, risk snapshot, status draft|sent|accepted|declined|
+    withdrawn, valid_until, number allocated on first send) and QuoteOption (product snapshot, breakdown
+    JSON, client_total, internal commission JSON, position, recommended).
+    - Create and recalculate via `insurers.service.calculate_product`.
+    - Send: number, comparison PDF (DocumentView gets `options`), public link scopes view+accept, emailed.
+      Register public target "quote" with html, download and choices.
+    - Public accept and decline by option *position* (no ids), with acceptance evidence. Notify the owner;
+      a linked lead goes to "quoted" on send.
+    - Tenant flag `multi_insurer_quotes` (D5).
+  - **Web:** quotes list, new quote from the client page, quote detail with send and withdraw; public page
+    `/d/[token]` through a `/public-api` proxy (iframe html, download, accept/decline, view beacon).
+  - **Test:** commission never appears in public HTML or PDF.
 - **Env:** the `cadaster-upload` containers were stopped (with the user's OK) for Docker headroom. Restart:
   `docker start cadaster-upload_postgres cadaster-upload_minio cadaster-upload_redis`.
 
