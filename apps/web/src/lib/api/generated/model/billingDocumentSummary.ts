@@ -4,8 +4,6 @@
  * BrokerOS API
  * OpenAPI spec version: 1.0.0
  */
-import type { BillingDocumentSummaryKind } from './billingDocumentSummaryKind';
-import type { BillingDocumentSummaryStatus } from './billingDocumentSummaryStatus';
 import type { ClientRef } from './clientRef';
 
 export interface BillingDocumentSummary {
@@ -17,7 +15,7 @@ export interface BillingDocumentSummary {
   due_date: string | null;
   id: string;
   issue_date: string | null;
-  kind: BillingDocumentSummaryKind;
+  kind: string;
   number: string | null;
   /**
      * Allocated to an invoice, or applied from a credit note
@@ -25,7 +23,7 @@ export interface BillingDocumentSummary {
      */
   paid: string;
   /** Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void. */
-  status: BillingDocumentSummaryStatus;
+  status: string;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   total: string;
   valid_until: string | null;

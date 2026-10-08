@@ -12,6 +12,14 @@
 - API schema names must be unique across modules (e.g. `MessageTemplateOut`, `DocumentLinkOut`), otherwise
   generated names leak module paths.
 
+## Amendments
+- 2026-10-08 (R2.1–R2.2): **response values that grow are published as `x-extensible-enum`**:
+  - covers permission keys, billing document kinds and statuses (`app/core/schema.py: ExtensibleEnum`);
+  - the generated TypeScript types them as `string`, and the UI must handle a value it does not know (show it
+    as-is);
+  - request fields keep closed enums;
+  - adding such a value is not a breaking change in the `oasdiff` CI check; removing or renaming one still is.
+
 ## Consequences
 - A separate `packages/api-client` and Turborepo come when a second consumer (mobile, R3) exists. Until then,
   each app keeps its own lockfile and pnpm 11 supply-chain policy.
