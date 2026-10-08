@@ -91,6 +91,52 @@ CATALOG: dict[str, EventTemplate] = {
             },
         ),
         EventTemplate(
+            event="invoice.reminder",
+            description="Reminder to a client that an invoice is due soon or overdue",
+            stream="reminders",
+            subject=(
+                "{% if overdue %}Overdue: {% endif %}invoice {{ number }} from {{ tenant_name }}"
+            ),
+            body=(
+                "Dear {{ recipient_name }},\n\n"
+                "{% if overdue %}Our invoice {{ number }} was due on {{ due_date }} and {{ amount_due }} "
+                "is still outstanding.{% else %}A reminder that invoice {{ number }} for {{ amount_due }} "
+                "is due on {{ due_date }}.{% endif %}"
+                "{% if payment_reference %} When paying by M-Pesa, use account {{ payment_reference }}."
+                "{% endif %}\n\n"
+                "If you have already paid, thank you, and please ignore this message.\n\n"
+                "Kind regards,\n{{ tenant_name }}"
+            ),
+            sample={
+                "recipient_name": "Otieno",
+                "tenant_name": "Acacia Traders",
+                "number": "INV-2026-00042",
+                "amount_due": "KES 4,698.00",
+                "due_date": "30 Oct 2026",
+                "payment_reference": "7KQ2M9XRT4",
+                "overdue": "",
+            },
+        ),
+        EventTemplate(
+            event="quote.expiring",
+            description="Reminder to a client that a quotation is about to expire",
+            stream="reminders",
+            subject="Quotation {{ number }} from {{ tenant_name }} expires on {{ valid_until }}",
+            body=(
+                "Dear {{ recipient_name }},\n\n"
+                "Our quotation {{ number }} for {{ total }} is valid until {{ valid_until }}. "
+                "Reply to this email or use the link we sent to accept it.\n\n"
+                "Kind regards,\n{{ tenant_name }}"
+            ),
+            sample={
+                "recipient_name": "Otieno",
+                "tenant_name": "Acacia Traders",
+                "number": "QT-2026-00012",
+                "total": "KES 58,000.00",
+                "valid_until": "30 Oct 2026",
+            },
+        ),
+        EventTemplate(
             event="notification.email",
             description="Email copy of an in-app notification (team members)",
             stream="transactional",

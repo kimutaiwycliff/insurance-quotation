@@ -73,6 +73,10 @@ class Choice(BaseModel):
     amount: str
     currency: str
     recommended: bool = False
+    kind: Literal["option", "addon"] = Field(
+        default="option",
+        description="option: choose one (insurance quotes); addon: tick any (sales quotes)",
+    )
 
 
 class PublicLinkView(BaseModel):

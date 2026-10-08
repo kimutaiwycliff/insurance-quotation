@@ -3,8 +3,13 @@
   "name": "Executive",
   "description": "Refined serif typography, generous white space and a prominent total.",
   "tier": "premium",
-  "version": 2,
-  "doc_types": ["quote", "invoice", "receipt", "credit_note"],
+  "version": 3,
+  "doc_types": [
+    "quote",
+    "invoice",
+    "receipt",
+    "credit_note"
+  ],
   "paper": "A4",
   "font_pair": "serif",
   "default_primary": "#2B2D42",

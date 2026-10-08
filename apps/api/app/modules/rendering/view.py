@@ -33,6 +33,10 @@ class Party(_Model):
 class LineItem(_Model):
     description: str
     details: str | None = None
+    section: str | None = Field(default=None, description="Heading the line is grouped under")
+    optional: bool = Field(
+        default=False, description="Quote add-on, listed apart and not in the total"
+    )
     quantity: Decimal = Decimal(1)
     unit_price: Decimal
     amount: Decimal

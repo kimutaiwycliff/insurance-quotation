@@ -49,6 +49,14 @@ class Tenant(Audited, Versioned, Base):
         ARRAY(SmallInteger), server_default=text("'{30,14,7}'")
     )
     renewal_client_emails: Mapped[bool] = mapped_column(server_default=text("false"))
+    # Invoice and quote reminders emailed to clients (R2.2); off until the tenant turns them on.
+    billing_reminders: Mapped[bool] = mapped_column(server_default=text("false"))
+    invoice_reminder_days_before: Mapped[list[int]] = mapped_column(
+        ARRAY(SmallInteger), server_default=text("'{3}'")
+    )
+    invoice_reminder_days_after: Mapped[list[int]] = mapped_column(
+        ARRAY(SmallInteger), server_default=text("'{1,7,14}'")
+    )
 
 
 class Membership(TenantScoped, Audited, Versioned, Base):
