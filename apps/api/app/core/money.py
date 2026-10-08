@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Context, Decimal, InvalidOperation
 from typing import Annotated, Self
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, PlainSerializer, field_validator
 
 # Storage scale of every money column (NUMERIC(20,4)).
 STORAGE_SCALE = 4
@@ -161,8 +161,18 @@ def _amount_to_str(value: Decimal) -> str:
     return format(value, "f")
 
 
+def _reject_float(value: object) -> object:
+    if isinstance(value, float):
+        msg = 'send amounts and rates as strings (e.g. "1234.50"), not numbers'
+        raise ValueError(msg)  # noqa: TRY004 - pydantic turns ValueError (not TypeError) into a 422
+    return value
+
+
+NoFloat = BeforeValidator(_reject_float)
+
 AmountStr = Annotated[
     Decimal,
+    NoFloat,
     PlainSerializer(_amount_to_str, return_type=str, when_used="always"),
     Field(json_schema_extra={"type": "string", "pattern": r"^-?\d{1,16}(\.\d{1,4})?$"}),
 ]

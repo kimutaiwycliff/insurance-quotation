@@ -1,0 +1,104 @@
+# Kenya jurisdiction pack. Values from docs/SPEC_REVIEW.md §2.1 (desk research, 2026-10-06).
+# NOT YET SIGNED by the tax adviser (decision D4): the app shows "pending sign-off" wherever these are used.
+code: ke
+version: "2026.1"
+title: Kenya
+currency: KES
+rounding: ROUND_HALF_UP
+day_count: actual/365
+sign_off:
+  status: pending
+  note: >-
+    Rates and bases per SPEC_REVIEW §2.1. To confirm before sign-off: effective dates (set to the start of the
+    current regime as placeholders), marine and single-journey stamp duty bands (manual entry until then),
+    and excise on agency fees (20%, interpretation).
+premium_tax_code: exempt
+commission_tax_code: exempt
+fee_tax_code: excise_fee
+wht_on_commission:
+  agent: "0.10"          # other residents (agents), ITA 3rd Schedule Head B
+  broker: "0.05"         # resident insurance brokers
+  non_resident: "0.20"
+  business: "0.10"
+tax_codes:
+  - {code: vat_standard, name: "VAT 16%", rate: "0.16", kind: vat, source: "VAT Act 2013 s.5"}
+  - {code: exempt, name: "Exempt", rate: "0", kind: exempt, source: "VAT Act 1st Schedule Part II para 2 (insurance); AKI v KRA 2021 (commission)"}
+  - {code: zero_rated, name: "Zero-rated", rate: "0", kind: zero_rated, source: "VAT Act 2nd Schedule"}
+  - {code: excise_fee, name: "Excise 20% on fees", rate: "0.20", kind: excise, source: "Excise Duty Act, 1st Schedule (other fees by Insurance Act licensees)", pending_confirmation: true}
+levies:
+  - id: ke.training_levy
+    name: "Training levy (0.2%)"
+    basis: premium
+    rate: "0.002"
+    charged_to: client
+    applies_to: {business_lines: [general]}
+    effective_from: 2007-01-01
+    source: "Insurance Act s.197B; Insurance Regulations r.56-57"
+  - id: ke.pcf_levy
+    name: "PCF levy (0.25%)"
+    basis: premium
+    rate: "0.0025"
+    charged_to: client
+    applies_to: {exclude_classes: [reinsurance, superannuation]}
+    effective_from: 2010-07-01
+    source: "Insurance (Policyholders Compensation Fund) Regulations LN 86/2010 reg 9"
+  - id: ke.pcf_levy_insurer
+    name: "PCF levy borne by the insurer (0.25%)"
+    basis: premium
+    rate: "0.0025"
+    charged_to: insurer
+    applies_to: {exclude_classes: [reinsurance, superannuation]}
+    effective_from: 2010-07-01
+    source: "LN 86/2010 reg 9 (insurer's own contribution; never billed to the client)"
+stamp_duty:
+  - id: ke.stamp_duty.general
+    name: "Stamp duty"
+    kind: flat
+    amount: "40"
+    applies_to:
+      business_lines: [general]
+      exclude_classes: [marine_cargo, travel]
+      exclude_document_kinds: [cover_note]
+    effective_from: 2000-01-01
+    source: "Stamp Duty Act, Schedule item 27 (accident, sickness, property and other policies)"
+  - id: ke.stamp_duty.life
+    name: "Stamp duty (life)"
+    kind: per_unit_of_sum_insured
+    amount: "7.50"
+    unit: "10000"
+    part_units: ceil   # "per KES 10,000 or part thereof": confirm with the adviser (D4)
+    applies_to: {business_lines: [long_term], exclude_document_kinds: [cover_note]}
+    effective_from: 2000-01-01
+    source: "Stamp Duty Act, Schedule item 27 (life: KES 7.50 per KES 10,000 sum assured)"
+  - id: ke.stamp_duty.marine_travel
+    name: "Stamp duty (marine / single journey)"
+    kind: manual
+    applies_to: {classes: [marine_cargo, travel], exclude_document_kinds: [cover_note]}
+    effective_from: 2000-01-01
+    source: "Stamp Duty Act, Schedule item 27 (marine bands; single-journey accident KES 5)"
+    note: "Enter the stamp duty from the insurer's quote: marine and single-journey bands are not encoded yet."
+classes:
+  - {code: motor_private, name: "Motor private", business_line: general}
+  - {code: motor_commercial, name: "Motor commercial", business_line: general}
+  - {code: motor_psv, name: "Motor PSV", business_line: general}
+  - {code: motorcycle, name: "Motorcycle", business_line: general}
+  - {code: medical_individual, name: "Medical (individual and family)", business_line: general, rating_hint: per_member}
+  - {code: medical_group, name: "Medical (group)", business_line: general, rating_hint: per_member}
+  - {code: personal_accident, name: "Personal accident", business_line: general, rating_hint: flat}
+  - {code: travel, name: "Travel", business_line: general, rating_hint: flat}
+  - {code: home, name: "Home (domestic package)", business_line: general}
+  - {code: fire_industrial, name: "Fire (industrial)", business_line: general}
+  - {code: burglary, name: "Burglary", business_line: general}
+  - {code: all_risks, name: "All risks", business_line: general}
+  - {code: public_liability, name: "Public liability", business_line: general}
+  - {code: professional_indemnity, name: "Professional indemnity", business_line: general}
+  - {code: wiba, name: "Work injury benefits (WIBA)", business_line: general}
+  - {code: marine_cargo, name: "Marine cargo", business_line: general}
+  - {code: contractors_all_risks, name: "Contractor's all risks", business_line: general}
+  - {code: bonds, name: "Bonds and guarantees", business_line: general, rating_hint: flat}
+  - {code: life_term, name: "Term life", business_line: long_term}
+  - {code: life_whole, name: "Whole life", business_line: long_term}
+  - {code: education_endowment, name: "Education / endowment", business_line: long_term}
+  - {code: group_life, name: "Group life", business_line: long_term}
+  - {code: credit_life, name: "Credit life", business_line: long_term}
+  - {code: last_expense, name: "Last expense (funeral)", business_line: long_term, rating_hint: flat}

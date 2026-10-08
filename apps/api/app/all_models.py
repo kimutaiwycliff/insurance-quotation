@@ -3,6 +3,7 @@
 from app.core.models import Base
 from app.modules.clients import models as clients_models
 from app.modules.documents import models as documents_models
+from app.modules.insurers import models as insurers_models
 from app.modules.leads import models as leads_models
 from app.modules.messaging import models as messaging_models
 from app.modules.notifications import models as notifications_models
@@ -17,6 +18,7 @@ __all__ = [
     "Base",
     "clients_models",
     "documents_models",
+    "insurers_models",
     "leads_models",
     "messaging_models",
     "notifications_models",

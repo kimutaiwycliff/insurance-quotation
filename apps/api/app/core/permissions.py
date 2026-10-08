@@ -34,6 +34,10 @@ class Perm(StrEnum):
     LEAD_WRITE = "lead:write"
     TASK_READ_ALL = "task:read:all"
     TASK_WRITE = "task:write"
+    INSURER_READ = "insurer:read"  # insurers, products, premium calculator
+    INSURER_MANAGE = "insurer:manage"
+    COMMISSION_READ_OWN = "commission:read:own"
+    COMMISSION_READ_ALL = "commission:read:all"
 
 
 class Role(StrEnum):
@@ -48,7 +52,9 @@ class Role(StrEnum):
 
 
 _ALL = frozenset(Perm)
-_READ_BASICS = frozenset({Perm.ORG_READ, Perm.BRANCH_READ, Perm.MEMBER_READ, Perm.DOCUMENT_READ})
+_READ_BASICS = frozenset(
+    {Perm.ORG_READ, Perm.BRANCH_READ, Perm.MEMBER_READ, Perm.DOCUMENT_READ, Perm.INSURER_READ}
+)
 # Day-to-day client work: files, sending links, seeing what was sent, own tasks.
 _CLIENT_WORK = frozenset(
     {Perm.DOCUMENT_WRITE, Perm.LINK_MANAGE, Perm.MESSAGE_READ, Perm.TASK_WRITE}
@@ -69,10 +75,20 @@ _AGENCY_BOOK = frozenset(
 ROLE_PERMISSIONS: dict[Role, frozenset[Perm]] = {
     Role.OWNER: _ALL,
     Role.ADMIN: _ALL,
-    Role.AGENT: _READ_BASICS | _CLIENT_WORK | _OWN_BOOK | {Perm.NUMBERING_READ},
+    Role.AGENT: _READ_BASICS
+    | _CLIENT_WORK
+    | _OWN_BOOK
+    | {Perm.NUMBERING_READ, Perm.COMMISSION_READ_OWN},
     Role.ACCOUNTS: _READ_BASICS
     | _CLIENT_WORK
-    | {Perm.NUMBERING_READ, Perm.NUMBERING_MANAGE, Perm.AUDIT_READ, Perm.CLIENT_READ_ALL},
+    | {
+        Perm.NUMBERING_READ,
+        Perm.NUMBERING_MANAGE,
+        Perm.AUDIT_READ,
+        Perm.CLIENT_READ_ALL,
+        Perm.INSURER_MANAGE,
+        Perm.COMMISSION_READ_ALL,
+    },
     Role.ASSISTANT: _READ_BASICS | _CLIENT_WORK | _AGENCY_BOOK,
     Role.VIEWER: frozenset(
         {
@@ -82,6 +98,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Perm]] = {
             Perm.CLIENT_READ_ALL,
             Perm.LEAD_READ_ALL,
             Perm.TASK_READ_ALL,
+            Perm.INSURER_READ,
         }
     ),
 }

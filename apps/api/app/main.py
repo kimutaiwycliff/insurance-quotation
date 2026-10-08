@@ -20,6 +20,7 @@ from app.core.telemetry import configure_sentry
 from app.modules.clients import router as clients_router
 from app.modules.dashboard import router as dashboard_router
 from app.modules.documents import router as documents_router
+from app.modules.insurers import router as insurers_router
 from app.modules.leads import router as leads_router
 from app.modules.messaging import router as messaging_router
 from app.modules.notifications import router as notifications_router
@@ -52,6 +53,7 @@ def api_v1_router() -> APIRouter:
     router.include_router(leads_router.router)
     router.include_router(tasks_router.router)
     router.include_router(dashboard_router.router)
+    router.include_router(insurers_router.router)
     router.include_router(notifications_router.router)
     router.include_router(messaging_router.public_router)
     # Anonymous routes (token-scoped, per-IP rate limited); no require_permission by design.

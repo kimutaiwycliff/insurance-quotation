@@ -1,0 +1,62 @@
+# Golden premium scenarios for the Kenya pack 2026.1. Hand-calculated (working in `why`).
+# STATUS: pending accountant sign-off (D4). When signed, record the reviewer and date here.
+pack: ke
+version: "2026.1"
+signed_by: null
+scenarios:
+  - name: motor private comprehensive, 4% of 2,000,000
+    why: "80,000; training 0.2% = 160; PCF 0.25% = 200; stamp 40 → 80,400. Commission 10% = 8,000; WHT 10% = 800."
+    request: {class_code: motor_private, rating: {basis: rate_on_sum_insured, sum_insured: "2000000", rate: "0.04"}, commission_rate: "0.10"}
+    expect: {client_total: "80400.00", insurer_borne: "200.00", lines: {basic_premium: "80000.00", ke.training_levy: "160.00", ke.pcf_levy: "200.00", ke.stamp_duty.general: "40.00"}, commission: {gross: "8000.00", wht: "800.00", net: "7200.00"}}
+  - name: minimum premium applies
+    why: "500,000 × 4% = 20,000 < minimum 37,500 → 37,500; levies 75 + 93.75; stamp 40 → 37,708.75"
+    request: {class_code: motor_private, rating: {basis: rate_on_sum_insured, sum_insured: "500000", rate: "0.04"}, min_premium: "37500"}
+    expect: {client_total: "37708.75", lines: {basic_premium: "37500.00", ke.training_levy: "75.00", ke.pcf_levy: "93.75"}}
+  - name: motor with excess protector and political violence benefits
+    why: "80,000 + 0.25%×2m (5,000) + 0.25%×2m (5,000) = 90,000; levies 180 + 225; stamp 40 → 90,445"
+    request: {class_code: motor_private, rating: {basis: rate_on_sum_insured, sum_insured: "2000000", rate: "0.04"}, benefits: [{code: excess_protector, name: Excess protector, basis: rate_on_sum_insured, value: "0.0025"}, {code: pvt, name: Political violence, basis: rate_on_sum_insured, value: "0.0025"}]}
+    expect: {client_total: "90445.00", lines: {benefit.excess_protector: "5000.00", benefit.pvt: "5000.00", ke.training_levy: "180.00", ke.pcf_levy: "225.00"}}
+  - name: family medical cover per member
+    why: "45,000 + 40,000 + 2 × 15,000 = 115,000; training 230; PCF 287.50; stamp 40 → 115,557.50"
+    request: {class_code: medical_individual, rating: {basis: per_member, members: [{label: Principal, count: 1, amount: "45000"}, {label: Spouse, count: 1, amount: "40000"}, {label: Child, count: 2, amount: "15000"}]}}
+    expect: {client_total: "115557.50", lines: {basic_premium: "115000.00", ke.training_levy: "230.00", ke.pcf_levy: "287.50", ke.stamp_duty.general: "40.00"}}
+  - name: term life, round sum assured
+    why: "3,000,000 × 0.5% = 15,000; no training levy (long-term); PCF 37.50; stamp 300 units × 7.50 = 2,250 → 17,287.50"
+    request: {class_code: life_term, rating: {basis: rate_on_sum_insured, sum_insured: "3000000", rate: "0.005"}}
+    expect: {client_total: "17287.50", lines: {ke.pcf_levy: "37.50", ke.stamp_duty.life: "2250.00"}, absent: [ke.training_levy]}
+  - name: term life, part of a 10,000 unit counts as a unit
+    why: "2,505,000 × 0.4% = 10,020; PCF 25.05; stamp ceil(250.5) = 251 × 7.50 = 1,882.50 → 11,927.55"
+    request: {class_code: life_term, rating: {basis: rate_on_sum_insured, sum_insured: "2505000", rate: "0.004"}}
+    expect: {client_total: "11927.55", lines: {ke.stamp_duty.life: "1882.50"}}
+  - name: cover note is not stamped
+    why: "80,000 + 160 + 200 = 80,360; no stamp duty on cover notes"
+    request: {class_code: motor_private, document_kind: cover_note, rating: {basis: rate_on_sum_insured, sum_insured: "2000000", rate: "0.04"}}
+    expect: {client_total: "80360.00", absent: [ke.stamp_duty.general]}
+  - name: marine cargo needs stamp duty entered
+    why: "1,000,000 × 0.3% = 3,000; training 6; PCF 7.50 → 3,013.50; stamp duty still to be entered"
+    request: {class_code: marine_cargo, rating: {basis: rate_on_sum_insured, sum_insured: "1000000", rate: "0.003"}}
+    expect: {client_total: "3013.50", needs_input: [stamp_duty]}
+  - name: marine cargo with stamp duty entered
+    why: "3,013.50 + 5 → 3,018.50"
+    request: {class_code: marine_cargo, rating: {basis: rate_on_sum_insured, sum_insured: "1000000", rate: "0.003"}, stamp_duty_manual: "5"}
+    expect: {client_total: "3018.50", lines: {ke.stamp_duty.marine_travel: "5.00"}, needs_input: []}
+  - name: 10% discount, commission on the discounted premium
+    why: "80,000 − 8,000 = 72,000; levies 144 + 180; stamp 40 → 72,364. Commission 10% of 72,000 = 7,200; WHT 720"
+    request: {class_code: motor_private, rating: {basis: rate_on_sum_insured, sum_insured: "2000000", rate: "0.04"}, adjustments: [{name: No claims discount, kind: discount, basis: percent, value: "0.10"}], commission_rate: "0.10"}
+    expect: {client_total: "72364.00", lines: {discount.no_claims_discount: "-8000.00"}, commission: {gross: "7200.00", wht: "720.00", net: "6480.00"}}
+  - name: discount cannot go below the minimum premium
+    why: "40,000 − 15% (6,000) = 34,000 < 37,500 → top-up 3,500; levies 75 + 93.75; stamp 40 → 37,708.75"
+    request: {class_code: motor_private, rating: {basis: flat, flat_amount: "40000"}, min_premium: "37500", adjustments: [{name: Fleet discount, kind: discount, basis: percent, value: "0.15"}]}
+    expect: {client_total: "37708.75", lines: {minimum_premium_topup: "3500.00"}}
+  - name: agency fee carries excise, not commission
+    why: "80,400 + fee 1,000 + excise 20% (200) = 81,600; commission base stays 80,000"
+    request: {class_code: motor_private, rating: {basis: rate_on_sum_insured, sum_insured: "2000000", rate: "0.04"}, fees: [{name: Admin fee, amount: "1000"}], commission_rate: "0.10"}
+    expect: {client_total: "81600.00", lines: {fee.admin_fee: "1000.00", fee_tax.excise_fee: "200.00"}, commission: {gross: "8000.00"}}
+  - name: half-up rounding at line level
+    why: "1,234,567 × 3.5% = 43,209.845 → 43,209.85; training 86.4197 → 86.42; PCF 108.0246 → 108.02; +40 → 43,444.29"
+    request: {class_code: motor_private, rating: {basis: rate_on_sum_insured, sum_insured: "1234567", rate: "0.035"}}
+    expect: {client_total: "43444.29", lines: {basic_premium: "43209.85", ke.training_levy: "86.42", ke.pcf_levy: "108.02"}}
+  - name: broker withholding is 5%
+    why: "Commission 10% of 80,000 = 8,000; WHT 5% = 400; net 7,600"
+    request: {class_code: motor_private, rating: {basis: rate_on_sum_insured, sum_insured: "2000000", rate: "0.04"}, commission_rate: "0.10", intermediary_type: broker}
+    expect: {commission: {gross: "8000.00", wht: "400.00", net: "7600.00"}}

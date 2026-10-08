@@ -1,0 +1,19 @@
+# Generic pack: no statutory levies or stamp duty; used outside supported jurisdictions.
+code: generic
+version: "2026.1"
+title: Generic
+currency: USD
+rounding: ROUND_HALF_UP
+day_count: actual/365
+sign_off: {status: signed, by: "n/a (no statutory rules)", signed_on: 2026-10-08}
+premium_tax_code: exempt
+commission_tax_code: exempt
+fee_tax_code: exempt
+wht_on_commission: {agent: "0", broker: "0", non_resident: "0", business: "0"}
+tax_codes:
+  - {code: exempt, name: "No tax", rate: "0", kind: exempt, source: "n/a"}
+classes:
+  - {code: motor_private, name: "Motor private", business_line: general}
+  - {code: medical_individual, name: "Medical", business_line: general, rating_hint: per_member}
+  - {code: home, name: "Home", business_line: general}
+  - {code: life_term, name: "Term life", business_line: long_term}
