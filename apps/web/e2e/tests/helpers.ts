@@ -5,6 +5,16 @@ const MAILPIT = process.env.E2E_MAILPIT_URL ?? "http://localhost:8025";
 
 /** WCAG 2.2 AA via axe: no serious or critical violations (plan W1 acceptance). */
 export async function expectAccessible(page: Page, context: string): Promise<void> {
+  // Colour contrast is only meaningful at rest: a toast caught mid-fade (opacity < 1) reads as low contrast.
+  // Let running CSS transitions and animations finish first (infinite ones, such as spinners, are skipped).
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  );
   // Sandboxed iframes (document previews) cannot run axe's script and would hang the scan; their content is
   // generated documents, covered by the template tests.
   const results = await new AxeBuilder({ page })
