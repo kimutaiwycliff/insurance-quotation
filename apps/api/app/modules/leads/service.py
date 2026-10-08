@@ -33,7 +33,7 @@ from app.modules.tenancy import service as tenancy
 from app.platform import audit
 from app.platform.deps import TenantContext, own_scope
 
-__all__ = ["Pipeline", "pipeline"]
+__all__ = ["Pipeline", "mark_quoted", "pipeline"]
 
 OPEN_STAGES = ("new", "contacted", "quoted")
 
@@ -276,3 +276,14 @@ async def pipeline(ctx: TenantContext, currency: str) -> Pipeline:
         ],
         follow_ups_due=int(due or 0),
     )
+
+
+async def mark_quoted(ctx: TenantContext, client_id: uuid.UUID) -> None:
+    """A quote was sent to this client: open leads linked to them move to "quoted"."""
+    rows = (
+        await ctx.session.scalars(
+            select(Lead).where(Lead.client_id == client_id, Lead.stage.in_(("new", "contacted")))
+        )
+    ).all()
+    for lead in rows:
+        lead.stage, lead.stage_changed_at = "quoted", datetime.now(UTC)

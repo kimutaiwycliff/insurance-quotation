@@ -26,6 +26,7 @@ from app.modules.messaging import router as messaging_router
 from app.modules.notifications import router as notifications_router
 from app.modules.numbering import router as numbering_router
 from app.modules.public_links import router as public_links_router
+from app.modules.quotes import router as quotes_router
 from app.modules.rendering import router as rendering_router
 from app.modules.tasks import router as tasks_router
 from app.modules.tenancy import internal as tenancy_internal
@@ -54,6 +55,7 @@ def api_v1_router() -> APIRouter:
     router.include_router(tasks_router.router)
     router.include_router(dashboard_router.router)
     router.include_router(insurers_router.router)
+    router.include_router(quotes_router.router)
     router.include_router(notifications_router.router)
     router.include_router(messaging_router.public_router)
     # Anonymous routes (token-scoped, per-IP rate limited); no require_permission by design.

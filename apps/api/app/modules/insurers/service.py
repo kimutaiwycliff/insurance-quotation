@@ -49,7 +49,16 @@ from app.modules.tenancy import service as tenancy
 from app.platform import audit
 from app.platform.deps import TenantContext
 
-__all__ = ["Insurer", "Product", "agency_pack", "calculate_product", "get_product"]
+__all__ = [
+    "CalculationOut",
+    "Insurer",
+    "Product",
+    "RiskIn",
+    "agency_pack",
+    "calculate_product",
+    "can_see_commission",
+    "get_product",
+]
 
 
 class PremiumCalculationError(AppError):

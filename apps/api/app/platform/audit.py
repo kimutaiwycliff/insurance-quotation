@@ -11,6 +11,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import REDACTED, is_sensitive_key
 from app.core.pagination import Page, PageParams, build_page, page_params
@@ -72,6 +73,31 @@ async def events_for(
         .limit(limit)
     )
     return list((await ctx.session.scalars(stmt)).all())
+
+
+async def record_actor(
+    session: AsyncSession,
+    tenant_id: uuid.UUID,
+    action: str,
+    *,
+    actor_type: str,
+    actor_id: str | None,
+    entity_type: str,
+    entity_id: uuid.UUID | str,
+    changes: dict[str, Any] | None = None,
+) -> None:
+    """Audit an action by someone who is not a signed-in member (a client on a public link, a job)."""
+    session.add(
+        AuditEvent(
+            tenant_id=tenant_id,
+            actor_type=actor_type,
+            actor_id=actor_id,
+            action=action,
+            entity_type=entity_type,
+            entity_id=str(entity_id),
+            changes=changes or {},
+        )
+    )
 
 
 class AuditEventOut(BaseModel):

@@ -3,7 +3,7 @@
 import uuid
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -16,7 +16,9 @@ from app.core.ratelimit import hit
 from app.modules.public_links import service
 from app.modules.public_links.models import PublicLink
 from app.modules.public_links.schemas import (
+    ActionResult,
     Beacon,
+    Choice,
     LinkCreate,
     LinkCreated,
     LinkEventOut,
@@ -140,6 +142,8 @@ async def get_public(ctx: Public, resources: ResourcesDep, response: Response) -
         expires_at=ctx.link.expires_at,
         has_web_view=content.html is not None,
         has_download=content.download is not None,
+        state=content.state,
+        choices=[Choice(**c) for c in content.choices],
     )
 
 
@@ -192,3 +196,32 @@ async def beacon(ctx: Public, body: Beacon, resources: ResourcesDep) -> None:
         storage=resources.storage,
         settings=resources.settings,
     )
+
+
+@public_router.post("/{token}/accept", operation_id="public_link_accept")
+async def accept(ctx: Public, body: dict[str, Any], resources: ResourcesDep) -> ActionResult:
+    """Accept (e.g. one option of a quotation). Requires the link's `accept` scope; recorded as evidence."""
+    state = await service.perform(
+        ctx.session,
+        resources.settings,
+        ctx.link,
+        "accept",
+        body,
+        ip_hash=ctx.ip_hash,
+        user_agent=ctx.user_agent,
+    )
+    return ActionResult(state=state)
+
+
+@public_router.post("/{token}/decline", operation_id="public_link_decline")
+async def decline(ctx: Public, body: dict[str, Any], resources: ResourcesDep) -> ActionResult:
+    state = await service.perform(
+        ctx.session,
+        resources.settings,
+        ctx.link,
+        "decline",
+        body,
+        ip_hash=ctx.ip_hash,
+        user_agent=ctx.user_agent,
+    )
+    return ActionResult(state=state)

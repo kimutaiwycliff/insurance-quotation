@@ -42,6 +42,8 @@ class Tenant(Audited, Versioned, Base):
     quiet_hours_start: Mapped[time | None] = mapped_column(server_default=text("'20:00'"))
     quiet_hours_end: Mapped[time | None] = mapped_column(server_default=text("'07:00'"))
     provisioned_via: Mapped[str] = mapped_column(server_default="hook")  # hook | lazy
+    # Whether quotes may compare several insurers (pending legal opinion D5 for tied agents).
+    multi_insurer_quotes: Mapped[bool] = mapped_column(server_default=text("true"))
 
 
 class Membership(TenantScoped, Audited, Versioned, Base):

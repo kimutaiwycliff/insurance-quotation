@@ -67,6 +67,14 @@ class PublicTenant(BaseModel):
     name: str
 
 
+class Choice(BaseModel):
+    position: int
+    label: str
+    amount: str
+    currency: str
+    recommended: bool = False
+
+
 class PublicLinkView(BaseModel):
     """What an anonymous visitor may learn about a link. No internal ids."""
 
@@ -77,6 +85,12 @@ class PublicLinkView(BaseModel):
     expires_at: datetime
     has_web_view: bool
     has_download: bool
+    state: str | None = None
+    choices: list[Choice] = Field(default_factory=list)
+
+
+class ActionResult(BaseModel):
+    state: str
 
 
 class Beacon(BaseModel):

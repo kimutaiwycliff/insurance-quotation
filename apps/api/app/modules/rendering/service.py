@@ -20,7 +20,26 @@ from app.modules.documents.service import Document, EntityRef
 from app.modules.rendering import engine
 from app.modules.rendering.models import BrandingSettings
 from app.modules.rendering.schemas import BrandingOut, BrandingUpdate, PaymentDefaults
-from app.modules.rendering.view import BrandingView, DocType, DocumentView, PaymentInstructions
+from app.modules.rendering.view import (
+    AmountLine,
+    BrandingView,
+    DocType,
+    DocumentView,
+    KeyValue,
+    OptionView,
+    Party,
+    PaymentInstructions,
+)
+
+__all__ = [
+    "AmountLine",
+    "DocumentView",
+    "KeyValue",
+    "OptionView",
+    "Party",
+    "generate_pdf",
+    "render_html_for",
+]
 from app.platform import audit
 from app.platform.deps import TenantContext
 
@@ -222,3 +241,14 @@ async def generate_pdf(
         links=[entity] if entity else None,
         actor=actor,
     )
+
+
+async def render_html_for(
+    session: AsyncSession, storage: S3Storage, tenant_id: uuid.UUID, view: DocumentView
+) -> str:
+    """The tenant-branded, self-contained HTML of a document (public web view)."""
+    row = await get_branding(session, tenant_id)
+    key = template_for(row, view.doc_type)
+    view = with_payment_defaults(view, row)
+    branding = await branding_view(session, storage, row, key)
+    return engine.render_html(key, view, branding)

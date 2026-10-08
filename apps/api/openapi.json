@@ -1,6 +1,19 @@
 {
   "components": {
     "schemas": {
+      "ActionResult": {
+        "properties": {
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "ActionResult",
+        "type": "object"
+      },
       "ActivityIn": {
         "additionalProperties": false,
         "properties": {
@@ -996,6 +1009,39 @@
         "title": "CheckStatus",
         "type": "string"
       },
+      "Choice": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "recommended": {
+            "default": false,
+            "title": "Recommended",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "position",
+          "label",
+          "amount",
+          "currency"
+        ],
+        "title": "Choice",
+        "type": "object"
+      },
       "ClientCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1656,6 +1702,49 @@
           "version"
         ],
         "title": "ClientOut",
+        "type": "object"
+      },
+      "ClientRef": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email",
+          "phone"
+        ],
+        "title": "ClientRef",
         "type": "object"
       },
       "ClientSummary": {
@@ -2573,6 +2662,30 @@
           "documents_expiring_30d"
         ],
         "title": "Dashboard",
+        "type": "object"
+      },
+      "Detail": {
+        "additionalProperties": false,
+        "description": "A fact about the risk shown on the quote, e.g. Vehicle: KDA 123A, Toyota Axio 2019.",
+        "properties": {
+          "label": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "Detail",
         "type": "object"
       },
       "DocumentCreate": {
@@ -4892,6 +5005,83 @@
         "title": "NumberingPreviewRequest",
         "type": "object"
       },
+      "OptionOut": {
+        "properties": {
+          "breakdown": {
+            "additionalProperties": true,
+            "title": "Breakdown",
+            "type": "object"
+          },
+          "client_total": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Client Total",
+            "type": "string"
+          },
+          "commission": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only for roles that may see commission",
+            "title": "Commission"
+          },
+          "excess_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excess Text"
+          },
+          "insurer_name": {
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "needs_input": {
+            "title": "Needs Input",
+            "type": "boolean"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "recommended": {
+            "title": "Recommended",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "position",
+          "product_id",
+          "insurer_name",
+          "product_name",
+          "excess_text",
+          "client_total",
+          "breakdown",
+          "commission",
+          "needs_input",
+          "recommended"
+        ],
+        "title": "OptionOut",
+        "type": "object"
+      },
       "OrganizationOut": {
         "properties": {
           "address": {
@@ -4968,6 +5158,10 @@
           "locale": {
             "title": "Locale",
             "type": "string"
+          },
+          "multi_insurer_quotes": {
+            "title": "Multi Insurer Quotes",
+            "type": "boolean"
           },
           "name": {
             "title": "Name",
@@ -5075,6 +5269,7 @@
           "fiscal_year_start_month",
           "quiet_hours_start",
           "quiet_hours_end",
+          "multi_insurer_quotes",
           "version"
         ],
         "title": "OrganizationOut",
@@ -5198,6 +5393,17 @@
               }
             ],
             "title": "Locale"
+          },
+          "multi_insurer_quotes": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Multi Insurer Quotes"
           },
           "name": {
             "anyOf": [
@@ -5558,6 +5764,19 @@
           }
         },
         "title": "PaymentDefaults",
+        "type": "object"
+      },
+      "PdfLink": {
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "PdfLink",
         "type": "object"
       },
       "Perm": {
@@ -6340,6 +6559,13 @@
       "PublicLinkView": {
         "description": "What an anonymous visitor may learn about a link. No internal ids.",
         "properties": {
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/Choice"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
           "expires_at": {
             "format": "date-time",
             "title": "Expires At",
@@ -6363,6 +6589,17 @@
             },
             "title": "Scopes",
             "type": "array"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
           },
           "tenant": {
             "$ref": "#/components/schemas/PublicTenant"
@@ -6397,6 +6634,434 @@
         "title": "PublicTenant",
         "type": "object"
       },
+      "QuoteCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/Detail"
+            },
+            "maxItems": 12,
+            "title": "Details",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "product_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Product Ids",
+            "type": "array"
+          },
+          "recommended_product_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Product Id"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/RiskIn"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "valid_days": {
+            "default": 30,
+            "maximum": 90.0,
+            "minimum": 1.0,
+            "title": "Valid Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_ids",
+          "risk",
+          "client_id"
+        ],
+        "title": "QuoteCreate",
+        "type": "object"
+      },
+      "QuoteOut": {
+        "properties": {
+          "accepted_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Position"
+          },
+          "class_code": {
+            "title": "Class Code",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/Detail"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lowest_total": {
+            "anyOf": [
+              {
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lowest Total"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "option_list": {
+            "items": {
+              "$ref": "#/components/schemas/OptionOut"
+            },
+            "title": "Option List",
+            "type": "array"
+          },
+          "options": {
+            "title": "Options",
+            "type": "integer"
+          },
+          "owner_user_id": {
+            "title": "Owner User Id",
+            "type": "string"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "response": {
+            "additionalProperties": true,
+            "title": "Response",
+            "type": "object"
+          },
+          "risk": {
+            "additionalProperties": true,
+            "title": "Risk",
+            "type": "object"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "status": {
+            "description": "'expired' when a sent quote is past its validity",
+            "enum": [
+              "draft",
+              "sent",
+              "accepted",
+              "declined",
+              "withdrawn",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "valid_until": {
+            "format": "date",
+            "title": "Valid Until",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "title",
+          "client",
+          "class_code",
+          "currency",
+          "status",
+          "valid_until",
+          "lowest_total",
+          "options",
+          "owner_user_id",
+          "created_at",
+          "risk",
+          "details",
+          "notes",
+          "sent_at",
+          "accepted_position",
+          "responded_at",
+          "response",
+          "document_id",
+          "option_list",
+          "version"
+        ],
+        "title": "QuoteOut",
+        "type": "object"
+      },
+      "QuoteRecalculate": {
+        "additionalProperties": false,
+        "properties": {
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Detail"
+                },
+                "maxItems": 12,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "product_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Product Ids",
+            "type": "array"
+          },
+          "recommended_product_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Product Id"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/RiskIn"
+          }
+        },
+        "required": [
+          "product_ids",
+          "risk"
+        ],
+        "title": "QuoteRecalculate",
+        "type": "object"
+      },
+      "QuoteSummary": {
+        "properties": {
+          "class_code": {
+            "title": "Class Code",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lowest_total": {
+            "anyOf": [
+              {
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lowest Total"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "options": {
+            "title": "Options",
+            "type": "integer"
+          },
+          "owner_user_id": {
+            "title": "Owner User Id",
+            "type": "string"
+          },
+          "status": {
+            "description": "'expired' when a sent quote is past its validity",
+            "enum": [
+              "draft",
+              "sent",
+              "accepted",
+              "declined",
+              "withdrawn",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "valid_until": {
+            "format": "date",
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "title",
+          "client",
+          "class_code",
+          "currency",
+          "status",
+          "valid_until",
+          "lowest_total",
+          "options",
+          "owner_user_id",
+          "created_at"
+        ],
+        "title": "QuoteSummary",
+        "type": "object"
+      },
       "ReadyResponse": {
         "properties": {
           "checks": {
@@ -6425,6 +7090,144 @@
         ],
         "title": "ResetPeriod",
         "type": "string"
+      },
+      "RiskIn": {
+        "additionalProperties": false,
+        "description": "What is being insured; shared by single calculations and comparisons.",
+        "properties": {
+          "adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/AdjustmentIn"
+            },
+            "maxItems": 10,
+            "title": "Adjustments",
+            "type": "array"
+          },
+          "benefit_codes": {
+            "anyOf": [
+              {
+                "items": {
+                  "pattern": "^[a-z0-9_]{1,40}$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "optional benefits to include; default = product defaults",
+            "title": "Benefit Codes"
+          },
+          "document_kind": {
+            "default": "policy",
+            "enum": [
+              "policy",
+              "cover_note"
+            ],
+            "title": "Document Kind",
+            "type": "string"
+          },
+          "fees": {
+            "items": {
+              "$ref": "#/components/schemas/FeeIn"
+            },
+            "maxItems": 5,
+            "title": "Fees",
+            "type": "array"
+          },
+          "manual_amount": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manual Amount"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/MemberCount"
+            },
+            "maxItems": 10,
+            "title": "Members",
+            "type": "array"
+          },
+          "on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "cover start; defaults to today in the agency's timezone",
+            "title": "On"
+          },
+          "renewal": {
+            "default": false,
+            "title": "Renewal",
+            "type": "boolean"
+          },
+          "stamp_duty_manual": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stamp Duty Manual"
+          },
+          "sum_insured": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sum Insured"
+          }
+        },
+        "title": "RiskIn",
+        "type": "object"
       },
       "RoleOut": {
         "properties": {
@@ -6598,6 +7401,32 @@
         "title": "SchemeUpdate",
         "type": "object"
       },
+      "SendQuote": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "defaults to the client's email; omit both to just get a link",
+            "title": "Email"
+          },
+          "message": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "title": "SendQuote",
+        "type": "object"
+      },
       "SendTo": {
         "additionalProperties": false,
         "description": "Email the link to the client right away (logged in the outbound messages).",
@@ -6625,6 +7454,48 @@
           "name"
         ],
         "title": "SendTo",
+        "type": "object"
+      },
+      "Sent": {
+        "properties": {
+          "emailed_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emailed To"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/QuoteOut"
+          },
+          "url": {
+            "description": "Tracked link for the client (share on WhatsApp if not emailed)",
+            "title": "Url",
+            "type": "string"
+          },
+          "whatsapp_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Url"
+          }
+        },
+        "required": [
+          "quote",
+          "url",
+          "emailed_to",
+          "whatsapp_url"
+        ],
+        "title": "Sent",
         "type": "object"
       },
       "StageSummary": {
@@ -11361,6 +12232,63 @@
         ]
       }
     },
+    "/api/v1/public/links/{token}/accept": {
+      "post": {
+        "description": "Accept (e.g. one option of a quotation). Requires the link's `accept` scope; recorded as evidence.",
+        "operationId": "public_link_accept",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 10,
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Accept",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/api/v1/public/links/{token}/beacon": {
       "post": {
         "description": "Sent by the public page after it rendered. Only this counts as a view; bots are recorded, not counted.",
@@ -11404,6 +12332,62 @@
           }
         },
         "summary": "Beacon",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/v1/public/links/{token}/decline": {
+      "post": {
+        "operationId": "public_link_decline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 10,
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decline",
         "tags": [
           "public"
         ]
@@ -11575,6 +12559,401 @@
         "summary": "Unsubscribe",
         "tags": [
           "public"
+        ]
+      }
+    },
+    "/api/v1/quotes": {
+      "get": {
+        "operationId": "quotes_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 20,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QuoteSummary"
+                  },
+                  "title": "Response Quotes List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Quotes",
+        "tags": [
+          "quotes"
+        ]
+      },
+      "post": {
+        "description": "Price the risk with each product and save a draft quote (options cheapest first).",
+        "operationId": "quotes_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Quote",
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
+    "/api/v1/quotes/{quote_id}": {
+      "get": {
+        "operationId": "quotes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Quote",
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
+    "/api/v1/quotes/{quote_id}/options": {
+      "put": {
+        "description": "Re-price a draft with new products or risk details.",
+        "operationId": "quotes_recalculate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteRecalculate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Recalculate",
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
+    "/api/v1/quotes/{quote_id}/pdf": {
+      "get": {
+        "operationId": "quotes_pdf",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdfLink"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pdf",
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
+    "/api/v1/quotes/{quote_id}/send": {
+      "post": {
+        "description": "Number the quote, render the PDF, create the tracked link and (if there is an email) send it.",
+        "operationId": "quotes_send",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendQuote"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sent"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send",
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
+    "/api/v1/quotes/{quote_id}/withdraw": {
+      "post": {
+        "description": "Withdraw a quote: its link stops working immediately.",
+        "operationId": "quotes_withdraw",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw",
+        "tags": [
+          "quotes"
         ]
       }
     },

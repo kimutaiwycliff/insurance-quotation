@@ -15,9 +15,10 @@ import re
 import secrets
 import uuid
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
+from typing import Any, Protocol
 
 from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,10 +30,23 @@ from app.modules.documents import service as documents
 from app.modules.messaging import service as messaging
 from app.modules.notifications import service as notifications
 from app.modules.public_links.models import LinkEvent, PublicLink
-from app.modules.public_links.schemas import LinkCreate
+from app.modules.public_links.schemas import LinkCreate, SendTo
 from app.modules.tenancy import service as tenancy
 from app.platform import audit
 from app.platform.deps import TenantContext
+
+__all__ = [
+    "LinkCreate",
+    "LinkGoneError",
+    "PublicContent",
+    "PublicLink",
+    "SendTo",
+    "create_link",
+    "link_url",
+    "register_actions",
+    "register_target",
+    "revoke_for_entity",
+]
 
 TOKEN_BYTES = 32
 _TOKEN_SHAPE = re.compile(r"^[A-Za-z0-9_-]{43}$")
@@ -61,6 +75,78 @@ class PublicContent:
     kind: str
     html: Callable[[], Awaitable[str]] | None = None  # self-contained HTML (template engine)
     download: Callable[[], Awaitable[str]] | None = None  # presigned URL
+    choices: list[dict[str, Any]] = field(default_factory=list)  # e.g. quote options to accept
+    state: str | None = None  # e.g. sent | accepted | declined | expired
+
+
+class ActionHandler(Protocol):
+    async def __call__(
+        self,
+        *,
+        session: AsyncSession,
+        settings: Settings,
+        link: PublicLink,
+        action: str,
+        body: dict[str, Any],
+        evidence: dict[str, Any],
+    ) -> str: ...
+
+
+_ACTIONS: dict[str, ActionHandler] = {}
+
+
+def register_actions(entity_type: str, handler: ActionHandler) -> None:
+    """Handle ``accept``/``decline`` on links to ``entity_type``; returns the new state."""
+    _ACTIONS[entity_type] = handler
+
+
+async def perform(
+    session: AsyncSession,
+    settings: Settings,
+    link: PublicLink,
+    action: str,
+    body: dict[str, Any],
+    *,
+    ip_hash: str | None,
+    user_agent: str | None,
+) -> str:
+    if "accept" not in link.scopes:
+        raise LinkScopeError()
+    handler = _ACTIONS.get(link.entity_type)
+    if handler is None:
+        raise LinkScopeError("Nothing to accept here")
+    evidence = {
+        "ip_hash": ip_hash,
+        "user_agent": (user_agent or "")[:300],
+        "at": datetime.now(UTC).isoformat(),
+    }
+    state = await handler(
+        session=session, settings=settings, link=link, action=action, body=body, evidence=evidence
+    )
+    await record_event(
+        session,
+        link,
+        "accepted" if action == "accept" else "declined",
+        ip_hash=ip_hash,
+        user_agent=user_agent,
+        details={k: v for k, v in body.items() if k in {"option", "reason"}},
+    )
+    return state
+
+
+async def revoke_for_entity(ctx: TenantContext, entity_type: str, entity_id: uuid.UUID) -> int:
+    links = (
+        await ctx.session.scalars(
+            select(PublicLink).where(
+                PublicLink.entity_type == entity_type,
+                PublicLink.entity_id == entity_id,
+                PublicLink.revoked_at.is_(None),
+            )
+        )
+    ).all()
+    for link in links:
+        await revoke(ctx, link.id)
+    return len(links)
 
 
 TargetResolver = Callable[[AsyncSession, S3Storage, Settings, PublicLink], Awaitable[PublicContent]]

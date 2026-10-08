@@ -58,6 +58,19 @@ class KeyValue(_Model):
     value: str
 
 
+class OptionView(_Model):
+    """One insurer's offer in a comparison quote (client-facing: never carries commission)."""
+
+    position: int
+    insurer: str
+    product: str
+    premium: Decimal = Field(description="premium incl. benefits, loadings and discounts")
+    charges: list[AmountLine] = Field(default_factory=list, description="levies, stamp duty, fees")
+    total: Decimal
+    excess: str | None = None
+    recommended: bool = False
+
+
 class PaymentInstructions(_Model):
     reference: str | None = Field(
         default=None, description="Short payment reference (M-Pesa account)"
@@ -84,8 +97,11 @@ class DocumentView(_Model):
     details: list[KeyValue] = Field(
         default_factory=list, description="e.g. vehicle, cover type, period"
     )
-    lines: list[LineItem]
-    totals: Totals
+    lines: list[LineItem] = Field(default_factory=list)
+    totals: Totals | None = None
+    options: list[OptionView] = Field(
+        default_factory=list, description="comparison quotes: one per insurer"
+    )
     notes: str | None = None
     terms: str | None = None
     payment: PaymentInstructions | None = None

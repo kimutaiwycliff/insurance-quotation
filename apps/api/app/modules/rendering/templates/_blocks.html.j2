@@ -47,7 +47,41 @@
 </table>
 {% endmacro %}
 
+{% macro options(doc) %}
+<table class="lines" aria-label="Options">
+  <caption class="muted small" style="text-align:left">Amounts in {{ doc.currency }}. Choose one option.</caption>
+  <thead><tr>
+    <th scope="col">Option</th><th scope="col" class="num">Premium</th>
+    <th scope="col" class="num">Levies &amp; duty</th><th scope="col" class="num">Total</th>
+  </tr></thead>
+  <tbody>
+  {% for o in doc.options %}
+    <tr>
+      <td><strong>{{ o.position }}. {{ o.insurer }}</strong>{% if o.recommended %} <em>(recommended)</em>{% endif %}
+        <div class="muted small">{{ o.product }}</div>
+        {% if o.excess %}<div class="muted small">Excess: {{ o.excess }}</div>{% endif %}
+      </td>
+      <td class="num">{{ o.premium | money(doc.currency) }}</td>
+      <td class="num">{{ o.charges | sum(attribute='amount') | money(doc.currency) }}</td>
+      <td class="num"><strong>{{ o.total | money(doc.currency) }}</strong></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% for o in doc.options %}
+<section class="block small" aria-label="Breakdown of option {{ o.position }}">
+  <div class="muted">Option {{ o.position }}: {{ o.insurer }}</div>
+  <dl class="kv">
+    <dt>Premium</dt><dd>{{ o.premium | money(doc.currency) }}</dd>
+    {% for c in o.charges %}<dt>{{ c.label }}</dt><dd>{{ c.amount | money(doc.currency) }}</dd>{% endfor %}
+    <dt><strong>Total</strong></dt><dd><strong>{{ o.total | money(doc.currency) }}</strong></dd>
+  </dl>
+</section>
+{% endfor %}
+{% endmacro %}
+
 {% macro totals(doc) %}
+{% if doc.totals %}
 <table class="totals" aria-label="Totals">
   <tr><td>Subtotal</td><td class="num">{{ doc.totals.subtotal | money(doc.currency) }}</td></tr>
   {% for charge in doc.totals.charges %}
@@ -61,6 +95,7 @@
   <tr><td><strong>Balance due</strong></td><td class="num"><strong>{{ doc.totals.balance | money(doc.currency) }}</strong></td></tr>
   {% endif %}
 </table>
+{% endif %}
 {% endmacro %}
 
 {% macro payment(doc) %}

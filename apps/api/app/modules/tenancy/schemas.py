@@ -62,6 +62,7 @@ class OrganizationOut(BaseModel):
     fiscal_year_start_month: int
     quiet_hours_start: time | None
     quiet_hours_end: time | None
+    multi_insurer_quotes: bool
     version: int
 
 
@@ -87,6 +88,7 @@ class OrganizationUpdate(_Strict):
     fiscal_year_start_month: Annotated[int, Field(ge=1, le=12)] | None = None
     quiet_hours_start: time | None = None
     quiet_hours_end: time | None = None
+    multi_insurer_quotes: bool | None = None
 
     @field_validator("default_currency")
     @classmethod

@@ -20,8 +20,12 @@
 </header>
 <div class="parties">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "To") }}</div>
 {{ b.details(doc) }}
+{% if doc.options %}
+<div class="block">{{ b.options(doc) }}</div>
+{% else %}
 <div class="block">{{ b.lines(doc) }}</div>
 {{ b.totals(doc) }}
+{% endif %}
 {{ b.payment(doc) }}
 {{ b.closing(doc, brand) }}
 {% endblock %}

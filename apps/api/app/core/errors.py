@@ -11,7 +11,7 @@ import structlog
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 PROBLEM_CONTENT_TYPE = "application/problem+json"
@@ -183,6 +183,25 @@ async def _handle_validation_error(request: Request, exc: RequestValidationError
     )
 
 
+async def _handle_model_validation_error(request: Request, exc: ValidationError) -> JSONResponse:
+    """Validation raised inside services (e.g. a body validated after routing) is still a 422, not a 500."""
+    errors = [
+        FieldError(
+            field=".".join(["body", *(str(part) for part in err.get("loc", ()))]),
+            message=str(err.get("msg", "Invalid value")),
+            code=str(err.get("type", "invalid")),
+        )
+        for err in exc.errors()
+    ]
+    return problem_response(
+        request,
+        status=HTTPStatus.UNPROCESSABLE_CONTENT,
+        code="validation_error",
+        title="Request validation failed",
+        errors=errors,
+    )
+
+
 async def _handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     status = HTTPStatus(exc.status_code)
     detail = exc.detail if isinstance(exc.detail, str) and exc.detail != status.phrase else None
@@ -210,6 +229,7 @@ def register_error_handlers(app: FastAPI) -> None:
     handlers: dict[Any, Any] = {
         AppError: _handle_app_error,
         RequestValidationError: _handle_validation_error,
+        ValidationError: _handle_model_validation_error,
         StarletteHTTPException: _handle_http_exception,
         Exception: _handle_unexpected,
     }

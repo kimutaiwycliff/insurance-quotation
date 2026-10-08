@@ -22,6 +22,7 @@ KINDS: dict[str, tuple[str, bool, bool]] = {
     "member.joined": ("Someone joined your agency", True, False),
     "task.due": ("A task assigned to you is due", True, False),
     "lead.assigned": ("A lead was assigned to you", True, False),
+    "quote.answered": ("A client accepted or declined a quotation", True, True),
 }
 
 
