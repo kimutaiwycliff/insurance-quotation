@@ -4,9 +4,7 @@
  * BrokerOS API
  * OpenAPI spec version: 1.0.0
  */
-import type { BillingDocumentOutKind } from './billingDocumentOutKind';
 import type { BillingDocumentOutResponse } from './billingDocumentOutResponse';
-import type { BillingDocumentOutStatus } from './billingDocumentOutStatus';
 import type { BillingLineOut } from './billingLineOut';
 import type { ClientRef } from './clientRef';
 import type { PaymentAllocationOut } from './paymentAllocationOut';
@@ -30,7 +28,7 @@ export interface BillingDocumentOut {
   id: string;
   issue_date: string | null;
   issued_at: string | null;
-  kind: BillingDocumentOutKind;
+  kind: string;
   lines: BillingLineOut[];
   notes: string | null;
   number: string | null;
@@ -51,7 +49,7 @@ export interface BillingDocumentOut {
   response: BillingDocumentOutResponse;
   response_status: string | null;
   /** Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void. */
-  status: BillingDocumentOutStatus;
+  status: string;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   subtotal: string;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */

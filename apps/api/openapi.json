@@ -623,13 +623,13 @@
             "title": "Issued At"
           },
           "kind": {
-            "enum": [
+            "title": "Kind",
+            "type": "string",
+            "x-extensible-enum": [
               "invoice",
               "credit_note",
               "quote"
-            ],
-            "title": "Kind",
-            "type": "string"
+            ]
           },
           "lines": {
             "items": {
@@ -728,7 +728,9 @@
           },
           "status": {
             "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void.",
-            "enum": [
+            "title": "Status",
+            "type": "string",
+            "x-extensible-enum": [
               "draft",
               "open",
               "partially_paid",
@@ -741,9 +743,7 @@
               "expired",
               "invoiced",
               "void"
-            ],
-            "title": "Status",
-            "type": "string"
+            ]
           },
           "subtotal": {
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
@@ -908,13 +908,13 @@
             "title": "Issue Date"
           },
           "kind": {
-            "enum": [
+            "title": "Kind",
+            "type": "string",
+            "x-extensible-enum": [
               "invoice",
               "credit_note",
               "quote"
-            ],
-            "title": "Kind",
-            "type": "string"
+            ]
           },
           "number": {
             "anyOf": [
@@ -935,7 +935,9 @@
           },
           "status": {
             "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void.",
-            "enum": [
+            "title": "Status",
+            "type": "string",
+            "x-extensible-enum": [
               "draft",
               "open",
               "partially_paid",
@@ -948,9 +950,7 @@
               "expired",
               "invoiced",
               "void"
-            ],
-            "title": "Status",
-            "type": "string"
+            ]
           },
           "total": {
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",

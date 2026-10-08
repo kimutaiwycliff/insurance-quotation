@@ -7,6 +7,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, model_validator
 
 from app.core.money import AmountStr, RateStr
+from app.core.schema import ExtensibleEnum
 from app.modules.quotes.service import ClientRef
 
 Note = Annotated[str, StringConstraints(max_length=3000)]
@@ -153,25 +154,29 @@ class PaymentAllocationOut(BaseModel):
     created_at: datetime
 
 
-Status = Literal[
-    "draft",
-    "open",
-    "partially_paid",
-    "paid",
-    "overdue",
-    "issued",
-    "sent",
-    "accepted",
-    "declined",
-    "expired",
-    "invoiced",
-    "void",
+Status = Annotated[
+    str,
+    ExtensibleEnum(
+        "draft",
+        "open",
+        "partially_paid",
+        "paid",
+        "overdue",
+        "issued",
+        "sent",
+        "accepted",
+        "declined",
+        "expired",
+        "invoiced",
+        "void",
+    ),
 ]
+Kind = Annotated[str, ExtensibleEnum("invoice", "credit_note", "quote")]
 
 
 class BillingDocumentSummary(BaseModel):
     id: uuid.UUID
-    kind: Literal["invoice", "credit_note", "quote"]
+    kind: Kind
     number: str | None
     client: ClientRef
     status: Status = Field(
