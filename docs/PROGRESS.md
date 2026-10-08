@@ -18,7 +18,9 @@ Read this first when resuming work. Update it at the end of every session (newes
   protected (all CI jobs required, linear history); work goes through pull requests.
 - **Done: R2.1 invoicing core** (PR #2, merged).
 - **Done: R2.2** (PR #3, merged).
-- **Next: R2.3** M-Pesa Daraja (plan A1.3). Paystack is on hold.
+- **In review: R2.3 M-Pesa Daraja** on `feat/r2-3-mpesa` (plan A1.3). Paystack is on hold.
+- **Next: R2.4** optional eTIMS (manual reference), then R2.5 plans and billing (prices approved), and R2.6
+  production on the VM.
 - **Done: R1.2** (insurers, premium engine, KE pack pending sign-off, calculator) on `feat/r1-2-insurers-calc`
   (stacked, not merged, no remote). The notes below describe what it contains.
   - Backend done and tested, not yet committed at the time of writing:
@@ -69,6 +71,9 @@ Read this first when resuming work. Update it at the end of every session (newes
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas
+- Daraja: amounts are whole shillings; STK Query answers 4999 ("still under processing") until the customer
+  responds; the sandbox cannot reach a localhost callback, so local prompts complete through the check job
+  or the status poll.
 - Runtime images apply Debian security updates and drop the package managers (npm/corepack/yarn in the Node
   images, the system pip/ensurepip in the Python image); CI's Trivy scan fails on fixable HIGH/CRITICAL CVEs in
   them. Scan locally: `docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.70.0 image

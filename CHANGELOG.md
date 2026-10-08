@@ -5,6 +5,25 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: R2.3 M-Pesa Daraja (2026-10-08)
+- **Settings → Payments:**
+  - connect the business's own Paybill or Till (Daraja keys checked with Safaricom and stored encrypted);
+  - register Paybill payments; turn off;
+  - card payments shown as **coming soon**.
+- **M-Pesa payment prompts:**
+  - from the invoice page ("Ask for M-Pesa payment"), and by the client from the invoice link ("Pay with
+    M-Pesa");
+  - followed live until paid, cancelled or timed out;
+  - recorded only after Safaricom confirms (STK Query); whole shillings, with any excess kept as credit.
+- **Paybill payments made by hand:**
+  - matched to invoices by payment reference;
+  - otherwise queued under Payments → "M-Pesa payments to match", to assign to a client or set aside.
+- Callbacks are stored before processing (duplicates ignored) on a secret path per connection, with an
+  optional IP allow-list (`MPESA_CALLBACK_ALLOWED_IPS`).
+- A simulator for trying it out without Safaricom (not available in production).
+- A sandbox smoke test runs in CI with repo secrets.
+- Runbook: `docs/runbooks/mpesa-go-live.md`.
+
 ### Added
 - Book import accepts **Excel (.xlsx)** files as well as CSV. Dates, numbers and yes/no cells are read as
   typed; old `.xls` files get a hint to resave.

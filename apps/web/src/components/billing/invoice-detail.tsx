@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { InvoiceEditor } from "@/components/billing/invoice-editor";
+import { MpesaPromptButton } from "@/components/billing/mpesa-prompt";
 import { BillingStatus, METHOD_LABELS } from "@/components/billing/status";
 import { Field, FormError } from "@/components/forms/field";
 import { todayIso } from "@/components/policies/new-policy";
@@ -420,6 +421,9 @@ export function InvoiceDetail({ documentId }: { documentId: string }) {
             >
               <Send aria-hidden="true" /> Send
             </Button>
+          )}
+          {isInvoice && issued && canPay && Number(d.balance) > 0 && (
+            <MpesaPromptButton invoiceId={d.id} clientPhone={d.client.phone} balance={d.balance} onPaid={refresh} />
           )}
           {isInvoice && issued && canPay && Number(d.balance) > 0 && (
             <Button onClick={() => setDialog("pay")}>Record payment</Button>

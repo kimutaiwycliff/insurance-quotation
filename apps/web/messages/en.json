@@ -134,7 +134,8 @@
     "branding": "Documents & brand",
     "security": "Security",
     "insurers": "Insurers & products",
-    "items": "Items & prices"
+    "items": "Items & prices",
+    "payments": "Payments"
   },
   "organization": {
     "name": "Trading name",
