@@ -54,9 +54,11 @@ __all__ = [
     "Insurer",
     "Product",
     "RiskIn",
+    "UnknownClassError",
     "agency_pack",
     "calculate_product",
     "can_see_commission",
+    "get_insurer",
     "get_product",
 ]
 

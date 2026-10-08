@@ -20,7 +20,7 @@ from app.modules.notifications import service as notifications
 from app.modules.tasks.models import Task
 from app.modules.tasks.schemas import Due, TaskCounts, TaskCreate, TaskUpdate
 
-__all__ = ["TaskCounts", "counts", "list_tasks"]
+__all__ = ["TaskCounts", "TaskCreate", "complete_task", "counts", "create_task", "list_tasks"]
 from app.modules.tenancy import service as tenancy
 from app.platform import audit, events
 from app.platform.deps import TenantContext, own_scope
@@ -126,6 +126,15 @@ async def update_task(
     if done:
         await audit.record(ctx, "task.completed", entity_type="task", entity_id=task.id)
     return task
+
+
+async def complete_task(ctx: TenantContext, task_id: uuid.UUID) -> None:
+    """Close a task another module opened (e.g. "remit premium" once the remittance is recorded)."""
+    task = await ctx.session.get(Task, task_id)
+    if task is not None and task.status == OPEN:
+        task.status, task.completed_at = DONE, datetime.now(UTC)
+        task.updated_by = ctx.principal.user_id
+        await ctx.session.flush()
 
 
 async def list_tasks(

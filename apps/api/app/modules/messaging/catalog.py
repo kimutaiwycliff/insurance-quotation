@@ -67,6 +67,30 @@ CATALOG: dict[str, EventTemplate] = {
             },
         ),
         EventTemplate(
+            event="policy.renewal_due",
+            description="Renewal reminder to a client before their policy expires",
+            stream="reminders",
+            subject="Your {{ policy_description }} cover expires on {{ expires_on }}",
+            body=(
+                "Dear {{ recipient_name }},\n\n"
+                "{% if message %}{{ message }}\n\n{% endif %}"
+                "Your {{ insurer_name }} cover for {{ policy_description }} expires on {{ expires_on }}. "
+                "To stay covered without a gap, reply to this email or call us on {{ agent_phone }} "
+                "and we will prepare your renewal.\n\n"
+                "Kind regards,\n{{ agent_name }}\n{{ tenant_name }}"
+            ),
+            sample={
+                "recipient_name": "Otieno",
+                "tenant_name": "Wanjiku Insurance Agency",
+                "agent_name": "Wanjiku",
+                "agent_phone": "+254 711 000 000",
+                "insurer_name": "Savanna General",
+                "policy_description": "KDA 123A Toyota Axio",
+                "expires_on": "30 Nov 2026",
+                "message": "",
+            },
+        ),
+        EventTemplate(
             event="notification.email",
             description="Email copy of an in-app notification (team members)",
             stream="transactional",

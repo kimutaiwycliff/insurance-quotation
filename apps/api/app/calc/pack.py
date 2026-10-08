@@ -108,6 +108,12 @@ class InsuranceClass(_Frozen):
     )
 
 
+class PremiumException(_Rule):
+    """A case where cover may start before the premium is paid in full (e.g. KE Regs r.43)."""
+
+    note: str = ""
+
+
 class Pack(_Frozen):
     code: str
     version: str
@@ -124,6 +130,8 @@ class Pack(_Frozen):
     levies: list[LevyRule] = Field(default_factory=list)
     stamp_duty: list[StampDutyRule] = Field(default_factory=list)
     classes: list[InsuranceClass] = Field(default_factory=list)
+    # "No premium, no cover": cases where a policy may be activated before full payment.
+    premium_exceptions: list[PremiumException] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _consistent(self) -> Pack:
@@ -131,7 +139,7 @@ class Pack(_Frozen):
         for ref in (self.premium_tax_code, self.commission_tax_code, self.fee_tax_code):
             if ref not in codes:
                 raise ValueError(f"Unknown tax code {ref!r}")
-        ids = [r.id for r in [*self.levies, *self.stamp_duty]]
+        ids = [r.id for r in [*self.levies, *self.stamp_duty, *self.premium_exceptions]]
         if len(ids) != len(set(ids)):
             raise ValueError("Rule ids must be unique")
         class_codes = [c.code for c in self.classes]
@@ -148,3 +156,15 @@ class Pack(_Frozen):
 
     def insurance_class(self, code: str) -> InsuranceClass | None:
         return next((c for c in self.classes if c.code == code), None)
+
+    def premium_exceptions_for(self, class_code: str, on: date) -> list[PremiumException]:
+        klass = self.insurance_class(class_code)
+        line = klass.business_line if klass else "general"
+        return [
+            e
+            for e in self.premium_exceptions
+            if e.in_force(on)
+            and e.applies_to.matches(
+                business_line=line, class_code=class_code, document_kind="policy"
+            )
+        ]

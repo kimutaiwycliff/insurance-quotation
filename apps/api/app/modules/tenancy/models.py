@@ -5,7 +5,7 @@ from datetime import date, datetime, time
 from typing import Any
 
 from sqlalchemy import CHAR, ForeignKey, ForeignKeyConstraint, SmallInteger, UniqueConstraint, text
-from sqlalchemy.dialects.postgresql import CITEXT, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, CITEXT, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.models import Audited, Base, TenantScoped, Versioned
@@ -44,6 +44,11 @@ class Tenant(Audited, Versioned, Base):
     provisioned_via: Mapped[str] = mapped_column(server_default="hook")  # hook | lazy
     # Whether quotes may compare several insurers (pending legal opinion D5 for tied agents).
     multi_insurer_quotes: Mapped[bool] = mapped_column(server_default=text("true"))
+    # Days before expiry on which the agent is reminded about a renewal (and, if enabled, the client emailed).
+    renewal_reminder_days: Mapped[list[int]] = mapped_column(
+        ARRAY(SmallInteger), server_default=text("'{30,14,7}'")
+    )
+    renewal_client_emails: Mapped[bool] = mapped_column(server_default=text("false"))
 
 
 class Membership(TenantScoped, Audited, Versioned, Base):

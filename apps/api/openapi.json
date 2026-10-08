@@ -14,6 +14,49 @@
         "title": "ActionResult",
         "type": "object"
       },
+      "Activate": {
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "default": "paid",
+            "enum": [
+              "paid",
+              "exception"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "exception_id": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exception Id"
+          },
+          "insurer_confirmed": {
+            "const": true,
+            "description": "The insurer has confirmed cover",
+            "title": "Insurer Confirmed",
+            "type": "boolean"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "insurer_confirmed"
+        ],
+        "title": "Activate",
+        "type": "object"
+      },
       "ActivityIn": {
         "additionalProperties": false,
         "properties": {
@@ -999,6 +1042,22 @@
           "needs_input"
         ],
         "title": "CalculationOut",
+        "type": "object"
+      },
+      "Cancel": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "Cancel",
         "type": "object"
       },
       "CheckStatus": {
@@ -2643,6 +2702,18 @@
               }
             ]
           },
+          "policies_active": {
+            "title": "Policies Active",
+            "type": "integer"
+          },
+          "premiums_to_remit": {
+            "title": "Premiums To Remit",
+            "type": "integer"
+          },
+          "renewals_due_30d": {
+            "title": "Renewals Due 30D",
+            "type": "integer"
+          },
           "tasks": {
             "anyOf": [
               {
@@ -2659,7 +2730,10 @@
           "new_clients_30d",
           "tasks",
           "pipeline",
-          "documents_expiring_30d"
+          "documents_expiring_30d",
+          "policies_active",
+          "renewals_due_30d",
+          "premiums_to_remit"
         ],
         "title": "Dashboard",
         "type": "object"
@@ -3176,6 +3250,119 @@
           "amount"
         ],
         "title": "FeeIn",
+        "type": "object"
+      },
+      "FromQuote": {
+        "additionalProperties": false,
+        "properties": {
+          "collection_mode": {
+            "default": "insurer_direct",
+            "enum": [
+              "insurer_direct",
+              "agent_collected"
+            ],
+            "title": "Collection Mode",
+            "type": "string"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Detail"
+                },
+                "maxItems": 12,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to one year less a day",
+            "title": "End Date"
+          },
+          "insurer_confirmed": {
+            "default": false,
+            "description": "The insurer has confirmed cover; activates the policy when the premium is paid",
+            "title": "Insurer Confirmed",
+            "type": "boolean"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "option": {
+            "anyOf": [
+              {
+                "maximum": 8.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The option the client took, when they accepted by phone rather than on the link",
+            "title": "Option"
+          },
+          "payment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaymentIn"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A payment already made"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "quote_id": {
+            "format": "uuid",
+            "title": "Quote Id",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "quote_id"
+        ],
+        "title": "FromQuote",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -5213,6 +5400,17 @@
             ],
             "title": "Registration Number"
           },
+          "renewal_client_emails": {
+            "title": "Renewal Client Emails",
+            "type": "boolean"
+          },
+          "renewal_reminder_days": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Renewal Reminder Days",
+            "type": "array"
+          },
           "slug": {
             "anyOf": [
               {
@@ -5270,6 +5468,8 @@
           "quiet_hours_start",
           "quiet_hours_end",
           "multi_insurer_quotes",
+          "renewal_reminder_days",
+          "renewal_client_emails",
           "version"
         ],
         "title": "OrganizationOut",
@@ -5465,6 +5665,37 @@
               }
             ],
             "title": "Registration Number"
+          },
+          "renewal_client_emails": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Also email clients a renewal reminder (agent is always reminded)",
+            "title": "Renewal Client Emails"
+          },
+          "renewal_reminder_days": {
+            "anyOf": [
+              {
+                "items": {
+                  "maximum": 120.0,
+                  "minimum": 1.0,
+                  "type": "integer"
+                },
+                "maxItems": 6,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Days before expiry on which renewals are reminded",
+            "title": "Renewal Reminder Days"
           },
           "tax_pin": {
             "anyOf": [
@@ -5766,6 +5997,199 @@
         "title": "PaymentDefaults",
         "type": "object"
       },
+      "PaymentIn": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "method": {
+            "default": "mpesa",
+            "enum": [
+              "mpesa",
+              "bank",
+              "card",
+              "cheque",
+              "cash",
+              "other"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "paid_to": {
+            "anyOf": [
+              {
+                "enum": [
+                  "insurer",
+                  "agent"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults from the policy's collection mode",
+            "title": "Paid To"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "amount",
+          "paid_on"
+        ],
+        "title": "PaymentIn",
+        "type": "object"
+      },
+      "PaymentOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "paid_to": {
+            "title": "Paid To",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "remittance_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remittance Reference"
+          },
+          "remitted_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remitted On"
+          },
+          "void_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Void Reason"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "paid_on",
+          "method",
+          "reference",
+          "paid_to",
+          "remitted_on",
+          "remittance_reference",
+          "voided_at",
+          "void_reason",
+          "created_by",
+          "created_at"
+        ],
+        "title": "PaymentOut",
+        "type": "object"
+      },
       "PdfLink": {
         "properties": {
           "url": {
@@ -5806,7 +6230,8 @@
           "insurer:read",
           "insurer:manage",
           "commission:read:own",
-          "commission:read:all"
+          "commission:read:all",
+          "premium:write"
         ],
         "title": "Perm",
         "type": "string"
@@ -5831,6 +6256,781 @@
           "follow_ups_due"
         ],
         "title": "Pipeline",
+        "type": "object"
+      },
+      "PolicyCreate": {
+        "additionalProperties": false,
+        "description": "A policy written outside a quote (e.g. an existing client's cover entered into the book).",
+        "properties": {
+          "class_code": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9_]{1,40}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Code"
+          },
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "collection_mode": {
+            "default": "insurer_direct",
+            "enum": [
+              "insurer_direct",
+              "agent_collected"
+            ],
+            "title": "Collection Mode",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Detail"
+                },
+                "maxItems": 12,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to one year less a day",
+            "title": "End Date"
+          },
+          "insurer_confirmed": {
+            "default": false,
+            "description": "The insurer has confirmed cover; activates the policy when the premium is paid",
+            "title": "Insurer Confirmed",
+            "type": "boolean"
+          },
+          "insurer_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required without product_id",
+            "title": "Insurer Name"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "payment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaymentIn"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A payment already made"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "renewed_from_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewed From Id"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "sum_insured": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "ge": 0,
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sum Insured"
+          },
+          "total_premium": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total Premium",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start_date",
+          "client_id",
+          "total_premium"
+        ],
+        "title": "PolicyCreate",
+        "type": "object"
+      },
+      "PolicyOut": {
+        "properties": {
+          "activated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activated At"
+          },
+          "activation": {
+            "additionalProperties": true,
+            "title": "Activation",
+            "type": "object"
+          },
+          "balance": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Balance",
+            "type": "string"
+          },
+          "breakdown": {
+            "additionalProperties": true,
+            "title": "Breakdown",
+            "type": "object"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "class_code": {
+            "title": "Class Code",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "collection_mode": {
+            "enum": [
+              "insurer_direct",
+              "agent_collected"
+            ],
+            "title": "Collection Mode",
+            "type": "string"
+          },
+          "commission": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only for roles that may see commission",
+            "title": "Commission"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "days_to_expiry": {
+            "title": "Days To Expiry",
+            "type": "integer"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/Detail"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "insurer_name": {
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "last_contacted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Contacted At"
+          },
+          "lost_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lost Reason"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "owner_user_id": {
+            "title": "Owner User Id",
+            "type": "string"
+          },
+          "paid": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Paid",
+            "type": "string"
+          },
+          "payments": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentOut"
+            },
+            "title": "Payments",
+            "type": "array"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "premium_exceptions": {
+            "description": "Cases in which this class may be activated before full payment",
+            "items": {
+              "$ref": "#/components/schemas/PremiumExceptionOut"
+            },
+            "title": "Premium Exceptions",
+            "type": "array"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "quote_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Id"
+          },
+          "renewal_quote_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewal Quote Id"
+          },
+          "renewal_stage": {
+            "enum": [
+              "due",
+              "contacted",
+              "quoted",
+              "renewed",
+              "lost"
+            ],
+            "title": "Renewal Stage",
+            "type": "string"
+          },
+          "renewed_from_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewed From Id"
+          },
+          "renewed_to_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewed To Id"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "description": "'expired' when an active policy is past its end date",
+            "enum": [
+              "pending",
+              "active",
+              "expired",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "sum_insured": {
+            "anyOf": [
+              {
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sum Insured"
+          },
+          "total_premium": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total Premium",
+            "type": "string"
+          },
+          "unremitted": {
+            "description": "Premium the agent collected and has not yet remitted",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Unremitted",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "client",
+          "policy_number",
+          "insurer_name",
+          "product_name",
+          "class_code",
+          "description",
+          "status",
+          "start_date",
+          "end_date",
+          "days_to_expiry",
+          "currency",
+          "total_premium",
+          "paid",
+          "balance",
+          "collection_mode",
+          "renewal_stage",
+          "owner_user_id",
+          "quote_id",
+          "product_id",
+          "details",
+          "sum_insured",
+          "breakdown",
+          "commission",
+          "activated_at",
+          "activation",
+          "cancelled_at",
+          "cancel_reason",
+          "renewed_from_id",
+          "renewed_to_id",
+          "renewal_quote_id",
+          "lost_reason",
+          "last_contacted_at",
+          "notes",
+          "payments",
+          "unremitted",
+          "premium_exceptions",
+          "version",
+          "created_at"
+        ],
+        "title": "PolicyOut",
+        "type": "object"
+      },
+      "PolicySummary": {
+        "properties": {
+          "balance": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Balance",
+            "type": "string"
+          },
+          "class_code": {
+            "title": "Class Code",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "collection_mode": {
+            "enum": [
+              "insurer_direct",
+              "agent_collected"
+            ],
+            "title": "Collection Mode",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "days_to_expiry": {
+            "title": "Days To Expiry",
+            "type": "integer"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "insurer_name": {
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "owner_user_id": {
+            "title": "Owner User Id",
+            "type": "string"
+          },
+          "paid": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Paid",
+            "type": "string"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "renewal_stage": {
+            "enum": [
+              "due",
+              "contacted",
+              "quoted",
+              "renewed",
+              "lost"
+            ],
+            "title": "Renewal Stage",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "description": "'expired' when an active policy is past its end date",
+            "enum": [
+              "pending",
+              "active",
+              "expired",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_premium": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total Premium",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "client",
+          "policy_number",
+          "insurer_name",
+          "product_name",
+          "class_code",
+          "description",
+          "status",
+          "start_date",
+          "end_date",
+          "days_to_expiry",
+          "currency",
+          "total_premium",
+          "paid",
+          "balance",
+          "collection_mode",
+          "renewal_stage",
+          "owner_user_id"
+        ],
+        "title": "PolicySummary",
+        "type": "object"
+      },
+      "PolicyUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Detail"
+                },
+                "maxItems": 12,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          }
+        },
+        "title": "PolicyUpdate",
         "type": "object"
       },
       "Preference": {
@@ -5861,6 +7061,34 @@
           "email"
         ],
         "title": "Preference",
+        "type": "object"
+      },
+      "PremiumExceptionOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "source",
+          "note"
+        ],
+        "title": "PremiumExceptionOut",
         "type": "object"
       },
       "ProductBenefit-Input": {
@@ -7082,6 +8310,471 @@
         "title": "ReadyResponse",
         "type": "object"
       },
+      "Remind": {
+        "additionalProperties": false,
+        "properties": {
+          "channel": {
+            "enum": [
+              "email",
+              "whatsapp",
+              "call",
+              "sms"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "required": [
+          "channel"
+        ],
+        "title": "Remind",
+        "type": "object"
+      },
+      "Reminded": {
+        "properties": {
+          "emailed_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emailed To"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyOut"
+          },
+          "whatsapp_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Url"
+          }
+        },
+        "required": [
+          "policy",
+          "whatsapp_url",
+          "emailed_to"
+        ],
+        "title": "Reminded",
+        "type": "object"
+      },
+      "Remitted": {
+        "additionalProperties": false,
+        "properties": {
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "remitted_on": {
+            "format": "date",
+            "title": "Remitted On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "remitted_on"
+        ],
+        "title": "Remitted",
+        "type": "object"
+      },
+      "RenewalBoard": {
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/RenewalColumn"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RenewalItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "window_days",
+          "currency",
+          "columns",
+          "items"
+        ],
+        "title": "RenewalBoard",
+        "type": "object"
+      },
+      "RenewalColumn": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "premium": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Premium",
+            "type": "string"
+          },
+          "stage": {
+            "enum": [
+              "due",
+              "contacted",
+              "quoted",
+              "renewed",
+              "lost"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "count",
+          "premium"
+        ],
+        "title": "RenewalColumn",
+        "type": "object"
+      },
+      "RenewalItem": {
+        "properties": {
+          "balance": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Balance",
+            "type": "string"
+          },
+          "class_code": {
+            "title": "Class Code",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "collection_mode": {
+            "enum": [
+              "insurer_direct",
+              "agent_collected"
+            ],
+            "title": "Collection Mode",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "days_to_expiry": {
+            "title": "Days To Expiry",
+            "type": "integer"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "insurer_name": {
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "last_contacted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Contacted At"
+          },
+          "lost_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lost Reason"
+          },
+          "owner_user_id": {
+            "title": "Owner User Id",
+            "type": "string"
+          },
+          "paid": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Paid",
+            "type": "string"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "renewal_quote_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewal Quote Id"
+          },
+          "renewal_quote_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renewal Quote Status"
+          },
+          "renewal_stage": {
+            "enum": [
+              "due",
+              "contacted",
+              "quoted",
+              "renewed",
+              "lost"
+            ],
+            "title": "Renewal Stage",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "description": "'expired' when an active policy is past its end date",
+            "enum": [
+              "pending",
+              "active",
+              "expired",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_premium": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total Premium",
+            "type": "string"
+          },
+          "whatsapp_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Url"
+          }
+        },
+        "required": [
+          "id",
+          "client",
+          "policy_number",
+          "insurer_name",
+          "product_name",
+          "class_code",
+          "description",
+          "status",
+          "start_date",
+          "end_date",
+          "days_to_expiry",
+          "currency",
+          "total_premium",
+          "paid",
+          "balance",
+          "collection_mode",
+          "renewal_stage",
+          "owner_user_id",
+          "whatsapp_url",
+          "last_contacted_at",
+          "renewal_quote_id",
+          "renewal_quote_status",
+          "lost_reason"
+        ],
+        "title": "RenewalItem",
+        "type": "object"
+      },
+      "RenewalQuote": {
+        "additionalProperties": false,
+        "description": "Start a renewal quote from the policy: client, class and details are copied.",
+        "properties": {
+          "details": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Detail"
+                },
+                "maxItems": 12,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "product_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Product Ids",
+            "type": "array"
+          },
+          "recommended_product_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended Product Id"
+          },
+          "risk": {
+            "$ref": "#/components/schemas/RiskIn"
+          },
+          "valid_days": {
+            "default": 30,
+            "maximum": 90.0,
+            "minimum": 1.0,
+            "title": "Valid Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_ids",
+          "risk"
+        ],
+        "title": "RenewalQuote",
+        "type": "object"
+      },
+      "RenewalUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "lost_reason": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lost Reason"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Logged on the client's timeline",
+            "title": "Note"
+          },
+          "stage": {
+            "enum": [
+              "due",
+              "contacted",
+              "lost"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage"
+        ],
+        "title": "RenewalUpdate",
+        "type": "object"
+      },
       "ResetPeriod": {
         "enum": [
           "never",
@@ -8247,6 +9940,22 @@
           "finalized_at"
         ],
         "title": "VersionOut",
+        "type": "object"
+      },
+      "VoidPayment": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "VoidPayment",
         "type": "object"
       }
     }
@@ -11636,6 +13345,800 @@
         ]
       }
     },
+    "/api/v1/policies": {
+      "get": {
+        "operationId": "policies_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(pending|active|expired|cancelled)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expiring_within",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 365,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expiring Within"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PolicySummary"
+                  },
+                  "title": "Response Policies List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Policies",
+        "tags": [
+          "policies"
+        ]
+      },
+      "post": {
+        "description": "Enter a policy written outside a quote (e.g. an existing client's cover).",
+        "operationId": "policies_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Policy",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/from-quote": {
+      "post": {
+        "description": "Turn the option the client accepted into a policy (pending until the insurer confirms cover).",
+        "operationId": "policies_from_quote",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FromQuote"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "From Quote",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}": {
+      "get": {
+        "operationId": "policies_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Policy",
+        "tags": [
+          "policies"
+        ]
+      },
+      "patch": {
+        "operationId": "policies_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Policy",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/activate": {
+      "post": {
+        "description": "No premium, no cover: needs the insurer's confirmation and full payment (or a pack exception).",
+        "operationId": "policies_activate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Activate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/cancel": {
+      "post": {
+        "operationId": "policies_cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cancel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/payments": {
+      "post": {
+        "description": "Record a premium payment (to the insurer, or to the agency when it is authorised to collect).",
+        "operationId": "policies_record_payment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Payment",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/payments/{payment_id}/remitted": {
+      "post": {
+        "operationId": "policies_mark_remitted",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Remitted"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark Remitted",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/payments/{payment_id}/void": {
+      "post": {
+        "operationId": "policies_void_payment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidPayment"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Void Payment",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/remind": {
+      "post": {
+        "description": "Remind the client now: email it, or get a WhatsApp link to open. Logged on the client's timeline.",
+        "operationId": "policies_remind",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Remind"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reminded"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remind",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/renewal": {
+      "post": {
+        "operationId": "policies_renewal_stage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenewalUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Renewal Stage",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/renewal-quote": {
+      "post": {
+        "description": "Start a renewal quote for the same client and risk; the policy moves to \"quoted\".",
+        "operationId": "policies_renewal_quote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenewalQuote"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Renewal Quote",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
     "/api/v1/premium/calculate": {
       "post": {
         "description": "Price one product for a risk: premium, benefits, levies, stamp duty, fees and (if allowed) commission.",
@@ -12954,6 +15457,69 @@
         "summary": "Withdraw",
         "tags": [
           "quotes"
+        ]
+      }
+    },
+    "/api/v1/renewals": {
+      "get": {
+        "description": "Active policies expiring within the window (and up to 30 days past), by renewal stage.",
+        "operationId": "renewals_board",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "window_days",
+            "required": false,
+            "schema": {
+              "default": 60,
+              "maximum": 120,
+              "minimum": 7,
+              "title": "Window Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 255,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenewalBoard"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Renewal Board",
+        "tags": [
+          "policies"
         ]
       }
     },

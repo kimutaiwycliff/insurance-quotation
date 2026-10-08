@@ -38,6 +38,7 @@ from app.modules.quotes.schemas import (
     AcceptBody,
     ClientRef,
     DeclineBody,
+    Detail,
     OptionOut,
     QuoteCreate,
     QuoteOut,
@@ -45,6 +46,20 @@ from app.modules.quotes.schemas import (
     QuoteSummary,
     SendQuote,
 )
+
+__all__ = [
+    "ClientRef",
+    "Detail",
+    "Quote",
+    "QuoteCreate",
+    "QuoteOption",
+    "QuoteOut",
+    "create_quote",
+    "get_quote",
+    "statuses",
+    "take_up",
+    "to_out",
+]
 from app.modules.rendering import service as rendering
 from app.modules.rendering.service import AmountLine, DocumentView, KeyValue, OptionView, Party
 from app.modules.tenancy import service as tenancy
@@ -438,6 +453,42 @@ async def pdf_url(
     return (
         await documents.download_url(ctx.session, quote.document_id, storage, settings, inline=True)
     ).url
+
+
+# ---------------------------------------------------------------- take-up (policy book)
+
+
+async def take_up(
+    ctx: TenantContext, quote_id: uuid.UUID, option: int | None
+) -> tuple[Quote, QuoteOption]:
+    """The option the client took. A sent quote the client accepted by phone is accepted here by the agent."""
+    quote = await get_quote(ctx, quote_id)
+    options = {o.position: o for o in await _options(ctx.session, quote.id)}
+    if quote.status == ACCEPTED and quote.accepted_position is not None:
+        if option is not None and option != quote.accepted_position:
+            raise QuoteStateError(f"The client accepted option {quote.accepted_position}")
+        return quote, options[quote.accepted_position]
+    if quote.status != SENT:
+        raise QuoteStateError(f"A {quote.status} quote cannot become a policy")
+    if option is None or option not in options:
+        raise QuoteStateError("Say which option the client accepted")
+    quote.status, quote.accepted_position = ACCEPTED, option
+    quote.responded_at = datetime.now(UTC)
+    quote.response = {"action": "accept", "option": option, "recorded_by": ctx.principal.user_id}
+    await links.revoke_for_entity(ctx, "quote", quote.id)
+    await audit.record(
+        ctx, "quote.accepted", entity_type="quote", entity_id=quote.id, changes={"option": option}
+    )
+    await ctx.session.flush()
+    return quote, options[option]
+
+
+async def statuses(ctx: TenantContext, quote_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+    if not quote_ids:
+        return {}
+    today = await _today(ctx.session, ctx.tenant_id)
+    rows = await ctx.session.scalars(select(Quote).where(Quote.id.in_(quote_ids)))
+    return {q.id: effective_status(q, today) for q in rows}
 
 
 # ---------------------------------------------------------------- public link target & actions

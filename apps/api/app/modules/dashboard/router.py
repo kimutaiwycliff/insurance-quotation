@@ -11,6 +11,7 @@ from app.modules.clients import service as clients
 from app.modules.documents import service as documents
 from app.modules.leads import service as leads
 from app.modules.leads.service import Pipeline
+from app.modules.policies import service as policies
 from app.modules.tasks import service as tasks
 from app.modules.tasks.service import TaskCounts
 from app.modules.tenancy import service as tenancy
@@ -25,6 +26,9 @@ class Dashboard(BaseModel):
     tasks: TaskCounts | None
     pipeline: Pipeline | None
     documents_expiring_30d: int
+    policies_active: int
+    renewals_due_30d: int
+    premiums_to_remit: int
 
 
 @router.get("", operation_id="dashboard_get")
@@ -46,6 +50,7 @@ async def dashboard(
         expiring_before=datetime.now(UTC).date() + timedelta(days=30),
         include_archived=False,
     )
+    book = await policies.counts(ctx)
     return Dashboard(
         clients=await clients.count_clients(ctx),
         new_clients_30d=await clients.count_clients(
@@ -54,4 +59,7 @@ async def dashboard(
         tasks=TaskCounts(**await tasks.counts(ctx)) if can_tasks else None,
         pipeline=await leads.pipeline(ctx, tenant.default_currency) if can_leads else None,
         documents_expiring_30d=len(expiring) if Perm.DOCUMENT_READ in perms else 0,
+        policies_active=book["active"],
+        renewals_due_30d=book["renewals_due_30d"],
+        premiums_to_remit=book["premiums_to_remit"],
     )

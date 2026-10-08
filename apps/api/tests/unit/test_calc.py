@@ -122,6 +122,16 @@ def test_pack_lookup() -> None:
     assert ("ke", "2026.1") in all_packs()
 
 
+def test_premium_exceptions_follow_class_and_business_line() -> None:
+    on = date(2026, 10, 8)
+    assert KE.premium_exceptions_for("motor_private", on) == []  # no premium, no cover
+    medical = [e.id for e in KE.premium_exceptions_for("medical_individual", on)]
+    assert medical == ["ke.r43.medical_instalments"]
+    assert "ke.s156.long_term" in [e.id for e in KE.premium_exceptions_for("life_term", on)]
+    assert len(KE.premium_exceptions_for("contractors_all_risks", on)) == 2
+    assert pack_for_country("UG").premium_exceptions_for("home", on) == []
+
+
 def test_pack_validation_rejects_inconsistencies() -> None:
     raw = KE.model_dump(mode="json")
     raw["levies"].append(raw["levies"][0])

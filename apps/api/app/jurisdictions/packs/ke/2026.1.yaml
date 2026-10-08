@@ -102,3 +102,37 @@ classes:
   - {code: group_life, name: "Group life", business_line: long_term}
   - {code: credit_life, name: "Credit life", business_line: long_term}
   - {code: last_expense, name: "Last expense (funeral)", business_line: long_term, rating_hint: flat}
+# "No premium, no cover" (Insurance Act s.156(1)): an insurer may not assume a general-insurance risk until the
+# premium is received. Regs r.43 lists the cases where cover may start earlier. Pending adviser sign-off (D4/D5).
+premium_exceptions:
+  - id: ke.r43.medical_instalments
+    name: "Medical cover paid by instalments"
+    applies_to: {classes: [medical_individual, medical_group]}
+    effective_from: 2000-01-01
+    source: "Insurance Regulations r.43 (medical insurance premium by instalments)"
+  - id: ke.r43.declaration
+    name: "Declaration policy (at least 75% of the deposit premium paid)"
+    applies_to: {classes: [marine_cargo, fire_industrial, wiba, group_life, credit_life]}
+    effective_from: 2000-01-01
+    source: "Insurance Regulations r.43 (declaration policies: 75% of the deposit premium)"
+    note: "Record the deposit received before activating."
+  - id: ke.r43.provisional
+    name: "Provisional premium (WIBA, contractor's all risks)"
+    applies_to: {classes: [wiba, contractors_all_risks]}
+    effective_from: 2000-01-01
+    source: "Insurance Regulations r.43 (provisional premium adjusted at expiry)"
+  - id: ke.r43.marine_15_days
+    name: "Marine: premium due within 15 days"
+    applies_to: {classes: [marine_cargo]}
+    effective_from: 2000-01-01
+    source: "Insurance Regulations r.43 (marine premium within 15 days)"
+  - id: ke.r43.staggered
+    name: "Bonds and contractor's all risks paid in agreed stages"
+    applies_to: {classes: [bonds, contractors_all_risks]}
+    effective_from: 2000-01-01
+    source: "Insurance Regulations r.43 (staggered payments for bonds and CAR)"
+  - id: ke.s156.long_term
+    name: "Long-term (life) business: premium terms set by the policy"
+    applies_to: {business_lines: [long_term]}
+    effective_from: 2000-01-01
+    source: "Insurance Act s.156(1) applies to general insurance business"

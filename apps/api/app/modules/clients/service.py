@@ -36,7 +36,15 @@ from app.modules.tenancy import service as tenancy
 from app.platform import audit
 from app.platform.deps import TenantContext, own_scope
 
-__all__ = ["Client", "ClientCreate", "create_client", "display_name", "get_visible_client"]
+__all__ = [
+    "ActivityIn",
+    "Client",
+    "ClientCreate",
+    "add_activity",
+    "create_client",
+    "display_name",
+    "get_visible_client",
+]
 
 
 class PossibleDuplicateError(ConflictError):

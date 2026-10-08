@@ -63,6 +63,8 @@ class OrganizationOut(BaseModel):
     quiet_hours_start: time | None
     quiet_hours_end: time | None
     multi_insurer_quotes: bool
+    renewal_reminder_days: list[int]
+    renewal_client_emails: bool
     version: int
 
 
@@ -89,6 +91,18 @@ class OrganizationUpdate(_Strict):
     quiet_hours_start: time | None = None
     quiet_hours_end: time | None = None
     multi_insurer_quotes: bool | None = None
+    renewal_reminder_days: (
+        Annotated[list[Annotated[int, Field(ge=1, le=120)]], Field(min_length=1, max_length=6)]
+        | None
+    ) = Field(default=None, description="Days before expiry on which renewals are reminded")
+    renewal_client_emails: bool | None = Field(
+        default=None, description="Also email clients a renewal reminder (agent is always reminded)"
+    )
+
+    @field_validator("renewal_reminder_days")
+    @classmethod
+    def _days(cls, value: list[int] | None) -> list[int] | None:
+        return sorted(set(value), reverse=True) if value is not None else None
 
     @field_validator("default_currency")
     @classmethod
