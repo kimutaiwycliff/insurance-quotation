@@ -2,27 +2,18 @@
 
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
-## Current state (2026-10-07)
-- **Done:**
-  - M0;
-  - M1 (`feat/m1-identity-tenancy`);
-  - M2 (`feat/m2-platform-services`);
-  - **W1 web foundation** (`feat/w1-web-foundation`).
-  - Branches are stacked and none is merged into `main` (no remote configured). R0 Foundations is complete.
-- **Green:** `make check`, `make test`, `make e2e`, `make e2e-web` (Playwright and axe, desktop and 390 px),
-  web lint, typecheck and unit tests.
-- **Next:** R1 Agent MVP (Amendment A1): clients and households, leads, insurers and products, insurance
-  quotes with KE levies (needs adviser-approved pack values, D4), policies, renewals, commission. Each slice
-  goes backend first, then web.
-- **W1 deviations:**
-  - API client generated inside `apps/web`; `packages/api-client` and Turborepo come when mobile arrives
-    (ADR-0022);
-  - template tier gating waits for billing;
-  - Microsoft, passkey and magic-link sign-in deferred to R2.
+## Current state (2026-10-08)
+- **Done:** R0 (M0–M2, W1) and **R1.1 agent CRM** (clients, households, leads, tasks, dashboard) on branch
+  `feat/r1-clients-leads`, stacked on `feat/w1-web-foundation` and not merged (no remote).
+- **R1 plan:** slices R1.1–R1.5 are in IMPLEMENTATION_PLAN Amendment A1.1. Next is **R1.2**: insurers and
+  products, calc engine v1, KE jurisdiction pack (values flagged *pending sign-off* until D4).
+- **Green:** `make check`, `make test`, `make e2e`, `make e2e-web` (golden path + CRM journey), web checks.
 
 ## Decisions made
 | Date | Decision | Where |
 |---|---|---|
+| 2026-10-08 | R1 delivered in slices R1.1–R1.5; agents see only their own clients, leads and tasks | Plan A1.1, ADR-0007 |
+| 2026-10-08 | ID/passport numbers encrypted in the application with keyed-hash lookup | ADR-0018 |
 | 2026-10-07 | 2FA is **optional** for all roles (enforcement available through `MFA_ENFORCED_ROLES`, empty by default) | ADR-0007 |
 | 2026-10-07 | M1 design: uuid5 tenant ids, per-request membership mirror, agent-first roles | ADR-0003/0006/0007 |
 | 2026-10-07 | Target customer is **Kenyan insurance agents** (not brokers); Kenya only for now | Plan Amendment A1, ADR-0002 |
@@ -38,6 +29,9 @@ Read this first when resuming work. Update it at the end of every session (newes
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas
+- Pydantic `StringConstraints(to_upper=True, pattern=...)` checks the pattern *before* upper-casing; patterns
+  must accept both cases.
+- Scope helpers use a TypeVarTuple (`def _scoped[*Ts](stmt: Select[*Ts], ...)`) so aggregate selects type-check.
 - Web: never use `crypto.randomUUID()` (missing on plain-HTTP origins such as http://web:3000 in E2E); use
   `randomId()`.
 - Web: next-intl messages use ICU, so escape literal braces with apostrophes (`'{YYYY}'`).
@@ -67,6 +61,9 @@ Read this first when resuming work. Update it at the end of every session (newes
   `return` inside `async for` silently rolled the transaction back.
 
 ## Session log
+### 2026-10-08: R1.1
+- Agent CRM backend (clients, households, contacts, activities, leads, tasks, dashboard, migration 0004,
+  PII crypto, phone normalisation) and screens (clients, client 360°, leads board, tasks, dashboard).
 ### 2026-10-07: W1
 - Built the web app (auth, onboarding, shell, settings, branding preview), the BFF, the orval client, Vitest/MSW
   tests and the Playwright and axe golden path. Fixed along the way: creating an organization did not set it

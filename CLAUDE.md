@@ -9,7 +9,7 @@ to win more business, plus a standalone quotation & invoicing tier for SMEs. Ken
 3. `docs/SPEC_REVIEW.md`: verified Kenyan regulatory facts and the corrections to the original spec
 4. `docs/PROJECT_SPEC.md`: the original product spec
 
-Current milestone: **R0 (M0–M2, W1) done → R1 Agent MVP next** (clients, leads, insurers/products, quotes, policies, renewals, commission).
+Current milestone: **R0 done, R1.1 (clients, leads, tasks) done → R1.2 next** (insurers/products, calc engine, KE pack). Slices: plan Amendment A1.1.
 **Start every session by reading `docs/PROGRESS.md`** (handoff log); update it and `CHANGELOG.md` before ending.
 
 ## Non-negotiable rules

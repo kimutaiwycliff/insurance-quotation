@@ -5,6 +5,39 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added — R1.1 Agent CRM: clients, leads, tasks (2026-10-08)
+- **Clients and households:**
+  - individual and corporate clients with phones normalised to E.164;
+  - KRA PIN, encrypted ID and passport numbers (AES-GCM with a keyed lookup hash, ADR-0018) and an audited
+    reveal;
+  - tags, consent, households, corporate contacts;
+  - activity log (calls, WhatsApp, meetings, notes) and a 360° timeline merging activities, documents, tasks,
+    emails and changes.
+- **Search** by name (trigram), phone in any format, email, KRA PIN or ID number.
+- **Duplicate detection** on phone, email, PIN or ID, with a live warning in the form. Matches in another
+  agent's book are counted, not shown.
+- **Agent scoping:** agents see and own their own clients, leads and tasks; owners, admins and assistants see
+  the whole agency.
+- **Leads:** pipeline (new, contacted, quoted, won, lost) with estimated premium per stage, follow-ups,
+  conversion to a client, lost reasons, and a notification on assignment.
+- **Tasks:** linked to records; overdue, today and upcoming in the agency's timezone; one-time due reminders
+  through a narrow cross-tenant scan.
+- **Dashboard:** overdue and today's tasks, follow-ups due, new clients, documents expiring, pipeline.
+- **Web:**
+  - clients list with search and an add sheet with live duplicate check;
+  - client 360° page (call, WhatsApp, email; timeline; documents with expiry; tasks);
+  - leads board (columns on desktop, stage tabs on phones);
+  - tasks page;
+  - dashboard home.
+- **Tests:** integration (encryption at rest, duplicates, scoping, search, timeline, pipeline, reminders),
+  web unit tests, and a Playwright journey from lead to client to task.
+
+### Fixed
+- The PDF renderer retries a timed-out render once (Chromium cold starts), not only 5xx errors.
+- Tests no longer depend on wall-clock speed: token timestamps are computed at run time, Hypothesis has no
+  per-example deadline, rate-limit tests tolerate minute boundaries, readiness is polled, and PDF tests share
+  one xdist worker.
+
 ### Added — W1 Web foundation (2026-10-07)
 - **Web app** (`apps/web`, Next.js 16.3, React 19, Tailwind 4, shadcn/Radix, TanStack Query, next-intl):
   - sign in and sign up with email confirmation, two-step sign-in, password reset, invitation acceptance;

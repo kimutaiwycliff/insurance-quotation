@@ -24,6 +24,17 @@ Radix) are **approved**. Consequences:
 | Pricing hypothesis | Individual-agent plan ~KES 1,500–3,000/mo; small agency (≤5 seats) ~KES 5,000–10,000; free capped tier or 30-day trial; M‑Pesa payment for subscriptions. |
 | Open verification | Whether a Kenyan agent may hold appointments with several insurers per class. This decides whether multi-insurer comparison quotes are an agent use case or need a different framing. **Ask the lawyer (D5) / IRA.** |
 
+### A1.1 R1 delivery slices (2026-10-08)
+Each slice ships backend first (API + tests), then its screens (web + Playwright).
+
+| Slice | Scope | Blocked by |
+|---|---|---|
+| **R1.1** | Clients & households (360° timeline, KYC documents, notes/calls, encrypted IDs, duplicates, agent scoping), leads pipeline + conversion, tasks & reminders, dashboard v1 | — |
+| R1.2 | Insurers & products (light), calc engine v1, KE jurisdiction pack (values flagged *pending sign-off*) | D4 for real values |
+| R1.3 | Insurance quotes: multi-insurer comparison, KE levies/stamp duty, send via tracked link, accept | R1.2; D5 (multi-insurer framing) |
+| R1.4 | Policy book (insurer-direct collection), renewal board, reminders (email + WhatsApp click-to-chat) | R1.3 |
+| R1.5 | Commission tracking (expected vs received, 10% WHT), spreadsheet import of the book, dashboard v2 | R1.4 |
+
 ---
 
 ## 1. Strategy in one page
