@@ -27,6 +27,7 @@ import {
   getBillingDocumentsGetQueryKey,
   invoicesApplyCredit,
   paymentsCreate,
+  salesQuotesConvert,
   useBillingDocumentsGet,
   useClientsAccount,
 } from "@/lib/api/generated/billing/billing";
@@ -98,13 +99,15 @@ function SendDialog({ doc, open, onOpenChange, refresh }: { doc: BillingDocument
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState<DocumentSent | null>(null);
   const { busy, error, run } = useRun(refresh);
-  const label = doc.kind === "invoice" ? "invoice" : "credit note";
+  const label = doc.kind === "invoice" ? "invoice" : doc.kind === "quote" ? "quote" : "credit note";
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setSent(null); }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{sent ? `${label[0]!.toUpperCase()}${label.slice(1)} sent` : `Send ${label}`}</DialogTitle>
-          <DialogDescription>{sent ? "Share the link on WhatsApp too, if you like." : `The client gets a link to view and download the ${label}.`}</DialogDescription>
+          <DialogDescription>
+            {sent ? "Share the link on WhatsApp too, if you like." : doc.kind === "quote" ? "Sending issues the quote. The client gets a link to view it, choose extras and accept." : `The client gets a link to view and download the ${label}.`}
+          </DialogDescription>
         </DialogHeader>
         {sent ? (
           <div className="grid gap-3">
@@ -177,6 +180,8 @@ export function InvoiceDetail({ documentId }: { documentId: string }) {
   if (editing) return <InvoiceEditor clientId={d.client.id} draft={d} />;
   const money = (a: string) => formatMoney(a, d.currency);
   const isInvoice = d.kind === "invoice";
+  const isQuote = d.kind === "quote";
+  const title = isInvoice ? "Invoice" : isQuote ? "Sales quote" : "Credit note";
   const issued = d.status !== "draft" && d.status !== "void";
   const credit = account.data ? Number(account.data.credit) : 0;
 
@@ -189,20 +194,30 @@ export function InvoiceDetail({ documentId }: { documentId: string }) {
     <div className="grid gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl">{isInvoice ? "Invoice" : "Credit note"} {d.number ?? "(draft)"}</h1>
+          <h1 className="text-3xl">{title} {d.number ?? "(draft)"}</h1>
           <p className="mt-1 text-muted-foreground">
             <Link className="font-bold text-primary hover:underline" href={`/clients/${d.client.id}`}>{d.client.display_name}</Link>
             {d.issue_date ? ` · issued ${formatDate(d.issue_date)}` : ""}{isInvoice && d.due_date && issued ? ` · due ${formatDate(d.due_date)}` : ""}
+            {isQuote && d.valid_until ? ` · valid until ${formatDate(d.valid_until)}` : ""}
           </p>
           <div className="mt-2"><BillingStatus status={d.status} /></div>
         </div>
         <div className="flex flex-wrap gap-2">
           {d.status === "draft" && canWrite && <Button variant="outline" onClick={() => setEditing(true)}><Pencil aria-hidden="true" /> Edit</Button>}
-          {d.status === "draft" && canIssue && (
-            <Button onClick={() => run(() => billingDocumentsIssue(documentId, {}), `${isInvoice ? "Invoice" : "Credit note"} issued`)} disabled={busy}>Issue</Button>
+          {d.status === "draft" && canIssue && !isQuote && (
+            <Button onClick={() => run(() => billingDocumentsIssue(documentId, {}), `${title} issued`)} disabled={busy}>Issue</Button>
+          )}
+          {isQuote && canIssue && (d.status === "draft" || d.status === "sent") && (
+            <Button onClick={() => setDialog("send")}><Send aria-hidden="true" /> {d.status === "draft" ? "Send to client" : "Send again"}</Button>
+          )}
+          {isQuote && canIssue && ["sent", "accepted", "expired"].includes(d.status) && (
+            <Button variant={d.status === "accepted" ? "default" : "outline"} disabled={busy} onClick={() => run(async () => {
+              const invoice = await salesQuotesConvert(documentId);
+              router.push(`/invoices/${invoice.id}`);
+            })}>Create invoice</Button>
           )}
           <Button variant="outline" onClick={openPdf}><FileDown aria-hidden="true" /> PDF</Button>
-          {issued && canIssue && <Button variant={isInvoice && Number(d.balance) > 0 ? "outline" : "default"} onClick={() => setDialog("send")}><Send aria-hidden="true" /> Send</Button>}
+          {issued && canIssue && !isQuote && <Button variant={isInvoice && Number(d.balance) > 0 ? "outline" : "default"} onClick={() => setDialog("send")}><Send aria-hidden="true" /> Send</Button>}
           {isInvoice && issued && canPay && Number(d.balance) > 0 && <Button onClick={() => setDialog("pay")}>Record payment</Button>}
         </div>
       </div>
@@ -214,15 +229,33 @@ export function InvoiceDetail({ documentId }: { documentId: string }) {
           <Button size="sm" disabled={busy} onClick={() => run(() => invoicesApplyCredit(documentId), "Credit applied")}>Use it on this invoice</Button>
         </p>
       )}
+      {isQuote && d.response_status === "accepted" && (
+        <p className="rounded-md border border-primary bg-accent px-3 py-2">
+          Accepted by <strong>{String(d.response.name)}</strong> on {formatDate(d.responded_at ?? "")}
+          {Array.isArray(d.response.addons) && d.response.addons.length > 0
+            ? `, with ${d.lines.filter((l) => (d.response.addons as number[]).includes(l.position)).map((l) => l.description).join(", ")}`
+            : ""}.
+          {d.status === "accepted" ? " Next: create the invoice." : ""}
+        </p>
+      )}
+      {isQuote && d.response_status === "declined" && (
+        <p className="rounded-md border border-destructive/40 px-3 py-2">Declined on {formatDate(d.responded_at ?? "")}{d.response.reason ? `: “${String(d.response.reason)}”` : ""}.</p>
+      )}
+      {isQuote && d.converted_document_id && <p><Link className="text-primary hover:underline" href={`/invoices/${d.converted_document_id}`}>Open the invoice made from this quote</Link></p>}
       {d.voided_at && <p className="rounded-md border border-destructive/40 px-3 py-2">Voided on {formatDate(d.voided_at)}: {d.void_reason}</p>}
 
       <div className="overflow-x-auto rounded-lg border bg-card" tabIndex={0} role="region" aria-label="Lines">
         <table className="w-full min-w-[36rem] text-sm">
           <thead><tr className="border-b text-left text-muted-foreground"><th className="px-3 py-2 font-normal">Description</th><th className="px-3 py-2 text-right font-normal">Qty</th><th className="px-3 py-2 text-right font-normal">Price</th><th className="px-3 py-2 font-normal">Tax</th><th className="px-3 py-2 text-right font-normal">Amount</th></tr></thead>
           <tbody>
-            {d.lines.map((l) => (
+            {d.lines.map((l, i) => (
               <tr key={l.position} className="border-b last:border-0">
-                <td className="px-3 py-2">{l.description}{Number(l.discount_rate) > 0 && <span className="block text-xs text-muted-foreground">{fractionToPercent(l.discount_rate)}% discount</span>}</td>
+                <td className="px-3 py-2">
+                  {l.section && l.section !== d.lines[i - 1]?.section && <span className="mb-1 block font-bold">{l.section}</span>}
+                  {l.description}
+                  {l.optional && <span className="ml-2 rounded-full bg-maize px-2 py-0.5 text-xs text-ink">Optional</span>}
+                  {Number(l.discount_rate) > 0 && <span className="block text-xs text-muted-foreground">{fractionToPercent(l.discount_rate)}% discount</span>}
+                </td>
                 <td className="tabular px-3 py-2 text-right">{l.quantity}</td>
                 <td className="tabular px-3 py-2 text-right">{money(l.unit_price)}</td>
                 <td className="px-3 py-2">{fractionToPercent(l.tax_rate)}%</td>
@@ -236,6 +269,7 @@ export function InvoiceDetail({ documentId }: { documentId: string }) {
         <div className="flex justify-between"><dt>Subtotal</dt><dd className="tabular">{money(d.subtotal)}</dd></div>
         {d.taxes.filter((t) => Number(t.tax) > 0).map((t) => <div key={t.code} className="flex justify-between"><dt>{t.name}</dt><dd className="tabular">{money(t.tax)}</dd></div>)}
         <div className="flex justify-between border-t pt-1 font-bold"><dt>Total</dt><dd className="tabular">{money(d.total)}</dd></div>
+        {isQuote && Number(d.optional_total) > 0 && <div className="flex justify-between text-muted-foreground"><dt>Optional extras</dt><dd className="tabular">{money(d.optional_total)}</dd></div>}
         {isInvoice && issued && Number(d.paid) > 0 && <div className="flex justify-between"><dt>Paid</dt><dd className="tabular">{money(d.paid)}</dd></div>}
         {isInvoice && issued && <div className="flex justify-between font-bold"><dt>Balance</dt><dd className="tabular">{money(d.balance)}</dd></div>}
       </dl>
@@ -257,7 +291,7 @@ export function InvoiceDetail({ documentId }: { documentId: string }) {
       )}
       {d.credits_document_id && <p className="text-sm"><Link className="text-primary hover:underline" href={`/invoices/${d.credits_document_id}`}>The invoice this credits</Link></p>}
 
-      {canIssue && issued && (
+      {canIssue && issued && !(isQuote && d.converted_document_id) && (
         <div className="flex flex-wrap gap-2">
           {isInvoice && <Button variant="outline" onClick={() => setDialog("credit")}>Issue a credit note</Button>}
           <Button variant="ghost" className="text-destructive" onClick={() => { setError(null); setDialog("void"); }}>Void</Button>

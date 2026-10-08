@@ -25,5 +25,19 @@ Invoices, credit notes and payments received (Plan A1.2 R2.1; ADR-0009 states, A
   credit on account and their open invoices.
 - **Sending:** `POST /billing-documents/{id}/send` creates the PDF and a tracked link (`/d/[token]`), emails
   it, and returns a WhatsApp link.
+- **Sales quotes** (`/sales-quotes`, kind `quote`; insurance quotes are a different module):
+  - lines can sit under a `section` heading, and `optional` lines are add-ons the client may choose (not in
+    the total);
+  - sending a draft issues it (number `QT-…`, validity frozen) and creates a link with the `accept` scope;
+  - on the link the client accepts (with any add-ons) or declines; the owner is notified;
+  - `POST /sales-quotes/{id}/convert` creates a draft invoice from the lines plus the chosen add-ons;
+  - status is draft, sent, accepted, declined, expired, invoiced or void.
+- **Reminders (daily job, off by default):**
+  - covers invoices due within N days, overdue by N days, and quotes expiring within N days;
+  - offsets are set per tenant (`invoice_reminder_days_before` / `_after`);
+  - each (document, kind, offset) is emailed once (`billing_reminders`), on the reminders stream with
+    unsubscribe.
+- **Summary:** `GET /billing/summary` returns outstanding, overdue, ageing buckets, this month's invoicing and
+  collections, quotes awaiting an answer, and 12 months of invoiced and collected.
 - **Permissions:** `invoice:write` for drafts (assistants too), `invoice:issue` to issue, void, credit and
   send, `payment:write` for payments. Reading is scoped like clients (`client:read:own|all`).

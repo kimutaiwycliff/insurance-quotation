@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { BillingDocumentOutKind } from './billingDocumentOutKind';
+import type { BillingDocumentOutResponse } from './billingDocumentOutResponse';
 import type { BillingDocumentOutStatus } from './billingDocumentOutStatus';
 import type { BillingLineOut } from './billingLineOut';
 import type { ClientRef } from './clientRef';
@@ -16,6 +17,7 @@ export interface BillingDocumentOut {
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   balance: string;
   client: ClientRef;
+  converted_document_id: string | null;
   created_at: string;
   /** Credit notes issued against this invoice */
   credit_notes: string[];
@@ -33,6 +35,11 @@ export interface BillingDocumentOut {
   notes: string | null;
   number: string | null;
   /**
+     * Quotes: the add-ons, if the client takes them all
+     * @pattern ^-?\d{1,16}(\.\d{1,4})?$
+     */
+  optional_total: string;
+  /**
      * Allocated to an invoice, or applied from a credit note
      * @pattern ^-?\d{1,16}(\.\d{1,4})?$
      */
@@ -40,7 +47,10 @@ export interface BillingDocumentOut {
   payment_reference: string | null;
   prices_include_tax: boolean;
   reference: string | null;
-  /** Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. */
+  responded_at: string | null;
+  response: BillingDocumentOutResponse;
+  response_status: string | null;
+  /** Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void. */
   status: BillingDocumentOutStatus;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   subtotal: string;
@@ -50,6 +60,7 @@ export interface BillingDocumentOut {
   terms: string | null;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   total: string;
+  valid_until: string | null;
   version: number;
   void_reason: string | null;
   voided_at: string | null;

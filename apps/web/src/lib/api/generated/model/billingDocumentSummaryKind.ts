@@ -11,4 +11,5 @@ export type BillingDocumentSummaryKind = typeof BillingDocumentSummaryKind[keyof
 export const BillingDocumentSummaryKind = {
   invoice: 'invoice',
   credit_note: 'credit_note',
+  quote: 'quote',
 } as const;

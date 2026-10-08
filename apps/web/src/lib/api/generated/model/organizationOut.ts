@@ -8,12 +8,15 @@ import type { OrganizationOutAddress } from './organizationOutAddress';
 
 export interface OrganizationOut {
   address: OrganizationOutAddress;
+  billing_reminders: boolean;
   country_code: string;
   default_currency: string;
   email: string | null;
   fiscal_year_start_month: number;
   id: string;
   intermediary_type: string;
+  invoice_reminder_days_after: number[];
+  invoice_reminder_days_before: number[];
   legal_name: string | null;
   licence_expiry: string | null;
   licence_number: string | null;

@@ -11,9 +11,11 @@ export interface BillingLineOut {
   item_id: string | null;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   net: string;
+  optional: boolean;
   position: number;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   quantity: string;
+  section: string | null;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   tax: string;
   tax_code: string;
