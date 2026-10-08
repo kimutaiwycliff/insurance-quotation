@@ -4,17 +4,20 @@
  * BrokerOS API
  * OpenAPI spec version: 1.0.0
  */
+import type { Choice } from './choice';
 import type { PublicTenant } from './publicTenant';
 
 /**
  * What an anonymous visitor may learn about a link. No internal ids.
  */
 export interface PublicLinkView {
+  choices?: Choice[];
   expires_at: string;
   has_download: boolean;
   has_web_view: boolean;
   kind: string;
   scopes: string[];
+  state?: string | null;
   tenant: PublicTenant;
   title: string;
 }

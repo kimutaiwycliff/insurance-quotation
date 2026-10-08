@@ -18,6 +18,7 @@ export interface OrganizationOut {
   licence_expiry: string | null;
   licence_number: string | null;
   locale: string;
+  multi_insurer_quotes: boolean;
   name: string;
   phone: string | null;
   quiet_hours_end: string | null;

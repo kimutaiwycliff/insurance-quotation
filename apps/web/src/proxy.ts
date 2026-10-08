@@ -20,6 +20,6 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Skip API routes, the BFF, Next internals and static files.
-  matcher: ["/((?!api/|bff/|_next/|favicon.ico|.*\\.[a-z0-9]+$).*)"],
+  // Skip API routes, the BFF, the anonymous public proxy, Next internals and static files.
+  matcher: ["/((?!api/|bff/|public-api/|_next/|favicon.ico|.*\\.[a-z0-9]+$).*)"],
 };

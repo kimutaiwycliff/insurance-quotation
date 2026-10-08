@@ -24,8 +24,11 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActionResult,
   Beacon,
   HTTPValidationError,
+  PublicLinkAcceptBody,
+  PublicLinkDeclineBody,
   PublicLinkView
 } from '../model';
 
@@ -151,7 +154,96 @@ export function usePublicLinkGet<TData = Awaited<ReturnType<typeof publicLinkGet
 
 
 
-export const getPublicLinkBeaconUrl = (token: string,) => {
+export const getPublicLinkAcceptUrl = (token: string,) => {
+
+
+
+
+  return `/api/v1/public/links/${token}/accept`
+}
+
+/**
+ * Accept (e.g. one option of a quotation). Requires the link's `accept` scope; recorded as evidence.
+ * @summary Accept
+ */
+export const publicLinkAccept = async (token: string,
+    publicLinkAcceptBody: PublicLinkAcceptBody, options?: Parameters<typeof apiFetch>[1]): Promise<ActionResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<ActionResult>(getPublicLinkAcceptUrl(token),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(publicLinkAcceptBody)
+  }
+);}
+
+
+
+
+
+export const getPublicLinkAcceptMutationKey = () => ['publicLinkAccept'] as const;
+
+export const getPublicLinkAcceptMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicLinkAccept>>, TError,PublicLinkAcceptMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof publicLinkAccept>>, TError,PublicLinkAcceptMutationVariables, TContext> => {
+
+const mutationKey = getPublicLinkAcceptMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publicLinkAccept>>, PublicLinkAcceptMutationVariables> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  publicLinkAccept(token,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublicLinkAcceptMutationResult = NonNullable<Awaited<ReturnType<typeof publicLinkAccept>>>
+    export type PublicLinkAcceptMutationBody = PublicLinkAcceptBody
+    export type PublicLinkAcceptMutationError = HTTPValidationError
+    export type PublicLinkAcceptMutationVariables = {token: string;data: PublicLinkAcceptBody}
+
+    /**
+ * @summary Accept
+ */
+export const usePublicLinkAccept = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicLinkAccept>>, TError,PublicLinkAcceptMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publicLinkAccept>>,
+        TError,
+        PublicLinkAcceptMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublicLinkAcceptMutationOptions(options), queryClient);
+    }
+    export const getPublicLinkBeaconUrl = (token: string,) => {
 
 
 
@@ -239,6 +331,94 @@ export const usePublicLinkBeacon = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getPublicLinkBeaconMutationOptions(options), queryClient);
+    }
+    export const getPublicLinkDeclineUrl = (token: string,) => {
+
+
+
+
+  return `/api/v1/public/links/${token}/decline`
+}
+
+/**
+ * @summary Decline
+ */
+export const publicLinkDecline = async (token: string,
+    publicLinkDeclineBody: PublicLinkDeclineBody, options?: Parameters<typeof apiFetch>[1]): Promise<ActionResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<ActionResult>(getPublicLinkDeclineUrl(token),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(publicLinkDeclineBody)
+  }
+);}
+
+
+
+
+
+export const getPublicLinkDeclineMutationKey = () => ['publicLinkDecline'] as const;
+
+export const getPublicLinkDeclineMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicLinkDecline>>, TError,PublicLinkDeclineMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof publicLinkDecline>>, TError,PublicLinkDeclineMutationVariables, TContext> => {
+
+const mutationKey = getPublicLinkDeclineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publicLinkDecline>>, PublicLinkDeclineMutationVariables> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  publicLinkDecline(token,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublicLinkDeclineMutationResult = NonNullable<Awaited<ReturnType<typeof publicLinkDecline>>>
+    export type PublicLinkDeclineMutationBody = PublicLinkDeclineBody
+    export type PublicLinkDeclineMutationError = HTTPValidationError
+    export type PublicLinkDeclineMutationVariables = {token: string;data: PublicLinkDeclineBody}
+
+    /**
+ * @summary Decline
+ */
+export const usePublicLinkDecline = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publicLinkDecline>>, TError,PublicLinkDeclineMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publicLinkDecline>>,
+        TError,
+        PublicLinkDeclineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublicLinkDeclineMutationOptions(options), queryClient);
     }
     export const getPublicLinkDownloadUrl = (token: string,) => {
 

@@ -15,4 +15,5 @@ export * from './numbering/numbering';
 export * from './organization/organization';
 export * from './public/public';
 export * from './public-links/public-links';
+export * from './quotes/quotes';
 export * from './tasks/tasks';

@@ -277,7 +277,8 @@
     "callAction": "Call",
     "whatsappAction": "WhatsApp",
     "emailAction": "Email",
-    "owner": "Agent"
+    "owner": "Agent",
+    "quotes": "Quotes"
   },
   "leads": {
     "title": "Leads",

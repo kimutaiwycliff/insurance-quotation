@@ -6,7 +6,10 @@ import { useTranslations } from "next-intl";
 import { useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
+import Link from "next/link";
+
 import { ClientForm, fromClient, toUpdate } from "@/components/clients/client-form";
+import { QuotesList } from "@/components/quotes/quotes-list";
 import { TaskList } from "@/components/tasks/task-list";
 import { Field } from "@/components/forms/field";
 import { useCan } from "@/components/shell/me-context";
@@ -34,7 +37,7 @@ import { ApiError, problemMessage } from "@/lib/problem";
 import { uploadDocument } from "@/lib/upload";
 import { cn } from "@/lib/utils";
 
-type Tab = "overview" | "timeline" | "documents" | "tasks";
+type Tab = "overview" | "timeline" | "quotes" | "documents" | "tasks";
 
 function Overview({ client }: { client: ClientOut }) {
   const t = useTranslations("clients");
@@ -235,7 +238,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
 
   if (!client.data) return <Skeleton className="h-96 w-full" />;
   const c = client.data;
-  const tabs: Tab[] = ["overview", "timeline", "documents", "tasks"];
+  const tabs: Tab[] = ["overview", "timeline", "quotes", "documents", "tasks"];
 
   return (
     <div className="grid gap-6">
@@ -255,6 +258,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
             </>
           )}
           {c.email && <Button asChild variant="outline"><a href={`mailto:${c.email}`}><Mail aria-hidden="true" /> {t("emailAction")}</a></Button>}
+          {canWrite && <Button asChild variant="outline"><Link href={`/quotes/new?client=${c.id}`}>New quote</Link></Button>}
           {canWrite && <Button onClick={() => setEditing(true)}>{t("edit")}</Button>}
         </div>
       </div>
@@ -278,6 +282,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
         {tab === "overview" && <Overview client={c} />}
         {tab === "timeline" && <Timeline clientId={c.id} />}
+        {tab === "quotes" && <QuotesList clientId={c.id} />}
         {tab === "documents" && <Documents clientId={c.id} />}
         {tab === "tasks" && <TaskList entity={{ entity_type: "client", entity_id: c.id, label: c.display_name }} />}
       </div>

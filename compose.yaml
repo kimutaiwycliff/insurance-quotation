@@ -157,7 +157,11 @@ services:
 
   api:
     build: { <<: *api-build, target: api }
-    environment: *app-env
+    environment:
+      <<: *app-env
+      # Trust X-Forwarded-For from the web proxy (only the web container and the host can reach this port).
+      # In production set this to the ingress/proxy network instead.
+      FORWARDED_ALLOW_IPS: "*"
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"
     depends_on:

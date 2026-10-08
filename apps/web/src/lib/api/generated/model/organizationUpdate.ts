@@ -20,6 +20,7 @@ export interface OrganizationUpdate {
   licence_expiry?: string | null;
   licence_number?: string | null;
   locale?: string | null;
+  multi_insurer_quotes?: boolean | null;
   name?: string | null;
   phone?: string | null;
   quiet_hours_end?: string | null;
