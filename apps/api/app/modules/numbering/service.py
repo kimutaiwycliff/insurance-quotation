@@ -20,11 +20,17 @@ from app.core.errors import ConflictError, NotFoundError
 from app.modules.numbering.models import NumberingScheme, NumberSequence
 from app.modules.numbering.pattern import Pattern, ResetPeriod, period_key
 from app.modules.numbering.references import generate_payment_reference
+from app.modules.numbering.references import normalise as normalise_payment_reference
 from app.modules.numbering.schemas import SchemeCreate, SchemeUpdate
 from app.platform import audit
 from app.platform.deps import TenantContext
 
-__all__ = ["AllocatedNumber", "allocate_number", "generate_payment_reference"]
+__all__ = [
+    "AllocatedNumber",
+    "allocate_number",
+    "generate_payment_reference",
+    "normalise_payment_reference",
+]
 
 # Seeded for every new tenant. Generic, not jurisdictional: KRA eTIMS assigns its own control numbers.
 DEFAULT_SCHEMES: dict[str, str] = {

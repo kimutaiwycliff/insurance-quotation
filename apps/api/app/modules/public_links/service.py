@@ -20,6 +20,7 @@ from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from typing import Any, Protocol
 
+import httpx
 from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,6 +39,8 @@ from app.platform.deps import TenantContext
 __all__ = [
     "LinkCreate",
     "LinkGoneError",
+    "PaymentAttempt",
+    "PaymentOffer",
     "PublicContent",
     "PublicLink",
     "SendTo",
@@ -45,6 +48,7 @@ __all__ = [
     "create_link",
     "link_url",
     "register_actions",
+    "register_payer",
     "register_target",
     "revoke_for_entity",
 ]
@@ -133,6 +137,74 @@ async def perform(
         details={k: v for k, v in body.items() if k in {"option", "reason"}},
     )
     return state
+
+
+# ---------------------------------------------------------------- payments from a link
+
+
+@dataclass(frozen=True, slots=True)
+class PaymentOffer:
+    amount: str  # what the client will be asked to pay (whole shillings for M-Pesa)
+    currency: str
+    methods: list[str]  # e.g. ["mpesa"]
+
+
+@dataclass(frozen=True, slots=True)
+class PaymentAttempt:
+    attempt_id: uuid.UUID
+    status: str  # pending | paid | cancelled | failed | expired
+    message: str
+
+
+class Payer(Protocol):
+    """Lets a client pay what a link shows (registered by a payment module, e.g. M-Pesa for invoices)."""
+
+    async def offer(
+        self, *, session: AsyncSession, settings: Settings, link: PublicLink
+    ) -> PaymentOffer | None: ...
+
+    async def start(
+        self,
+        *,
+        session: AsyncSession,
+        settings: Settings,
+        http: httpx.AsyncClient,
+        link: PublicLink,
+        phone: str,
+    ) -> PaymentAttempt: ...
+
+    async def status(
+        self,
+        *,
+        session: AsyncSession,
+        settings: Settings,
+        http: httpx.AsyncClient,
+        link: PublicLink,
+        attempt_id: uuid.UUID,
+    ) -> PaymentAttempt: ...
+
+
+_PAYERS: dict[str, Payer] = {}
+
+
+def register_payer(entity_type: str, payer: Payer) -> None:
+    _PAYERS[entity_type] = payer
+
+
+def payer_for(link: PublicLink) -> Payer:
+    payer = _PAYERS.get(link.entity_type)
+    if "pay" not in link.scopes or payer is None:
+        raise LinkScopeError("This link cannot take payments")
+    return payer
+
+
+async def payment_offer(
+    session: AsyncSession, settings: Settings, link: PublicLink
+) -> PaymentOffer | None:
+    payer = _PAYERS.get(link.entity_type)
+    if "pay" not in link.scopes or payer is None:
+        return None
+    return await payer.offer(session=session, settings=settings, link=link)
 
 
 async def revoke_for_entity(ctx: TenantContext, entity_type: str, entity_id: uuid.UUID) -> int:

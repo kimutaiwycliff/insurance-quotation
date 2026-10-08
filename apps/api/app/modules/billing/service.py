@@ -10,6 +10,7 @@
 
 import uuid
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from http import HTTPStatus
@@ -36,7 +37,15 @@ from app.modules.billing.models import (
     Payment,
 )
 
-__all__ = ["BillingDocument"]
+__all__ = [
+    "BillingDocument",
+    "Payable",
+    "PaymentAllocationIn",
+    "PaymentCreate",
+    "find_by_payment_reference",
+    "payable",
+    "record_payment",
+]
 from app.modules.billing.schemas import (
     AgeingBucket,
     BillingDocumentOut,
@@ -89,6 +98,12 @@ from app.platform.deps import TenantContext, own_scope
 ZERO = Decimal(0)
 INVOICE, CREDIT_NOTE, QUOTE = "invoice", "credit_note", "quote"
 # Public links: insurance quotes already own the "quote" entity type.
+# Invoices can be paid from their link (when the tenant has M-Pesa connected); quotes accepted.
+_LINK_SCOPES: dict[str, list[Literal["view", "accept", "pay"]]] = {
+    "invoice": ["view", "pay"],
+    "credit_note": ["view"],
+    "quote": ["view", "accept"],
+}
 LINK_ENTITY = {INVOICE: "invoice", CREDIT_NOTE: "credit_note", QUOTE: "sales_quote"}
 DRAFT, ISSUED, VOID = "draft", "issued", "void"
 
@@ -1243,7 +1258,7 @@ async def send(
         links.LinkCreate(
             entity_type=LINK_ENTITY[doc.kind],
             entity_id=doc.id,
-            scopes=["view", "accept"] if doc.kind == QUOTE else ["view"],
+            scopes=_LINK_SCOPES[doc.kind],
             expires_in_days=180,
             send_to=links.SendTo(email=email, name=client.display_name, message=body.message)
             if email
@@ -1663,4 +1678,51 @@ async def billing_summary(ctx: TenantContext) -> BillingSummary:
             MonthBilling(month=m, invoiced=_round(v[0], currency), collected=_round(v[1], currency))
             for m, v in months.items()
         ],
+    )
+
+
+# ---------------------------------------------------------------- for payment providers (M-Pesa)
+
+
+@dataclass(frozen=True, slots=True)
+class Payable:
+    invoice_id: uuid.UUID
+    client_id: uuid.UUID
+    owner_user_id: str
+    number: str | None
+    payment_reference: str | None
+    currency: str
+    balance: Decimal
+    status: str
+
+
+async def payable(session: AsyncSession, invoice_id: uuid.UUID) -> Payable | None:
+    """What an issued invoice still owes (None if it is not an issued invoice)."""
+    doc = await session.get(BillingDocument, invoice_id)
+    if doc is None or doc.kind != INVOICE or doc.status != ISSUED:
+        return None
+    paid = (await _paid(session, [doc])).get(doc.id, ZERO)
+    return Payable(
+        invoice_id=doc.id,
+        client_id=doc.client_id,
+        owner_user_id=doc.owner_user_id,
+        number=doc.number,
+        payment_reference=doc.payment_reference,
+        currency=doc.currency,
+        balance=max(doc.total - paid, ZERO),
+        status=_status(doc, paid, await tenancy.today(session, doc.tenant_id)),
+    )
+
+
+async def find_by_payment_reference(session: AsyncSession, reference: str) -> uuid.UUID | None:
+    """The issued invoice a client meant when typing a payment reference (case and spaces ignored)."""
+    ref = numbering.normalise_payment_reference(reference)
+    if not ref:
+        return None
+    return await session.scalar(
+        select(BillingDocument.id).where(
+            BillingDocument.payment_reference == ref,
+            BillingDocument.kind == INVOICE,
+            BillingDocument.status == ISSUED,
+        )
     )

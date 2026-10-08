@@ -79,6 +79,27 @@ class Choice(BaseModel):
     )
 
 
+class PaymentOfferOut(BaseModel):
+    amount: str
+    currency: str
+    methods: list[str] = Field(description="Ways to pay now, e.g. ['mpesa']")
+    coming_soon: list[str] = Field(default_factory=lambda: ["card"])
+
+
+class PayBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    phone: Annotated[str, StringConstraints(strip_whitespace=True, min_length=9, max_length=20)] = (
+        Field(description="The M-Pesa number to prompt, e.g. 0712 345 678")
+    )
+
+
+class PaymentAttemptOut(BaseModel):
+    attempt_id: uuid.UUID
+    status: str = Field(description="pending, paid, cancelled, failed or expired")
+    message: str
+
+
 class PublicLinkView(BaseModel):
     """What an anonymous visitor may learn about a link. No internal ids."""
 
@@ -91,6 +112,9 @@ class PublicLinkView(BaseModel):
     has_download: bool
     state: str | None = None
     choices: list[Choice] = Field(default_factory=list)
+    payment: PaymentOfferOut | None = Field(
+        default=None, description="Present when this document can be paid from the link"
+    )
 
 
 class ActionResult(BaseModel):
