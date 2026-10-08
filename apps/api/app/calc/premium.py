@@ -13,6 +13,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.calc.commission import Commission
+from app.calc.commission import commission as compute_commission
 from app.calc.pack import IntermediaryType, Pack
 from app.core.money import Money
 
@@ -91,18 +93,6 @@ class Line(BaseModel):
     rule_id: str | None = None
     source: str | None = None
     note: str | None = None
-
-
-class Commission(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    base: Decimal
-    rate: Decimal
-    gross: Decimal
-    wht_rate: Decimal
-    wht: Decimal
-    vat: Decimal
-    net: Decimal
 
 
 class PackRef(BaseModel):
@@ -393,18 +383,12 @@ def calculate(pack: Pack, request: PremiumRequest) -> PremiumResult:
             ),
             ZERO,
         )
-        gross = ctx.round(base * request.commission_rate)
-        wht_rate = pack.wht_on_commission.get(request.intermediary_type, ZERO)
-        wht = ctx.round(gross * wht_rate)
-        vat = ctx.round(gross * pack.tax(pack.commission_tax_code).rate)
-        commission = Commission(
-            base=base,
-            rate=request.commission_rate,
-            gross=gross,
-            wht_rate=wht_rate,
-            wht=wht,
-            vat=vat,
-            net=gross - wht + vat,
+        commission = compute_commission(
+            pack,
+            base,
+            request.commission_rate,
+            currency=request.currency,
+            intermediary=request.intermediary_type,
         )
 
     if not pack.signed:

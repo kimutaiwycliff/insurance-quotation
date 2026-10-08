@@ -225,6 +225,7 @@ async def test_agent_collected_premium_is_remitted_and_exceptions_apply(
     ).json()
     assert active["status"] == "active"
     assert active["activation"]["source"].startswith("Insurance Regulations r.43")
+    assert active["activation"]["pack"] == "ke/2026.1"
 
     cancelled = (
         await api.post(f"{url}/cancel", json={"reason": "Client sold the car"}, headers=h)

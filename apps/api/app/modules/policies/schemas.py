@@ -6,7 +6,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from app.core.money import AmountStr
+from app.core.money import AmountStr, RateStr
 from app.modules.insurers.service import RiskIn
 from app.modules.quotes.service import ClientRef, Detail, QuoteCreate
 
@@ -77,6 +77,19 @@ class PolicyCreate(_Cover):
     sum_insured: AmountStr | None = Field(default=None, ge=0)
     total_premium: AmountStr = Field(ge=0)
     renewed_from_id: uuid.UUID | None = None
+    commission_rate: RateStr | None = Field(
+        default=None, description="Defaults to the product's rate (new or renewal)"
+    )
+    commission_base: AmountStr | None = Field(
+        default=None,
+        ge=0,
+        description="Commissionable premium: the premium before levies and stamp duty",
+    )
+
+
+class CommissionIn(_Strict):
+    rate: RateStr
+    base: AmountStr = Field(ge=0, description="Premium before levies and stamp duty")
 
 
 class PolicyUpdate(_Strict):
@@ -138,7 +151,7 @@ class RenewalQuote(_Strict):
             {
                 "client_id": client_id,
                 "product_ids": self.product_ids,
-                "risk": self.risk,
+                "risk": self.risk.model_copy(update={"renewal": True}),
                 "recommended_product_id": self.recommended_product_id,
                 "details": self.details if self.details is not None else details,
                 "notes": self.notes,
@@ -245,3 +258,39 @@ class Reminded(BaseModel):
     policy: PolicyOut
     whatsapp_url: str | None
     emailed_to: str | None
+
+
+class BookEntry(BaseModel):
+    """A policy as the commission ledger sees it (expected commission, internal)."""
+
+    id: uuid.UUID
+    client_name: str
+    description: str
+    insurer_name: str
+    policy_number: str | None
+    class_code: str
+    start_date: date
+    status: Status
+    currency: str
+    total_premium: AmountStr
+    commission: dict[str, Any] | None
+    owner_user_id: str
+
+
+class MonthTotal(BaseModel):
+    month: str = Field(description="YYYY-MM")
+    amount: AmountStr
+
+
+class BookStats(BaseModel):
+    currency: str
+    since: date
+    written_count: int
+    written_premium: AmountStr
+    outstanding_premium: AmountStr
+    expected_commission: AmountStr | None = Field(
+        description="Net of WHT, on policies written since; null without commission access"
+    )
+    renewed: int = Field(description="Renewals won in the last 12 months")
+    lost: int
+    written_by_month: list[MonthTotal]

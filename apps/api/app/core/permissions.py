@@ -38,6 +38,9 @@ class Perm(StrEnum):
     INSURER_MANAGE = "insurer:manage"
     COMMISSION_READ_OWN = "commission:read:own"
     COMMISSION_READ_ALL = "commission:read:all"
+    COMMISSION_MANAGE = (
+        "commission:manage"  # record commission received from insurers, set expectations
+    )
     PREMIUM_WRITE = "premium:write"  # record, void and remit premium payments on policies
 
 
@@ -89,6 +92,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Perm]] = {
         Perm.CLIENT_READ_ALL,
         Perm.INSURER_MANAGE,
         Perm.COMMISSION_READ_ALL,
+        Perm.COMMISSION_MANAGE,
         Perm.PREMIUM_WRITE,
     },
     Role.ASSISTANT: _READ_BASICS | _CLIENT_WORK | _AGENCY_BOOK,

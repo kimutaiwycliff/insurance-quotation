@@ -40,9 +40,11 @@ __all__ = [
     "ActivityIn",
     "Client",
     "ClientCreate",
+    "DuplicateCheck",
     "add_activity",
     "create_client",
     "display_name",
+    "find_duplicates",
     "get_visible_client",
 ]
 

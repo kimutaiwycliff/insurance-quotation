@@ -14,7 +14,9 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.calc.pack import Pack
+from app.calc.commission import Commission, Withholding, withholding
+from app.calc.commission import commission as calc_commission
+from app.calc.pack import IntermediaryType, Pack
 from app.calc.premium import (
     Adjustment,
     Benefit,
@@ -51,15 +53,19 @@ from app.platform.deps import TenantContext
 
 __all__ = [
     "CalculationOut",
+    "Commission",
     "Insurer",
     "Product",
     "RiskIn",
     "UnknownClassError",
+    "Withholding",
     "agency_pack",
     "calculate_product",
     "can_see_commission",
+    "commission_for",
     "get_insurer",
     "get_product",
+    "withholding_for",
 ]
 
 
@@ -79,6 +85,28 @@ async def agency_pack(ctx: TenantContext) -> tuple[Pack, str, str]:
     """The agency's jurisdiction pack, its intermediary type and timezone."""
     tenant = await tenancy.get_tenant(ctx.session, ctx.tenant_id)
     return pack_for_country(tenant.country_code), tenant.intermediary_type, tenant.timezone
+
+
+def _intermediary(intermediary_type: str) -> IntermediaryType:
+    return "agent" if intermediary_type == "business" else intermediary_type  # type: ignore[return-value]
+
+
+async def commission_for(
+    ctx: TenantContext, base: Decimal, rate: Decimal, currency: str
+) -> Commission:
+    """Expected commission on a commissionable premium, with the pack's WHT for this agency."""
+    pack, intermediary_type, _ = await agency_pack(ctx)
+    return calc_commission(
+        pack, base, rate, currency=currency, intermediary=_intermediary(intermediary_type)
+    )
+
+
+async def withholding_for(ctx: TenantContext, gross: Decimal, currency: str) -> Withholding:
+    """WHT and net the insurer pays on a gross commission (pack rate for this agency)."""
+    pack, intermediary_type, _ = await agency_pack(ctx)
+    return withholding(
+        pack, gross, currency=currency, intermediary=_intermediary(intermediary_type)
+    )
 
 
 def can_see_commission(ctx: TenantContext) -> bool:
@@ -347,7 +375,7 @@ async def calculate_product(
             commission_rate=product.commission_rate_renewal
             if risk.renewal
             else product.commission_rate_new,
-            intermediary_type="agent" if intermediary_type == "business" else intermediary_type,  # type: ignore[arg-type]
+            intermediary_type=_intermediary(intermediary_type),
         )
         result = calculate(pack, request)
     except (PremiumInputError, ValueError) as exc:

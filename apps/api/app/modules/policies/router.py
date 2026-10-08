@@ -11,6 +11,7 @@ from app.modules.policies import service
 from app.modules.policies.schemas import (
     Activate,
     Cancel,
+    CommissionIn,
     FromQuote,
     PaymentIn,
     PolicyCreate,
@@ -183,3 +184,14 @@ async def remind(ctx: Write, policy_id: uuid.UUID, body: Remind) -> Reminded:
 async def renewal_quote(ctx: Write, policy_id: uuid.UUID, body: RenewalQuote) -> QuoteOut:
     """Start a renewal quote for the same client and risk; the policy moves to "quoted"."""
     return await quotes.to_out(ctx, await service.renewal_quote(ctx, policy_id, body))
+
+
+@router.put("/policies/{policy_id}/commission", operation_id="policies_set_commission")
+async def set_commission(
+    ctx: Annotated[TenantContext, Depends(require_permission(Perm.COMMISSION_MANAGE))],
+    policy_id: uuid.UUID,
+    body: CommissionIn,
+    response: Response,
+) -> PolicyOut:
+    """Set the commission expected on a policy (rate on the premium before levies)."""
+    return await _out(ctx, await service.set_commission(ctx, policy_id, body), response)

@@ -36,11 +36,22 @@ from app.modules.messaging import service as messaging
 from app.modules.notifications import service as notifications
 from app.modules.policies.models import Policy, PolicyPayment, RenewalReminder
 
-__all__ = ["Policy"]
+__all__ = [
+    "BookEntry",
+    "BookStats",
+    "MonthTotal",
+    "PaymentIn",
+    "Policy",
+    "PolicyCreate",
+]
 from app.modules.policies.schemas import (
     Activate,
+    BookEntry,
+    BookStats,
     Cancel,
+    CommissionIn,
     FromQuote,
+    MonthTotal,
     PaymentIn,
     PaymentOut,
     PolicyCreate,
@@ -84,6 +95,12 @@ class ReasonRequiredError(AppError):
     status = HTTPStatus.UNPROCESSABLE_CONTENT
     code = "reason_required"
     title = "Say why the renewal was lost"
+
+
+class CommissionBaseError(AppError):
+    status = HTTPStatus.UNPROCESSABLE_CONTENT
+    code = "commission_base_required"
+    title = "Enter the premium before levies to work out the commission"
 
 
 class PolicyExistsError(ConflictError):
@@ -366,17 +383,40 @@ async def create_from_quote(ctx: TenantContext, body: FromQuote) -> Policy:
     return await _finish_create(ctx, policy, body, "quote")
 
 
-async def create_policy(ctx: TenantContext, body: PolicyCreate) -> Policy:
+async def _expected_commission(
+    ctx: TenantContext,
+    rate: Decimal | None,
+    base: Decimal | None,
+    currency: str,
+) -> dict[str, Any] | None:
+    if rate is None or base is None:
+        return None
+    return (await insurers.commission_for(ctx, base, rate, currency)).model_dump(mode="json")
+
+
+async def create_policy(
+    ctx: TenantContext, body: PolicyCreate, *, imported: str | None = None
+) -> Policy:
+    """Enter a policy by hand. ``imported`` (an import reference) records existing cover as active."""
+    if body.commission_rate is not None and body.commission_base is None:
+        raise CommissionBaseError()
     client = await clients.get_visible_client(ctx, body.client_id)
     pack, _, _ = await insurers.agency_pack(ctx)
     tenant = await tenancy.get_tenant(ctx.session, ctx.tenant_id)
     insurer_name, product_name, class_code = body.insurer_name, body.product_name, body.class_code
     currency = tenant.default_currency
+    rate = body.commission_rate
     if body.product_id is not None:
         product = await insurers.get_product(ctx, body.product_id)
         insurer = await insurers.get_insurer(ctx, product.insurer_id)
         insurer_name, product_name = insurer.name, product.name
         class_code, currency = product.class_code, product.currency
+        if rate is None:
+            rate = (
+                product.commission_rate_renewal
+                if body.renewed_from_id is not None
+                else product.commission_rate_new
+            )
     if not insurer_name or not class_code:
         raise AppError("Choose a product, or enter the insurer and class of business")
     klass = pack.insurance_class(class_code)
@@ -407,11 +447,36 @@ async def create_policy(ctx: TenantContext, body: PolicyCreate) -> Policy:
         total_premium=body.total_premium,
         collection_mode=body.collection_mode,
         renewed_from_id=body.renewed_from_id,
+        commission=await _expected_commission(ctx, rate, body.commission_base, currency),
         notes=body.notes,
         created_by=ctx.principal.user_id,
         updated_by=ctx.principal.user_id,
     )
-    return await _finish_create(ctx, policy, body, "manual")
+    policy = await _finish_create(ctx, policy, body, imported or "manual")
+    if imported and policy.status == PENDING:
+        evidence = {"basis": "imported", "import": imported, "by": ctx.principal.user_id}
+        policy.status, policy.activated_at, policy.activation = ACTIVE, datetime.now(UTC), evidence
+        await ctx.session.flush()
+        await ctx.session.refresh(policy)
+    return policy
+
+
+async def set_commission(ctx: TenantContext, policy_id: uuid.UUID, body: CommissionIn) -> Policy:
+    """Set (or correct) the commission expected on a policy, e.g. one entered by hand."""
+    policy = await get_policy(ctx, policy_id, lock=True)
+    before = policy.commission
+    policy.commission = await _expected_commission(ctx, body.rate, body.base, policy.currency)
+    policy.updated_by = ctx.principal.user_id
+    await audit.record(
+        ctx,
+        "policy.commission_set",
+        entity_type="policy",
+        entity_id=policy.id,
+        changes={"before": before, "after": policy.commission},
+    )
+    await ctx.session.flush()
+    await ctx.session.refresh(policy)
+    return policy
 
 
 # ---------------------------------------------------------------- edit / activate / cancel
@@ -455,7 +520,7 @@ async def _activate(ctx: TenantContext, policy: Policy, body: Activate, paid: De
                 f"{policy.currency} has been recorded"
             )
     else:
-        pack, code, version = await insurers.agency_pack(ctx)
+        pack, _, _ = await insurers.agency_pack(ctx)
         allowed = {
             e.id: e
             for e in pack.premium_exceptions_for(
@@ -469,7 +534,7 @@ async def _activate(ctx: TenantContext, policy: Policy, body: Activate, paid: De
             "exception_id": exception.id,
             "exception": exception.name,
             "source": exception.source,
-            "pack": f"{code}/{version}",
+            "pack": f"{pack.code}/{pack.version}",
         }
     policy.status, policy.activated_at, policy.activation = ACTIVE, datetime.now(UTC), evidence
     await audit.record(
@@ -835,6 +900,122 @@ async def counts(ctx: TenantContext) -> dict[str, int]:
         "renewals_due_30d": int(await ctx.session.scalar(due) or 0),
         "premiums_to_remit": int(await ctx.session.scalar(unremitted) or 0),
     }
+
+
+async def existing_numbers(ctx: TenantContext) -> set[tuple[str, str]]:
+    """(insurer, policy number) pairs already in the agency's book, lower-cased (import de-duplication)."""
+    rows = await ctx.session.execute(
+        select(Policy.insurer_name, Policy.policy_number).where(Policy.policy_number.is_not(None))
+    )
+    return {(i.lower(), str(n).lower()) for i, n in rows}
+
+
+# ---------------------------------------------------------------- commission book & dashboard
+
+
+async def commission_book(
+    ctx: TenantContext,
+    *,
+    insurer: str | None = None,
+    policy_ids: list[uuid.UUID] | None = None,
+    started_from: date | None = None,
+    started_to: date | None = None,
+) -> list[BookEntry]:
+    """Policies with an expected commission (cancelled ones excluded), oldest first."""
+    today = await _today(ctx.session, ctx.tenant_id)
+    stmt = _scoped(
+        select(Policy, clients.Client.display_name).join(
+            clients.Client, clients.Client.id == Policy.client_id
+        ),
+        ctx,
+    ).where(Policy.commission.is_not(None), Policy.status != CANCELLED)
+    if insurer:
+        stmt = stmt.where(Policy.insurer_name == insurer)
+    if policy_ids is not None:
+        stmt = stmt.where(Policy.id.in_(policy_ids))
+    if started_from is not None:
+        stmt = stmt.where(Policy.start_date >= started_from)
+    if started_to is not None:
+        stmt = stmt.where(Policy.start_date <= started_to)
+    rows = (
+        await ctx.session.execute(stmt.order_by(Policy.start_date, Policy.id).limit(2000))
+    ).all()
+    return [
+        BookEntry(
+            id=p.id,
+            client_name=name,
+            description=p.description,
+            insurer_name=p.insurer_name,
+            policy_number=p.policy_number,
+            class_code=p.class_code,
+            start_date=p.start_date,
+            status=effective_status(p, today),  # type: ignore[arg-type]
+            currency=p.currency,
+            total_premium=_round(p.total_premium, p.currency),
+            commission=p.commission,
+            owner_user_id=p.owner_user_id,
+        )
+        for p, name in rows
+    ]
+
+
+async def book_stats(ctx: TenantContext, since: date) -> BookStats:
+    """Premium written since a date, premium still unpaid, expected commission, renewal results."""
+    tenant = await tenancy.get_tenant(ctx.session, ctx.tenant_id)
+    currency = tenant.default_currency
+    today = await _today(ctx.session, ctx.tenant_id)
+    live = _scoped(select(Policy), ctx).where(
+        Policy.currency == currency, Policy.status != CANCELLED
+    )
+    written = list((await ctx.session.scalars(live.where(Policy.start_date >= since))).all())
+    open_ids = select(Policy.id).where(
+        Policy.currency == currency, Policy.status.in_([PENDING, ACTIVE])
+    )
+    owner = own_scope(ctx.principal, Perm.CLIENT_READ_ALL)
+    if owner is not None:
+        open_ids = open_ids.where(Policy.owner_user_id == owner)
+    due = await ctx.session.scalar(
+        select(func.coalesce(func.sum(Policy.total_premium), 0)).where(Policy.id.in_(open_ids))
+    )
+    paid = await ctx.session.scalar(
+        select(func.coalesce(func.sum(PolicyPayment.amount), 0)).where(
+            PolicyPayment.policy_id.in_(open_ids), PolicyPayment.voided_at.is_(None)
+        )
+    )
+    year_ago = today - timedelta(days=365)
+    closed = _scoped(
+        select(Policy.renewal_stage, func.count()).where(
+            Policy.renewal_stage.in_(CLOSED_STAGES), Policy.end_date >= year_ago
+        ),
+        ctx,
+    ).group_by(Policy.renewal_stage)
+    outcome = {stage: int(n) for stage, n in (await ctx.session.execute(closed)).all()}
+    first_month = (today.replace(day=1) - timedelta(days=330)).replace(day=1)
+    months: dict[str, Decimal] = {}
+    cursor = first_month
+    while cursor <= today:
+        months[f"{cursor:%Y-%m}"] = Decimal(0)
+        cursor = (cursor + timedelta(days=32)).replace(day=1)
+    for p in (await ctx.session.scalars(live.where(Policy.start_date >= first_month))).all():
+        key = f"{p.start_date:%Y-%m}"
+        if key in months:
+            months[key] += p.total_premium
+    expected = sum((Decimal(str(p.commission["net"])) for p in written if p.commission), Decimal(0))
+    return BookStats(
+        currency=currency,
+        since=since,
+        written_count=len(written),
+        written_premium=_round(sum((p.total_premium for p in written), Decimal(0)), currency),
+        outstanding_premium=_round(
+            max(Decimal(due or 0) - Decimal(paid or 0), Decimal(0)), currency
+        ),
+        expected_commission=_round(expected, currency),
+        renewed=outcome.get("renewed", 0),
+        lost=outcome.get("lost", 0),
+        written_by_month=[
+            MonthTotal(month=m, amount=_round(a, currency)) for m, a in months.items()
+        ],
+    )
 
 
 # ---------------------------------------------------------------- reminder jobs

@@ -243,6 +243,147 @@
         "title": "AdjustmentIn",
         "type": "object"
       },
+      "AllocationIn": {
+        "additionalProperties": false,
+        "properties": {
+          "gross": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "Gross commission the insurer paid for this policy",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "policy_id": {
+            "format": "uuid",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "wht": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "ge": 0,
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "As on the insurer's statement; defaults to the pack rate",
+            "title": "Wht"
+          }
+        },
+        "required": [
+          "policy_id",
+          "gross"
+        ],
+        "title": "AllocationIn",
+        "type": "object"
+      },
+      "AllocationOut": {
+        "properties": {
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "gross": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Net",
+            "type": "string"
+          },
+          "policy_id": {
+            "format": "uuid",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "vat": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Vat",
+            "type": "string"
+          },
+          "wht": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy_id",
+          "client_name",
+          "description",
+          "policy_number",
+          "gross",
+          "wht",
+          "vat",
+          "net"
+        ],
+        "title": "AllocationOut",
+        "type": "object"
+      },
+      "Amounts": {
+        "properties": {
+          "gross": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Net",
+            "type": "string"
+          },
+          "wht": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          }
+        },
+        "required": [
+          "gross",
+          "wht",
+          "net"
+        ],
+        "title": "Amounts",
+        "type": "object"
+      },
       "AuditEventOut": {
         "properties": {
           "action": {
@@ -338,6 +479,75 @@
           }
         },
         "title": "Beacon",
+        "type": "object"
+      },
+      "BookStats": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "expected_commission": {
+            "anyOf": [
+              {
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Net of WHT, on policies written since; null without commission access",
+            "title": "Expected Commission"
+          },
+          "lost": {
+            "title": "Lost",
+            "type": "integer"
+          },
+          "outstanding_premium": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Outstanding Premium",
+            "type": "string"
+          },
+          "renewed": {
+            "description": "Renewals won in the last 12 months",
+            "title": "Renewed",
+            "type": "integer"
+          },
+          "since": {
+            "format": "date",
+            "title": "Since",
+            "type": "string"
+          },
+          "written_by_month": {
+            "items": {
+              "$ref": "#/components/schemas/MonthTotal"
+            },
+            "title": "Written By Month",
+            "type": "array"
+          },
+          "written_count": {
+            "title": "Written Count",
+            "type": "integer"
+          },
+          "written_premium": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Written Premium",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency",
+          "since",
+          "written_count",
+          "written_premium",
+          "outstanding_premium",
+          "expected_commission",
+          "renewed",
+          "lost",
+          "written_by_month"
+        ],
+        "title": "BookStats",
         "type": "object"
       },
       "BranchCreate": {
@@ -2241,6 +2451,49 @@
         "title": "ClientUpdate",
         "type": "object"
       },
+      "CommissionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "Premium before levies and stamp duty",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Base",
+            "type": "string"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "ge": 0,
+            "le": 1,
+            "pattern": "^(0(\\.\\d{1,8})?|1(\\.0+)?)$",
+            "title": "Rate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rate",
+          "base"
+        ],
+        "title": "CommissionIn",
+        "type": "object"
+      },
       "CommissionOut": {
         "properties": {
           "base": {
@@ -2680,9 +2933,26 @@
       },
       "Dashboard": {
         "properties": {
+          "book": {
+            "$ref": "#/components/schemas/BookStats",
+            "description": "This year: premium written and unpaid, renewals won and lost"
+          },
           "clients": {
             "title": "Clients",
             "type": "integer"
+          },
+          "commission_received": {
+            "anyOf": [
+              {
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Net commission received this year; null without commission access",
+            "title": "Commission Received"
           },
           "documents_expiring_30d": {
             "title": "Documents Expiring 30D",
@@ -2733,7 +3003,9 @@
           "documents_expiring_30d",
           "policies_active",
           "renewals_due_30d",
-          "premiums_to_remit"
+          "premiums_to_remit",
+          "book",
+          "commission_received"
         ],
         "title": "Dashboard",
         "type": "object"
@@ -3252,6 +3524,29 @@
         "title": "FeeIn",
         "type": "object"
       },
+      "FieldInfo": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "required"
+        ],
+        "title": "FieldInfo",
+        "type": "object"
+      },
       "FromQuote": {
         "additionalProperties": false,
         "properties": {
@@ -3506,6 +3801,164 @@
         "title": "IdNumber",
         "type": "object"
       },
+      "ImportPreview": {
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "errors": {
+            "title": "Errors",
+            "type": "integer"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/FieldInfo"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Mapping",
+            "type": "object"
+          },
+          "matched_clients": {
+            "title": "Matched Clients",
+            "type": "integer"
+          },
+          "new_clients": {
+            "title": "New Clients",
+            "type": "integer"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "integer"
+          },
+          "problems": {
+            "description": "Mapping problems; nothing can be imported until fixed",
+            "items": {
+              "type": "string"
+            },
+            "title": "Problems",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RowResult"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "columns",
+          "mapping",
+          "fields",
+          "problems",
+          "rows",
+          "ok",
+          "errors",
+          "skipped",
+          "new_clients",
+          "matched_clients"
+        ],
+        "title": "ImportPreview",
+        "type": "object"
+      },
+      "ImportRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "assume_paid": {
+            "default": true,
+            "description": "Record the premium as paid to the insurer when there is no 'paid' column",
+            "title": "Assume Paid",
+            "type": "boolean"
+          },
+          "csv": {
+            "description": "The spreadsheet saved as CSV (UTF-8)",
+            "maxLength": 2000000,
+            "title": "Csv",
+            "type": "string"
+          },
+          "filename": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
+          },
+          "mapping": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Field \u2192 column heading; detected from the headings if omitted",
+            "title": "Mapping"
+          },
+          "skip_errors": {
+            "default": false,
+            "description": "Import the good rows, skip the rest",
+            "title": "Skip Errors",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "filename",
+          "csv"
+        ],
+        "title": "ImportRequest",
+        "type": "object"
+      },
+      "ImportResult": {
+        "properties": {
+          "clients_created": {
+            "title": "Clients Created",
+            "type": "integer"
+          },
+          "clients_matched": {
+            "title": "Clients Matched",
+            "type": "integer"
+          },
+          "import_id": {
+            "format": "uuid",
+            "title": "Import Id",
+            "type": "string"
+          },
+          "policies_created": {
+            "title": "Policies Created",
+            "type": "integer"
+          },
+          "rows_skipped": {
+            "title": "Rows Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "import_id",
+          "clients_created",
+          "clients_matched",
+          "policies_created",
+          "rows_skipped"
+        ],
+        "title": "ImportResult",
+        "type": "object"
+      },
       "InsuranceClassOut": {
         "properties": {
           "business_line": {
@@ -3733,6 +4186,43 @@
           "version"
         ],
         "title": "InsurerOut",
+        "type": "object"
+      },
+      "InsurerRow": {
+        "properties": {
+          "expected_net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Expected Net",
+            "type": "string"
+          },
+          "insurer_name": {
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "outstanding_net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Outstanding Net",
+            "type": "string"
+          },
+          "received_net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Received Net",
+            "type": "string"
+          },
+          "wht": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          }
+        },
+        "required": [
+          "insurer_name",
+          "expected_net",
+          "received_net",
+          "outstanding_net",
+          "wht"
+        ],
+        "title": "InsurerRow",
         "type": "object"
       },
       "InsurerUpdate": {
@@ -5077,6 +5567,57 @@
         "title": "MoneyModel",
         "type": "object"
       },
+      "MonthRow": {
+        "properties": {
+          "expected_net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Expected Net",
+            "type": "string"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "received_net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Received Net",
+            "type": "string"
+          },
+          "wht": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month",
+          "expected_net",
+          "received_net",
+          "wht"
+        ],
+        "title": "MonthRow",
+        "type": "object"
+      },
+      "MonthTotal": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "month": {
+            "description": "YYYY-MM",
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month",
+          "amount"
+        ],
+        "title": "MonthTotal",
+        "type": "object"
+      },
       "NotificationOut": {
         "properties": {
           "body": {
@@ -6231,6 +6772,7 @@
           "insurer:manage",
           "commission:read:own",
           "commission:read:all",
+          "commission:manage",
           "premium:write"
         ],
         "title": "Perm",
@@ -6287,6 +6829,53 @@
             ],
             "title": "Collection Mode",
             "type": "string"
+          },
+          "commission_base": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "ge": 0,
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Commissionable premium: the premium before levies and stamp duty",
+            "title": "Commission Base"
+          },
+          "commission_rate": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "ge": 0,
+                "le": 1,
+                "pattern": "^(0(\\.\\d{1,8})?|1(\\.0+)?)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to the product's rate (new or renewal)",
+            "title": "Commission Rate"
           },
           "description": {
             "anyOf": [
@@ -8310,6 +8899,216 @@
         "title": "ReadyResponse",
         "type": "object"
       },
+      "ReceiptCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "insurer_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AllocationIn"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Lines",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "received_on": {
+            "format": "date",
+            "title": "Received On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "wht_certificate": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "KRA WHT certificate number",
+            "title": "Wht Certificate"
+          }
+        },
+        "required": [
+          "insurer_name",
+          "received_on",
+          "lines"
+        ],
+        "title": "ReceiptCreate",
+        "type": "object"
+      },
+      "ReceiptOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "gross": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "insurer_name": {
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AllocationOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Net",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "received_on": {
+            "format": "date",
+            "title": "Received On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "vat": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Vat",
+            "type": "string"
+          },
+          "void_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Void Reason"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          },
+          "wht": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          },
+          "wht_certificate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wht Certificate"
+          }
+        },
+        "required": [
+          "id",
+          "insurer_name",
+          "received_on",
+          "currency",
+          "gross",
+          "wht",
+          "vat",
+          "net",
+          "reference",
+          "wht_certificate",
+          "notes",
+          "voided_at",
+          "void_reason",
+          "created_by",
+          "created_at",
+          "lines"
+        ],
+        "title": "ReceiptOut",
+        "type": "object"
+      },
       "Remind": {
         "additionalProperties": false,
         "properties": {
@@ -8953,6 +9752,145 @@
         "title": "RoleOut",
         "type": "object"
       },
+      "RowResult": {
+        "properties": {
+          "class_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Code"
+          },
+          "client_action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "create",
+                  "match"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Action"
+          },
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "insurer": {
+            "title": "Insurer",
+            "type": "string"
+          },
+          "line": {
+            "description": "Line in the file (the heading is line 1)",
+            "title": "Line",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "paid": {
+            "anyOf": [
+              {
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "premium": {
+            "anyOf": [
+              {
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Premium"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "error",
+              "skip"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "line",
+          "status",
+          "messages",
+          "client_name",
+          "client_action",
+          "insurer",
+          "class_code",
+          "policy_number",
+          "description",
+          "start_date",
+          "end_date",
+          "premium",
+          "paid"
+        ],
+        "title": "RowResult",
+        "type": "object"
+      },
       "SchemeCreate": {
         "additionalProperties": false,
         "properties": {
@@ -9218,6 +10156,198 @@
           "estimated_premium"
         ],
         "title": "StageSummary",
+        "type": "object"
+      },
+      "Statement": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "expected_net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Expected Net",
+            "type": "string"
+          },
+          "outstanding_net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Outstanding Net",
+            "type": "string"
+          },
+          "received_net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Received Net",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/StatementRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "currency",
+          "rows",
+          "expected_net",
+          "received_net",
+          "outstanding_net"
+        ],
+        "title": "Statement",
+        "type": "object"
+      },
+      "StatementRow": {
+        "properties": {
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "expected": {
+            "$ref": "#/components/schemas/Amounts"
+          },
+          "insurer_name": {
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "outstanding": {
+            "$ref": "#/components/schemas/Amounts",
+            "description": "Expected less received; negative when overpaid"
+          },
+          "policy_id": {
+            "format": "uuid",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate"
+          },
+          "received": {
+            "$ref": "#/components/schemas/Amounts"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy_id",
+          "client_name",
+          "description",
+          "insurer_name",
+          "policy_number",
+          "start_date",
+          "status",
+          "currency",
+          "rate",
+          "expected",
+          "received",
+          "outstanding"
+        ],
+        "title": "StatementRow",
+        "type": "object"
+      },
+      "Summary": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "expected_net": {
+            "description": "On policies that started in the year",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Expected Net",
+            "type": "string"
+          },
+          "insurers": {
+            "items": {
+              "$ref": "#/components/schemas/InsurerRow"
+            },
+            "title": "Insurers",
+            "type": "array"
+          },
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/MonthRow"
+            },
+            "title": "Months",
+            "type": "array"
+          },
+          "outstanding_net": {
+            "description": "All years: expected less received",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Outstanding Net",
+            "type": "string"
+          },
+          "received_net": {
+            "description": "Received in the year",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Received Net",
+            "type": "string"
+          },
+          "wht": {
+            "description": "Withheld by insurers in the year (a credit against income tax)",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          },
+          "wht_certificates": {
+            "description": "Receipts with WHT in the year; empty for members who see only their own",
+            "items": {
+              "$ref": "#/components/schemas/WhtCertificate"
+            },
+            "title": "Wht Certificates",
+            "type": "array"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "currency",
+          "expected_net",
+          "received_net",
+          "outstanding_net",
+          "wht",
+          "months",
+          "insurers",
+          "wht_certificates"
+        ],
+        "title": "Summary",
         "type": "object"
       },
       "TaskCounts": {
@@ -9956,6 +11086,65 @@
           "reason"
         ],
         "title": "VoidPayment",
+        "type": "object"
+      },
+      "VoidReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "VoidReceipt",
+        "type": "object"
+      },
+      "WhtCertificate": {
+        "properties": {
+          "certificate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate"
+          },
+          "insurer_name": {
+            "title": "Insurer Name",
+            "type": "string"
+          },
+          "receipt_id": {
+            "format": "uuid",
+            "title": "Receipt Id",
+            "type": "string"
+          },
+          "received_on": {
+            "format": "date",
+            "title": "Received On",
+            "type": "string"
+          },
+          "wht": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          }
+        },
+        "required": [
+          "receipt_id",
+          "insurer_name",
+          "received_on",
+          "wht",
+          "certificate"
+        ],
+        "title": "WhtCertificate",
         "type": "object"
       }
     }
@@ -11053,6 +12242,314 @@
         ]
       }
     },
+    "/api/v1/commission-receipts": {
+      "get": {
+        "operationId": "commission_receipts_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2100,
+                  "minimum": 2000,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReceiptOut"
+                  },
+                  "title": "Response Commission Receipts List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Receipts",
+        "tags": [
+          "commissions"
+        ]
+      },
+      "post": {
+        "description": "Record commission an insurer paid, split across the policies it covers.",
+        "operationId": "commission_receipts_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Receipt",
+        "tags": [
+          "commissions"
+        ]
+      }
+    },
+    "/api/v1/commission-receipts/{receipt_id}/void": {
+      "post": {
+        "operationId": "commission_receipts_void",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "receipt_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Receipt Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidReceipt"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Void Receipt",
+        "tags": [
+          "commissions"
+        ]
+      }
+    },
+    "/api/v1/commissions/statement": {
+      "get": {
+        "description": "Expected vs received commission per policy (yours only, unless you see the agency's).",
+        "operationId": "commissions_statement",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "insurer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Insurer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "policy_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Policy Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "outstanding",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Outstanding",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Statement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Statement",
+        "tags": [
+          "commissions"
+        ]
+      }
+    },
+    "/api/v1/commissions/summary": {
+      "get": {
+        "description": "Expected, received and outstanding commission and WHT for a year, by month and insurer.",
+        "operationId": "commissions_summary",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2100,
+                  "minimum": 2000,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Summary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Summary",
+        "tags": [
+          "commissions"
+        ]
+      }
+    },
     "/api/v1/dashboard": {
       "get": {
         "operationId": "dashboard_get",
@@ -11849,6 +13346,108 @@
         "summary": "Update Household",
         "tags": [
           "clients"
+        ]
+      }
+    },
+    "/api/v1/imports/policies": {
+      "post": {
+        "description": "Import the clients and policies (all in one transaction).",
+        "operationId": "imports_policies_run",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/policies/preview": {
+      "post": {
+        "description": "Read the file, detect the columns and check every row. Nothing is saved.",
+        "operationId": "imports_policies_preview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "imports"
         ]
       }
     },
@@ -13793,6 +15392,60 @@
           }
         },
         "summary": "Cancel",
+        "tags": [
+          "policies"
+        ]
+      }
+    },
+    "/api/v1/policies/{policy_id}/commission": {
+      "put": {
+        "description": "Set the commission expected on a policy (rate on the premium before levies).",
+        "operationId": "policies_set_commission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommissionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Commission",
         "tags": [
           "policies"
         ]

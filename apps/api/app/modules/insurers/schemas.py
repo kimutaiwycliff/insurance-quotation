@@ -11,23 +11,14 @@ from pydantic import (
     ConfigDict,
     EmailStr,
     Field,
-    PlainSerializer,
     StringConstraints,
     field_validator,
     model_validator,
 )
 
-from app.core.money import AmountStr, NoFloat
+from app.core.money import AmountStr, NoFloat, RateStr
 from app.core.phone import InvalidPhoneError, to_e164
 
-RateStr = Annotated[
-    Decimal,
-    NoFloat,
-    Field(
-        ge=0, le=1, json_schema_extra={"type": "string", "pattern": r"^(0(\.\d{1,8})?|1(\.0+)?)$"}
-    ),
-    PlainSerializer(lambda v: format(v.normalize(), "f"), return_type=str, when_used="always"),
-]
 Money = Annotated[Decimal, Field(ge=0)]
 RatingBasis = Literal["rate_on_sum_insured", "flat", "per_member", "manual"]
 Code = Annotated[

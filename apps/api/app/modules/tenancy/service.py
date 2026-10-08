@@ -4,8 +4,9 @@ All functions run inside a transaction whose RLS tenant context is already set t
 """
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, cast
+from zoneinfo import ZoneInfo
 
 import structlog
 from sqlalchemy import CursorResult, select, update
@@ -153,6 +154,12 @@ async def resolve_principal(
 
 
 # ---------------------------------------------------------------- organization
+
+
+async def today(session: AsyncSession, tenant_id: uuid.UUID) -> date:
+    """Today's date in the agency's timezone."""
+    tenant = await get_tenant(session, tenant_id)
+    return datetime.now(ZoneInfo(tenant.timezone)).date()
 
 
 async def get_tenant(session: AsyncSession, tenant_id: uuid.UUID) -> Tenant:

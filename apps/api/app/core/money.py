@@ -178,6 +178,17 @@ AmountStr = Annotated[
 ]
 
 
+# A rate as a fraction (0.10 = 10%), sent as a string.
+RateStr = Annotated[
+    Decimal,
+    NoFloat,
+    Field(
+        ge=0, le=1, json_schema_extra={"type": "string", "pattern": r"^(0(\.\d{1,8})?|1(\.0+)?)$"}
+    ),
+    PlainSerializer(lambda v: format(v.normalize(), "f"), return_type=str, when_used="always"),
+]
+
+
 class MoneyModel(BaseModel):
     """Wire format of money: ``{"amount": "1234.50", "currency": "KES"}``."""
 
