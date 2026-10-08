@@ -26,6 +26,7 @@ test("a business connects M-Pesa and gets paid from the app and from the invoice
   await form.getByLabel("Last name").fill("Kamau");
   await form.getByLabel("Phone").fill("0712 345 678");
   await form.getByRole("button", { name: "Save client" }).click();
+  await expect(page.getByRole("heading", { name: "Wanjiru Kamau" })).toBeVisible();
   const clientUrl = page.url();
   for (const amount of ["1000", "2500"]) {
     await page.goto(clientUrl);
@@ -44,7 +45,7 @@ test("a business connects M-Pesa and gets paid from the app and from the invoice
   await dialog.getByRole("button", { name: "Send prompt" }).click();
   await expect(dialog.getByText(/Paid\. The payment is recorded/)).toBeVisible({ timeout: 30_000 });
   await dialog.getByRole("button", { name: "Done" }).click();
-  await expect(page.getByText("Paid", { exact: true })).toBeVisible();
+  await expect(page.getByText("Paid", { exact: true }).first()).toBeVisible(); // status badge
 
   // From the link: the client pays the other invoice on their phone.
   await page.goto(clientUrl);
@@ -60,6 +61,6 @@ test("a business connects M-Pesa and gets paid from the app and from the invoice
   await expectAccessible(visitor, "public invoice payment");
   await visitor.getByLabel("Your M-Pesa number").fill("0712345678");
   await visitor.getByRole("button", { name: "Pay with M-Pesa" }).click();
-  await expect(visitor.getByText(/^Paid\./)).toBeVisible({ timeout: 30_000 });
+  await expect(visitor.getByText("This invoice is paid. Thank you.")).toBeVisible({ timeout: 30_000 });
   await visitor.close();
 });

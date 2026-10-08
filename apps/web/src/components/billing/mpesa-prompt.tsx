@@ -28,6 +28,7 @@ export function MpesaPromptButton({ invoiceId, clientPhone, balance, onPaid }: {
   const [prompt, setPrompt] = useState<PromptOut | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [misses, setMisses] = useState(0);
   const connection = useMpesaConnectionGet();
 
   useEffect(() => {
@@ -40,8 +41,9 @@ export function MpesaPromptButton({ invoiceId, clientPhone, balance, onPaid }: {
           toast.success(`M-Pesa payment received${next.receipt ? `: ${next.receipt}` : ""}`);
           await onPaid();
         }
+        setMisses(0);
       } catch {
-        /* keep polling */
+        setMisses((n) => n + 1); // keep polling; say so if the status cannot be fetched for a while
       }
     }, 3000);
     return () => window.clearTimeout(timer);
@@ -62,9 +64,11 @@ export function MpesaPromptButton({ invoiceId, clientPhone, balance, onPaid }: {
   if (connection.data?.status !== "active") return null;
   return (
     <>
-      <Button variant="outline" onClick={() => { setPrompt(null); setError(null); setOpen(true); }}>
-        <Smartphone aria-hidden="true" /> Ask for M-Pesa payment
-      </Button>
+      {Number(balance) > 0 && (
+        <Button variant="outline" onClick={() => { setPrompt(null); setError(null); setOpen(true); }}>
+          <Smartphone aria-hidden="true" /> Ask for M-Pesa payment
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -78,6 +82,7 @@ export function MpesaPromptButton({ invoiceId, clientPhone, balance, onPaid }: {
             <p role="status" aria-live="polite" className={prompt.status === "paid" ? "font-bold text-primary" : DONE.has(prompt.status) ? "font-bold text-destructive" : ""}>
               {TEXT[prompt.status] ?? prompt.result_desc ?? "The payment did not go through."}
               {prompt.receipt && ` Receipt ${prompt.receipt}.`}
+              {misses >= 3 && !DONE.has(prompt.status) && " (We cannot reach the server right now; still trying.)"}
             </p>
           ) : (
             <Field label="Client's M-Pesa number">{(p) => <Input {...p} type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0712 345 678" />}</Field>

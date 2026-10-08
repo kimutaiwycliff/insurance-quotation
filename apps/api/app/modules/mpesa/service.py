@@ -523,7 +523,11 @@ async def check_request(
     request_id: uuid.UUID,
 ) -> str:
     """Confirm a pending prompt with STK Query (job and on-demand). Idempotent."""
-    request = await session.get(MpesaRequest, request_id, with_for_update=True)
+    # populate_existing: re-read under the lock even if this session already holds a (stale) copy,
+    # so a prompt completed meanwhile by the job (or a callback) is never completed twice.
+    request = await session.get(
+        MpesaRequest, request_id, with_for_update=True, populate_existing=True
+    )
     if request is None or request.status != PENDING or request.checkout_request_id is None:
         return request.status if request else "missing"
     connection = await session.get(MpesaConnection, request.connection_id)
@@ -535,7 +539,7 @@ async def check_request(
         result = None
     if result is not None and result.result_code == 0:
         receipt = request.receipt or (
-            simulated_receipt()
+            simulated_receipt(request.checkout_request_id)
             if connection.environment == "simulator"
             else f"STK{request.checkout_request_id[-9:]}"
         )

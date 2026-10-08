@@ -16,13 +16,14 @@ from sqlalchemy import select
 from app.core import db
 from app.core.config import Settings
 from app.core.tenancy import tenant_id_for_org
-from app.integrations.mpesa import Credentials, DarajaClient
+from app.integrations.mpesa import Credentials, DarajaClient, DarajaError
 from app.modules.mpesa import service as mpesa
 from app.modules.mpesa.models import WebhookEvent
 from tests.support import Org
 
 pytestmark = pytest.mark.xdist_group("gotenberg")  # sending invoices renders PDFs
 
+_SANDBOX_TRANSIENT = {429, 500, 502, 503, 504}
 SIMULATOR = {
     "environment": "simulator",
     "shortcode_type": "paybill",
@@ -369,14 +370,20 @@ async def test_daraja_sandbox_accepts_a_prompt() -> None:
     )
     async with httpx.AsyncClient() as http:
         client = DarajaClient(credentials, http)
-        await client.check_credentials()
-        accepted = await client.stk_push(
-            phone="254708374149",  # Safaricom's sandbox test number
-            amount=1,
-            account_reference="TEST123456",
-            description="Sandbox test",
-            callback_url="https://example.com/api/v1/webhooks/mpesa/sandbox-test/stk",
-        )
-        assert accepted.checkout_request_id.startswith("ws_CO_")
-        status = await client.stk_query(accepted.checkout_request_id)
-        assert status.result_code in {None, 0, 1, 1032, 1037}
+        try:
+            await client.check_credentials()
+            accepted = await client.stk_push(
+                phone="254708374149",  # Safaricom's sandbox test number
+                amount=1,
+                account_reference="TEST123456",
+                description="Sandbox test",
+                callback_url="https://example.com/api/v1/webhooks/mpesa/sandbox-test/stk",
+            )
+            status = await client.stk_query(accepted.checkout_request_id)
+        except DarajaError as exc:
+            # The shared sandbox throttles bursts and has outages; that is not a failure of ours.
+            if exc.status in _SANDBOX_TRANSIENT or "spike" in exc.detail.lower():
+                pytest.skip(f"Daraja sandbox unavailable: {exc.detail}")
+            raise
+    assert accepted.checkout_request_id.startswith("ws_CO_")
+    assert status.result_code in {None, 0, 1, 1032, 1037}

@@ -422,7 +422,8 @@ export function InvoiceDetail({ documentId }: { documentId: string }) {
               <Send aria-hidden="true" /> Send
             </Button>
           )}
-          {isInvoice && issued && canPay && Number(d.balance) > 0 && (
+          {isInvoice && issued && canPay && (
+            /* stays mounted once paid, so its confirmation is still visible */
             <MpesaPromptButton invoiceId={d.id} clientPhone={d.client.phone} balance={d.balance} onPaid={refresh} />
           )}
           {isInvoice && issued && canPay && Number(d.balance) > 0 && (
