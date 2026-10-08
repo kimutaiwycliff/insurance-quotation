@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { initials } from "@/components/brand/seal";
 import { slugify } from "@/components/onboarding/wizard";
 import { changedFields } from "@/components/settings/organization-form";
-import { formatMoney, relativeTime } from "@/lib/format";
+import { formatMoney, relativeTime, sumAmounts } from "@/lib/format";
 import { safeNext } from "@/lib/navigation";
 import { fieldErrors, parseProblem, problemMessage } from "@/lib/problem";
 
@@ -118,5 +118,14 @@ describe("percent strings", () => {
   it("rejects junk", async () => {
     const { percentToFraction } = await import("@/lib/format");
     for (const bad of ["", "abc", "-1", "1e2", "4%"]) expect(percentToFraction(bad)).toBeNull();
+  });
+});
+
+describe("sumAmounts", () => {
+  it("adds money strings exactly", () => {
+    expect(sumAmounts(["0.10", "0.20"])).toBe("0.30");
+    expect(sumAmounts(["3500", "4000.5", "", "abc"])).toBe("7500.50");
+    expect(sumAmounts(["-10.25", "5"])).toBe("-5.25");
+    expect(sumAmounts([])).toBe("0.00");
   });
 });

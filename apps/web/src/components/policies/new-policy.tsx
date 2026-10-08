@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Field, FormError } from "@/components/forms/field";
+import { useCan } from "@/components/shell/me-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -14,7 +15,7 @@ import { useJurisdictionPackGet, useProductsList } from "@/lib/api/generated/ins
 import type { PaymentIn, PaymentInMethod, PolicyCreateCollectionMode } from "@/lib/api/generated/model";
 import { policiesCreate, policiesFromQuote, usePoliciesGet } from "@/lib/api/generated/policies/policies";
 import { useQuotesGet } from "@/lib/api/generated/quotes/quotes";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate, formatMoney, percentToFraction } from "@/lib/format";
 import { ApiError, problemMessage } from "@/lib/problem";
 
 const METHODS: { value: PaymentInMethod; label: string }[] = [
@@ -195,6 +196,10 @@ export function NewPolicy({ clientId, renewalOf }: { clientId: string; renewalOf
   const [description, setDescription] = useState("");
   const [premium, setPremium] = useState("");
   const [sumInsured, setSumInsured] = useState("");
+  const seesOwnCommission = useCan("commission:read:own");
+  const seesAllCommission = useCan("commission:read:all");
+  const [rate, setRate] = useState("");
+  const [base, setBase] = useState("");
   const [cover, setCover] = useState<CoverState | null>(null);
   const { error, busy, run } = useSubmit();
 
@@ -219,6 +224,8 @@ export function NewPolicy({ clientId, renewalOf }: { clientId: string; renewalOf
         total_premium: premium,
         sum_insured: sumInsured || undefined,
         renewed_from_id: renewalOf,
+        commission_rate: rate ? (percentToFraction(rate) ?? undefined) : undefined,
+        commission_base: base || undefined,
         ...coverBody(state),
       }),
     );
@@ -258,6 +265,14 @@ export function NewPolicy({ clientId, renewalOf }: { clientId: string; renewalOf
         </Field>
         <Field label="Sum insured" optional>{(p) => <Input {...p} inputMode="decimal" value={sumInsured} onChange={(e) => setSumInsured(e.target.value.replace(/[, ]/g, ""))} />}</Field>
       </div>
+      {(seesOwnCommission || seesAllCommission) && <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Commission rate (%)" optional hint={productId ? "Leave empty to use the product's rate." : undefined}>
+          {(p) => <Input {...p} inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} />}
+        </Field>
+        <Field label={`Premium before levies (${currency})`} optional hint="Commission is paid on this amount.">
+          {(p) => <Input {...p} inputMode="decimal" value={base} onChange={(e) => setBase(e.target.value.replace(/[, ]/g, ""))} />}
+        </Field>
+      </div>}
       <Cover total={premium || null} currency={currency} state={state} set={setCover} />
       <div><Button type="submit" size="lg" disabled={busy}>Save policy</Button></div>
     </form>

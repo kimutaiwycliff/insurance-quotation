@@ -8,8 +8,8 @@ import { useState, type ReactNode } from "react";
 
 import { Seal } from "@/components/brand/seal";
 import { CommandMenu } from "@/components/shell/command-menu";
-import { MeProvider } from "@/components/shell/me-context";
-import { isActive, NAV } from "@/components/shell/nav";
+import { MeProvider, useMe } from "@/components/shell/me-context";
+import { isActive, visibleNav } from "@/components/shell/nav";
 import { NotificationBell } from "@/components/shell/notification-bell";
 import { UserMenu } from "@/components/shell/user-menu";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,10 @@ import { cn } from "@/lib/utils";
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const me = useMe();
   return (
     <nav aria-label="Main" className="grid gap-0.5">
-      {NAV.map(({ href, key, icon: Icon, soon }) => {
+      {visibleNav(me.permissions as string[]).map(({ href, key, icon: Icon, soon }) => {
         const active = isActive(pathname, href);
         if (soon) {
           return (

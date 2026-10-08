@@ -62,3 +62,22 @@ export function fractionToPercent(fraction: string | null | undefined): string {
   const rest = padded.slice(2).replace(/0+$/, "");
   return rest ? `${intPart}.${rest}` : intPart;
 }
+
+/** Sum decimal amount strings exactly (in 1/10,000ths, via BigInt): never through floats. */
+export function sumAmounts(amounts: readonly string[]): string {
+  const scale = 4;
+  let total = 0n;
+  for (const raw of amounts) {
+    const value = raw.trim();
+    if (!/^-?\d+(\.\d+)?$/.test(value)) continue;
+    const negative = value.startsWith("-");
+    const [whole = "0", fraction = ""] = value.replace("-", "").split(".");
+    const units = BigInt(whole) * 10n ** BigInt(scale) + BigInt(fraction.padEnd(scale, "0").slice(0, scale) || "0");
+    total += negative ? -units : units;
+  }
+  const negative = total < 0n;
+  const abs = negative ? -total : total;
+  const whole = abs / 10n ** BigInt(scale);
+  const fraction = (abs % 10n ** BigInt(scale)).toString().padStart(scale, "0").slice(0, 2);
+  return `${negative ? "-" : ""}${whole}.${fraction}`;
+}

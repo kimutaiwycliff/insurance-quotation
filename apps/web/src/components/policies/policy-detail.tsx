@@ -24,11 +24,13 @@ import {
   policiesCancel,
   policiesMarkRemitted,
   policiesRecordPayment,
+  policiesSetCommission,
   policiesUpdate,
   policiesVoidPayment,
   usePoliciesGet,
 } from "@/lib/api/generated/policies/policies";
-import { formatDate, formatMoney, fractionToPercent } from "@/lib/format";
+import { formatDate, formatMoney, fractionToPercent, percentToFraction } from "@/lib/format";
+import { useCommissionsStatement } from "@/lib/api/generated/commissions/commissions";
 import { ApiError, problemMessage } from "@/lib/problem";
 
 const METHOD_LABELS: Record<string, string> = { mpesa: "M-Pesa", bank: "Bank", card: "Card", cheque: "Cheque", cash: "Cash", other: "Other" };
@@ -189,11 +191,64 @@ function PaymentRow({ policy, payment, canPay, refresh }: { policy: PolicyOut; p
   );
 }
 
+function CommissionPanel({ policy, canManage, refresh }: { policy: PolicyOut; canManage: boolean; refresh: () => Promise<unknown> }) {
+  const statement = useCommissionsStatement({ policy_id: policy.id });
+  const [editing, setEditing] = useState(false);
+  const [rate, setRate] = useState(policy.commission ? fractionToPercent(String(policy.commission.rate)) : "");
+  const [base, setBase] = useState(policy.commission ? String(policy.commission.base) : "");
+  const { busy, error, run } = useAction(async () => { await refresh(); await statement.refetch(); });
+  const money = (a: string) => formatMoney(a, policy.currency);
+  const row = statement.data?.rows[0];
+  const c = policy.commission;
+  return (
+    <section aria-labelledby="commission-heading" className="grid gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="commission-heading" className="text-xl">Commission</h2>
+        {canManage && <Button size="sm" variant="outline" onClick={() => setEditing(true)}>{c ? "Change" : "Set expected commission"}</Button>}
+      </div>
+      {c ? (
+        <dl className="grid grid-cols-2 gap-x-8 gap-y-2 sm:grid-cols-4">
+          <div><dt className="text-sm text-muted-foreground">Expected</dt><dd className="tabular font-bold">{money(String(c.gross))} <span className="font-normal text-muted-foreground">({fractionToPercent(String(c.rate))}%)</span></dd></div>
+          <div><dt className="text-sm text-muted-foreground">After WHT</dt><dd className="tabular font-bold">{money(String(c.net))}</dd></div>
+          {row && <div><dt className="text-sm text-muted-foreground">Received</dt><dd className="tabular font-bold">{money(row.received.net)}</dd></div>}
+          {row && <div><dt className="text-sm text-muted-foreground">Still owed</dt><dd className={`tabular font-bold ${Number(row.outstanding.net) > 0 ? "text-destructive" : ""}`}>{money(row.outstanding.net)}</dd></div>}
+        </dl>
+      ) : (
+        <p className="text-muted-foreground">No expected commission yet. Set it to track what the insurer owes you.</p>
+      )}
+      <Dialog open={editing} onOpenChange={setEditing}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Expected commission</DialogTitle>
+            <DialogDescription>The rate the insurer pays you, on the premium before levies and stamp duty. Withholding tax is worked out for you.</DialogDescription>
+          </DialogHeader>
+          <FormError message={error} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Rate (%)">{(f) => <Input {...f} inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} />}</Field>
+            <Field label={`Premium before levies (${policy.currency})`}>{(f) => <Input {...f} inputMode="decimal" value={base} onChange={(e) => setBase(e.target.value.replace(/[, ]/g, ""))} />}</Field>
+          </div>
+          <DialogFooter>
+            <Button disabled={busy} onClick={async () => {
+              const fraction = percentToFraction(rate);
+              if (!fraction) return;
+              if (await run(() => policiesSetCommission(policy.id, { rate: fraction, base }), "Commission saved")) setEditing(false);
+            }}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
+
 export function PolicyDetail({ policyId }: { policyId: string }) {
   const queryClient = useQueryClient();
   const policy = usePoliciesGet(policyId);
   const canWrite = useCan("client:write");
   const canPay = useCan("premium:write");
+  const seesOwnCommission = useCan("commission:read:own");
+  const seesAllCommission = useCan("commission:read:all");
+  const canSeeCommission = seesOwnCommission || seesAllCommission;
+  const canManageCommission = useCan("commission:manage");
   const [paying, setPaying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [number, setNumber] = useState<string | null>(null);
@@ -264,7 +319,7 @@ export function PolicyDetail({ policyId }: { policyId: string }) {
         {p.payments.length === 0 ? (
           <p className="text-muted-foreground">No payments recorded.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border bg-card">
+          <div tabIndex={0} role="region" aria-label="Payments" className="overflow-x-auto rounded-lg border bg-card">
             <table className="w-full min-w-[36rem] text-sm">
               <caption className="sr-only">Payments</caption>
               <thead><tr className="border-b text-left text-muted-foreground"><th className="px-3 py-2 font-normal">Date</th><th className="px-3 py-2 text-right font-normal">Amount</th><th className="px-3 py-2 font-normal">Method</th><th className="px-3 py-2 font-normal">Status</th><th className="px-3 py-2"><span className="sr-only">Actions</span></th></tr></thead>
@@ -284,14 +339,10 @@ export function PolicyDetail({ policyId }: { policyId: string }) {
               ))}
             </tbody>
           </table>
-          {p.commission && (
-            <p className="text-sm text-muted-foreground">
-              Expected commission {money(String(p.commission.gross))} ({fractionToPercent(String(p.commission.rate))}%), {money(String(p.commission.net))} after withholding tax.
-            </p>
-          )}
         </section>
       )}
       {p.notes && <p className="max-w-prose whitespace-pre-line text-muted-foreground">{p.notes}</p>}
+      {(canSeeCommission || canManageCommission) && <CommissionPanel policy={p} canManage={canManageCommission} refresh={refresh} />}
 
       {canWrite && p.status !== "cancelled" && (
         <div><Button variant="ghost" className="text-destructive" onClick={() => setCancelling(true)}>Cancel policy</Button></div>

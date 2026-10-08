@@ -4,11 +4,16 @@
  * BrokerOS API
  * OpenAPI spec version: 1.0.0
  */
+import type { BookStats } from './bookStats';
 import type { Pipeline } from './pipeline';
 import type { TaskCounts } from './taskCounts';
 
 export interface Dashboard {
+  /** This year: premium written and unpaid, renewals won and lost */
+  book: BookStats;
   clients: number;
+  /** Net commission received this year; null without commission access */
+  commission_received: string | null;
   documents_expiring_30d: number;
   new_clients_30d: number;
   pipeline: Pipeline | null;

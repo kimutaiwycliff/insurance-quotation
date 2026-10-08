@@ -15,6 +15,10 @@ export interface PolicyCreate {
   class_code?: string | null;
   client_id: string;
   collection_mode?: PolicyCreateCollectionMode;
+  /** Commissionable premium: the premium before levies and stamp duty */
+  commission_base?: string | null;
+  /** Defaults to the product's rate (new or renewal) */
+  commission_rate?: string | null;
   description?: string | null;
   details?: Detail[] | null;
   /** Defaults to one year less a day */

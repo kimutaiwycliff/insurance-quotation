@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
-import { NAV } from "@/components/shell/nav";
+import { visibleNav } from "@/components/shell/nav";
 import { SETTINGS_SECTIONS } from "@/components/settings/sections";
 import {
   CommandDialog,
@@ -56,7 +56,7 @@ export function CommandMenu({ me }: { me: Me }) {
         <CommandList>
           <CommandEmpty>No matches.</CommandEmpty>
           <CommandGroup heading={t("home")}>
-            {NAV.filter((item) => !item.soon).map(({ href, key, icon: Icon }) => (
+            {visibleNav(me.permissions as string[]).filter((item) => !item.soon).map(({ href, key, icon: Icon }) => (
               <CommandItem key={key} onSelect={() => go(href)}>
                 <Icon aria-hidden="true" /> {t(key)}
               </CommandItem>

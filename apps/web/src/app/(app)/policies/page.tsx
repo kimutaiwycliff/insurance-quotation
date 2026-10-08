@@ -13,7 +13,10 @@ export default function PoliciesPage() {
           <h1 className="text-3xl">Policies</h1>
           <p className="mt-1 text-muted-foreground">To add an existing policy, open the client and choose Add policy.</p>
         </div>
-        <Button asChild variant="outline"><Link href="/renewals">Renewals</Link></Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link href="/policies/import">Import from a spreadsheet</Link></Button>
+          <Button asChild variant="outline"><Link href="/renewals">Renewals</Link></Button>
+        </div>
       </div>
       <PoliciesList />
     </div>
