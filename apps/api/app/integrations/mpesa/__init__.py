@@ -6,11 +6,12 @@ Amounts are whole shillings: M-Pesa does not take cents.
 """
 
 import base64
+import hashlib
 import secrets
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -124,7 +125,7 @@ class DarajaClient:
         _TOKENS[key] = (token, time.monotonic() + int(data.get("expires_in", 3599)) - 60)
         return token
 
-    async def _post(self, path: str, body: dict[str, object]) -> dict[str, object]:
+    async def _post(self, path: str, body: dict[str, object]) -> dict[str, Any]:
         token = await self._token()
         try:
             response = await self.http.post(
@@ -135,9 +136,18 @@ class DarajaClient:
             )
         except httpx.HTTPError as exc:
             raise DarajaError(f"M-Pesa could not be reached ({type(exc).__name__})") from None
-        data: dict[str, object] = response.json() if response.content else {}
+        try:
+            data: dict[str, Any] = response.json() if response.content else {}
+        except ValueError:
+            data = {}
         if response.status_code >= httpx.codes.BAD_REQUEST:
-            message = str(data.get("errorMessage") or data.get("ResultDesc") or "request refused")
+            fault = data.get("fault") if isinstance(data.get("fault"), dict) else {}
+            message = str(
+                data.get("errorMessage")
+                or data.get("ResultDesc")
+                or (fault or {}).get("faultstring")
+                or f"request refused (HTTP {response.status_code})"
+            )
             raise DarajaError(f"M-Pesa: {message}", status=response.status_code)
         return data
 
@@ -251,9 +261,10 @@ class SimulatorClient:
         return None
 
 
-def simulated_receipt() -> str:
-    """A receipt-like code for simulated payments (never a real M-Pesa code: starts with 'SIM')."""
-    return "SIM" + secrets.token_hex(4).upper()[:7]
+def simulated_receipt(checkout_request_id: str) -> str:
+    """A receipt-like code for a simulated payment ('SIM' + 7 characters derived from the prompt): the same
+    prompt always gets the same receipt, so it is recorded once."""
+    return "SIM" + hashlib.sha256(checkout_request_id.encode()).hexdigest()[:7].upper()
 
 
 def client_for(credentials: Credentials, http: httpx.AsyncClient) -> MpesaClient:
