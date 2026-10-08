@@ -9,18 +9,18 @@ from app.core.concurrency import etag
 from app.core.permissions import Perm
 from app.modules.billing import service
 from app.modules.billing.schemas import (
+    BillingDocumentOut,
+    BillingDocumentSummary,
     ClientAccount,
     CreditNoteCreate,
-    DocumentOut,
-    DocumentSummary,
+    DocumentSent,
     FileLink,
     InvoiceCreate,
     InvoiceUpdate,
     Issue,
     PaymentCreate,
-    PaymentOut,
+    ReceivedPayment,
     Send,
-    Sent,
     Void,
 )
 from app.platform.deps import ResourcesDep, TenantContext, require_permission
@@ -41,7 +41,9 @@ StatusQ = Annotated[
 ]
 
 
-async def _out(ctx: TenantContext, doc: service.BillingDocument, response: Response) -> DocumentOut:
+async def _out(
+    ctx: TenantContext, doc: service.BillingDocument, response: Response
+) -> BillingDocumentOut:
     response.headers["ETag"] = etag(doc.version)
     return await service.to_out(ctx, doc)
 
@@ -52,7 +54,7 @@ async def list_invoices(
     client_id: uuid.UUID | None = None,
     status: StatusQ = None,
     limit: Annotated[int, Query(ge=1, le=500)] = 200,
-) -> list[DocumentSummary]:
+) -> list[BillingDocumentSummary]:
     return await service.list_documents(
         ctx, kind="invoice", client_id=client_id, status=status, limit=limit
     )
@@ -61,14 +63,14 @@ async def list_invoices(
 @router.get("/credit-notes", operation_id="credit_notes_list")
 async def list_credit_notes(
     ctx: Read, client_id: uuid.UUID | None = None, limit: Annotated[int, Query(ge=1, le=500)] = 200
-) -> list[DocumentSummary]:
+) -> list[BillingDocumentSummary]:
     return await service.list_documents(
         ctx, kind="credit_note", client_id=client_id, status=None, limit=limit
     )
 
 
 @router.post(
-    "/invoices", operation_id="invoices_create", status_code=201, response_model=DocumentOut
+    "/invoices", operation_id="invoices_create", status_code=201, response_model=BillingDocumentOut
 )
 async def create_invoice(
     ctx: Write,
@@ -83,7 +85,10 @@ async def create_invoice(
 
 
 @router.post(
-    "/credit-notes", operation_id="credit_notes_create", status_code=201, response_model=DocumentOut
+    "/credit-notes",
+    operation_id="credit_notes_create",
+    status_code=201,
+    response_model=BillingDocumentOut,
 )
 async def create_credit_note(
     ctx: IssueCtx,
@@ -98,7 +103,7 @@ async def create_credit_note(
 
 
 @router.get("/billing-documents/{document_id}", operation_id="billing_documents_get")
-async def get_document(ctx: Read, document_id: uuid.UUID, response: Response) -> DocumentOut:
+async def get_document(ctx: Read, document_id: uuid.UUID, response: Response) -> BillingDocumentOut:
     return await _out(ctx, await service.get_document(ctx, document_id), response)
 
 
@@ -109,7 +114,7 @@ async def update_document(
     body: InvoiceUpdate,
     response: Response,
     if_match: Annotated[str | None, Header()] = None,
-) -> DocumentOut:
+) -> BillingDocumentOut:
     """Edit a draft. Issued documents are corrected with a credit note."""
     return await _out(ctx, await service.update_draft(ctx, document_id, body, if_match), response)
 
@@ -117,7 +122,7 @@ async def update_document(
 @router.post("/billing-documents/{document_id}/issue", operation_id="billing_documents_issue")
 async def issue(
     ctx: IssueCtx, document_id: uuid.UUID, body: Issue, response: Response
-) -> DocumentOut:
+) -> BillingDocumentOut:
     """Number it, freeze it and post it to the ledger."""
     return await _out(ctx, await service.issue(ctx, document_id, body), response)
 
@@ -125,12 +130,14 @@ async def issue(
 @router.post("/billing-documents/{document_id}/void", operation_id="billing_documents_void")
 async def void(
     ctx: IssueCtx, document_id: uuid.UUID, body: Void, response: Response
-) -> DocumentOut:
+) -> BillingDocumentOut:
     return await _out(ctx, await service.void(ctx, document_id, body), response)
 
 
 @router.post("/billing-documents/{document_id}/send", operation_id="billing_documents_send")
-async def send(ctx: IssueCtx, document_id: uuid.UUID, body: Send, resources: ResourcesDep) -> Sent:
+async def send(
+    ctx: IssueCtx, document_id: uuid.UUID, body: Send, resources: ResourcesDep
+) -> DocumentSent:
     doc, url, emailed, whatsapp = await service.send(
         ctx,
         document_id,
@@ -139,7 +146,7 @@ async def send(ctx: IssueCtx, document_id: uuid.UUID, body: Send, resources: Res
         storage=resources.storage,
         renderer=resources.pdf_renderer,
     )
-    return Sent(
+    return DocumentSent(
         document=await service.to_out(ctx, doc), url=url, emailed_to=emailed, whatsapp_url=whatsapp
     )
 
@@ -158,7 +165,7 @@ async def pdf(ctx: Read, document_id: uuid.UUID, resources: ResourcesDep) -> Fil
 
 
 @router.post("/invoices/{invoice_id}/apply-credit", operation_id="invoices_apply_credit")
-async def apply_credit(ctx: Pay, invoice_id: uuid.UUID, response: Response) -> DocumentOut:
+async def apply_credit(ctx: Pay, invoice_id: uuid.UUID, response: Response) -> BillingDocumentOut:
     """Use the client's unapplied payments and credit notes to pay this invoice."""
     return await _out(ctx, await service.apply_credit(ctx, invoice_id), response)
 
@@ -166,12 +173,12 @@ async def apply_credit(ctx: Pay, invoice_id: uuid.UUID, response: Response) -> D
 @router.get("/payments", operation_id="payments_list")
 async def list_payments(
     ctx: Read, client_id: uuid.UUID | None = None, limit: Annotated[int, Query(ge=1, le=500)] = 200
-) -> list[PaymentOut]:
+) -> list[ReceivedPayment]:
     return await service.list_payments(ctx, client_id=client_id, limit=limit)
 
 
 @router.post(
-    "/payments", operation_id="payments_create", status_code=201, response_model=PaymentOut
+    "/payments", operation_id="payments_create", status_code=201, response_model=ReceivedPayment
 )
 async def record_payment(
     ctx: Pay,
@@ -186,12 +193,12 @@ async def record_payment(
 
 
 @router.get("/payments/{payment_id}", operation_id="payments_get")
-async def get_payment(ctx: Read, payment_id: uuid.UUID) -> PaymentOut:
+async def get_payment(ctx: Read, payment_id: uuid.UUID) -> ReceivedPayment:
     return await service.payment_out(ctx, await service.get_payment(ctx, payment_id))
 
 
 @router.post("/payments/{payment_id}/void", operation_id="payments_void")
-async def void_payment(ctx: Pay, payment_id: uuid.UUID, body: Void) -> PaymentOut:
+async def void_payment(ctx: Pay, payment_id: uuid.UUID, body: Void) -> ReceivedPayment:
     return await service.payment_out(ctx, await service.void_payment(ctx, payment_id, body))
 
 

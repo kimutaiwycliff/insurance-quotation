@@ -22,6 +22,7 @@ from app.modules.insurers.schemas import (
     ProductIn,
     ProductOut,
     ProductUpdate,
+    TaxCodeOut,
 )
 from app.platform.deps import TenantContext, require_permission
 from app.platform.idempotency import Idempotency, idempotency_dependency
@@ -51,6 +52,11 @@ async def jurisdiction_pack(ctx: Read) -> PackOut:
         signed=pack.signed,
         sign_off_note=pack.sign_off.note,
         classes=[InsuranceClassOut(**c.model_dump()) for c in pack.classes],
+        tax_codes=[
+            TaxCodeOut(code=t.code, name=t.name, rate=format(t.rate.normalize(), "f"), kind=t.kind)
+            for t in pack.tax_codes
+            if t.kind != "excise"
+        ],
     )
 
 

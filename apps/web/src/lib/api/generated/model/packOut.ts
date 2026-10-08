@@ -5,12 +5,14 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { InsuranceClassOut } from './insuranceClassOut';
+import type { TaxCodeOut } from './taxCodeOut';
 
 export interface PackOut {
   classes: InsuranceClassOut[];
   code: string;
   sign_off_note: string;
   signed: boolean;
+  tax_codes: TaxCodeOut[];
   title: string;
   version: string;
 }

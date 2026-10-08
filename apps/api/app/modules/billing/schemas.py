@@ -85,7 +85,7 @@ class Send(_Strict):
     message: Annotated[str, StringConstraints(max_length=2000)] = ""
 
 
-class AllocationIn(_Strict):
+class PaymentAllocationIn(_Strict):
     invoice_id: uuid.UUID
     amount: AmountStr = Field(gt=0)
 
@@ -97,14 +97,14 @@ class PaymentCreate(_Strict):
     method: Method = "mpesa"
     reference: Annotated[str, StringConstraints(strip_whitespace=True, max_length=60)] | None = None
     notes: Note | None = None
-    allocations: list[AllocationIn] | None = Field(
+    allocations: list[PaymentAllocationIn] | None = Field(
         default=None,
         max_length=100,
         description="Omit to apply the payment to the client's open invoices, oldest first",
     )
 
 
-class LineOut(BaseModel):
+class BillingLineOut(BaseModel):
     position: int
     item_id: uuid.UUID | None
     description: str
@@ -126,7 +126,7 @@ class TaxLine(BaseModel):
     tax: AmountStr
 
 
-class AllocationOut(BaseModel):
+class PaymentAllocationOut(BaseModel):
     id: uuid.UUID
     invoice_id: uuid.UUID
     invoice_number: str | None
@@ -140,7 +140,7 @@ class AllocationOut(BaseModel):
 Status = Literal["draft", "open", "partially_paid", "paid", "overdue", "issued", "void"]
 
 
-class DocumentSummary(BaseModel):
+class BillingDocumentSummary(BaseModel):
     id: uuid.UUID
     kind: Literal["invoice", "credit_note"]
     number: str | None
@@ -158,8 +158,8 @@ class DocumentSummary(BaseModel):
     created_at: datetime
 
 
-class DocumentOut(DocumentSummary):
-    lines: list[LineOut]
+class BillingDocumentOut(BillingDocumentSummary):
+    lines: list[BillingLineOut]
     subtotal: AmountStr
     discount: AmountStr
     tax: AmountStr
@@ -173,13 +173,13 @@ class DocumentOut(DocumentSummary):
     issued_at: datetime | None
     voided_at: datetime | None
     void_reason: str | None
-    allocations: list[AllocationOut]
+    allocations: list[PaymentAllocationOut]
     credit_notes: list[uuid.UUID] = Field(description="Credit notes issued against this invoice")
     document_id: uuid.UUID | None
     version: int
 
 
-class PaymentOut(BaseModel):
+class ReceivedPayment(BaseModel):
     id: uuid.UUID
     number: str
     client: ClientRef
@@ -190,7 +190,7 @@ class PaymentOut(BaseModel):
     reference: str | None
     notes: str | None
     unallocated: AmountStr
-    allocations: list[AllocationOut]
+    allocations: list[PaymentAllocationOut]
     voided_at: datetime | None
     void_reason: str | None
     created_at: datetime
@@ -201,11 +201,11 @@ class ClientAccount(BaseModel):
     currency: str
     owed: AmountStr = Field(description="Receivable: open invoice balances (from the ledger)")
     credit: AmountStr = Field(description="Paid or credited but not yet applied to an invoice")
-    open_invoices: list[DocumentSummary]
+    open_invoices: list[BillingDocumentSummary]
 
 
-class Sent(BaseModel):
-    document: DocumentOut
+class DocumentSent(BaseModel):
+    document: BillingDocumentOut
     url: str
     emailed_to: str | None
     whatsapp_url: str | None

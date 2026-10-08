@@ -5,6 +5,7 @@ import {
   Funnel,
   Home,
   ListChecks,
+  ReceiptText,
   type LucideIcon,
   Settings,
   ShieldCheck,
@@ -24,6 +25,7 @@ export interface NavItem {
     | "policies"
     | "renewals"
     | "commission"
+    | "invoices"
     | "settings";
   icon: LucideIcon;
   /** Modules arriving in R1 are listed so agents see where the product is going, but disabled. */
@@ -41,6 +43,7 @@ export const NAV: NavItem[] = [
   { href: "/quotes", key: "quotes", icon: FileText },
   { href: "/policies", key: "policies", icon: ShieldCheck },
   { href: "/renewals", key: "renewals", icon: CalendarClock },
+  { href: "/invoices", key: "invoices", icon: ReceiptText, anyOf: ["invoice:write", "invoice:issue", "client:read:all"] },
   { href: "/commission", key: "commission", icon: Wallet, anyOf: ["commission:read:own", "commission:read:all"] },
   { href: "/settings", key: "settings", icon: Settings },
 ];

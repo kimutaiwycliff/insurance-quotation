@@ -96,6 +96,7 @@
     "policies": "Policies",
     "renewals": "Renewals",
     "commission": "Commission",
+    "invoices": "Invoices",
     "settings": "Settings",
     "soon": "Coming soon",
     "search": "Search or jump to…",
@@ -132,7 +133,8 @@
     "numbering": "Document numbers",
     "branding": "Documents & brand",
     "security": "Security",
-    "insurers": "Insurers & products"
+    "insurers": "Insurers & products",
+    "items": "Items & prices"
   },
   "organization": {
     "name": "Trading name",
@@ -283,7 +285,8 @@
     "emailAction": "Email",
     "owner": "Agent",
     "quotes": "Quotes",
-    "policies": "Policies"
+    "policies": "Policies",
+    "billing": "Invoices"
   },
   "leads": {
     "title": "Leads",
