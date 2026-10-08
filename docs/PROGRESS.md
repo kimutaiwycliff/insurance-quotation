@@ -17,10 +17,8 @@ Read this first when resuming work. Update it at the end of every session (newes
 - **R1 (agent MVP) is complete.** Repo: https://github.com/kimutaiwycliff/insurance-quotation. `main` is
   protected (all CI jobs required, linear history); work goes through pull requests.
 - **Done: R2.1 invoicing core** (PR #2, merged).
-- **In review: R2.2** sales quotes, billing reminders, invoicing overview on `feat/r2-2-sales-quotes`.
-- **Next: R2.3** online payments (Paystack on the tenant's own account, webhook ingress, pay from the link).
-  This needs Paystack test keys from the product owner. Open question: `openpyxl` for `.xlsx` imports
-  (ADR-0001)?
+- **Done: R2.2** (PR #3, merged).
+- **Next: R2.3** M-Pesa Daraja (plan A1.3). Paystack is on hold.
 - **Done: R1.2** (insurers, premium engine, KE pack pending sign-off, calculator) on `feat/r1-2-insurers-calc`
   (stacked, not merged, no remote). The notes below describe what it contains.
   - Backend done and tested, not yet committed at the time of writing:
@@ -50,6 +48,10 @@ Read this first when resuming work. Update it at the end of every session (newes
 ## Decisions made
 | Date | Decision | Where |
 |---|---|---|
+| 2026-10-08 | Payments by M-Pesa Daraja only (tenant's own shortcode); cards "coming soon"; Paystack on hold | ADR-0015 |
+| 2026-10-08 | eTIMS optional at launch (manual reference); KRA integration later | ADR-0017 |
+| 2026-10-08 | Hosting: one VM with Docker Compose (Caddy, off-site backups) | ADR-0020 |
+| 2026-10-08 | Pricing proposal: Free / Agent KES 1,500 / Agency KES 4,500 / Business KES 999 (awaiting sign-off) | docs/PRICING.md |
 | 2026-10-08 | R1 delivered in slices R1.1–R1.5; agents see only their own clients, leads and tasks | Plan A1.1, ADR-0007 |
 | 2026-10-08 | ID/passport numbers encrypted in the application with keyed-hash lookup | ADR-0018 |
 | 2026-10-07 | 2FA is **optional** for all roles (enforcement available through `MFA_ENFORCED_ROLES`, empty by default) | ADR-0007 |
@@ -61,9 +63,8 @@ Read this first when resuming work. Update it at the end of every session (newes
 - D1 legal entity (Kenyan only vs + foreign entity for Stripe/global tier)
 - D4 tax adviser sign-off on KE pack values
 - D5 lawyer opinion, including: may an agent represent several insurers per class?
-- D6 hosting region (blocks `infra/` IaC + staging deploy)
 - D7 brand, name and domain
-- D8 prices and trial model
+- D8 prices and trial model: proposal in `docs/PRICING.md`, awaiting sign-off
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas

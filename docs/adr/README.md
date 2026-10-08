@@ -19,8 +19,11 @@ Write the ADR when the milestone that needs it starts (backlog in `docs/IMPLEMEN
 | [0012](0012-ledger.md) | Double-entry ledger for billing | Accepted | 2026-10-08 |
 | [0013](0013-jurisdiction-packs.md) | Jurisdiction pack format & loader | Accepted | 2026-10-08 |
 | [0014](0014-template-rendering-and-public-pages.md) | Template rendering & public-page isolation | Accepted | 2026-10-07 |
+| [0015](0015-payment-providers.md) | Payment providers: M-Pesa Daraja first, cards later | Accepted | 2026-10-08 |
+| [0017](0017-etims-optional.md) | eTIMS optional at launch | Accepted | 2026-10-08 |
 | [0018](0018-pii-encryption.md) | PII encryption & key management | Accepted | 2026-10-08 |
 | [0019](0019-premium-collection-and-activation.md) | Premium collection modes & activation gating | Accepted | 2026-10-08 |
+| [0020](0020-hosting-single-vm.md) | Hosting on a single VM with Docker Compose | Accepted | 2026-10-08 |
 | [0021](0021-frontend-bff-and-data-fetching.md) | Frontend data fetching & BFF | Accepted | 2026-10-07 |
 | [0022](0022-api-client-codegen.md) | API client code generation | Accepted | 2026-10-07 |
 | [0023](0023-documents-and-uploads.md) | Documents & uploads | Accepted | 2026-10-07 |
