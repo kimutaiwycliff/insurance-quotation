@@ -16,7 +16,8 @@ from http import HTTPStatus
 from typing import Any, Literal
 from urllib.parse import quote as urlquote
 
-from sqlalchemy import Select, delete, select
+from sqlalchemy import Select, delete, select, text
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.calc.invoice import InvoiceInputError, LineIn, calculate_invoice
@@ -27,23 +28,35 @@ from app.core.money import Money
 from app.core.permissions import Perm
 from app.integrations.pdf import PdfRenderer
 from app.integrations.storage.s3 import S3Storage
-from app.modules.billing.models import Allocation, BillingDocument, BillingLine, Payment
+from app.modules.billing.models import (
+    Allocation,
+    BillingDocument,
+    BillingLine,
+    BillingReminder,
+    Payment,
+)
 
 __all__ = ["BillingDocument"]
 from app.modules.billing.schemas import (
+    AgeingBucket,
     BillingDocumentOut,
     BillingDocumentSummary,
     BillingLineOut,
+    BillingSummary,
     ClientAccount,
     CreditNoteCreate,
     InvoiceCreate,
     InvoiceUpdate,
     Issue,
     LineInput,
+    MonthBilling,
     PaymentAllocationIn,
     PaymentAllocationOut,
     PaymentCreate,
+    QuoteAccept,
+    QuoteDecline,
     ReceivedPayment,
+    SalesQuoteCreate,
     Send,
     TaxLine,
     Void,
@@ -54,6 +67,8 @@ from app.modules.documents import service as documents
 from app.modules.insurers import service as insurers
 from app.modules.ledger import service as ledger
 from app.modules.ledger.service import Leg
+from app.modules.messaging import service as messaging
+from app.modules.notifications import service as notifications
 from app.modules.numbering import service as numbering
 from app.modules.public_links import service as links
 from app.modules.quotes.service import ClientRef
@@ -68,11 +83,13 @@ from app.modules.rendering.service import (
     Totals,
 )
 from app.modules.tenancy import service as tenancy
-from app.platform import audit
+from app.platform import audit, events
 from app.platform.deps import TenantContext, own_scope
 
 ZERO = Decimal(0)
-INVOICE, CREDIT_NOTE = "invoice", "credit_note"
+INVOICE, CREDIT_NOTE, QUOTE = "invoice", "credit_note", "quote"
+# Public links: insurance quotes already own the "quote" entity type.
+LINK_ENTITY = {INVOICE: "invoice", CREDIT_NOTE: "credit_note", QUOTE: "sales_quote"}
 DRAFT, ISSUED, VOID = "draft", "issued", "void"
 
 
@@ -162,16 +179,29 @@ async def _paid(session: AsyncSession, docs: list[BillingDocument]) -> dict[uuid
     return out
 
 
-def _status(doc: BillingDocument, paid: Decimal, today: date) -> str:
-    if doc.status != ISSUED:
-        return doc.status
-    if doc.kind == CREDIT_NOTE:
-        return ISSUED
+def _quote_status(doc: BillingDocument, today: date) -> str:
+    if doc.converted_document_id is not None:
+        return "invoiced"
+    if doc.response_status is not None:
+        return doc.response_status
+    return "expired" if doc.valid_until is not None and doc.valid_until < today else "sent"
+
+
+def _invoice_status(doc: BillingDocument, paid: Decimal, today: date) -> str:
     if paid >= doc.total:
         return "paid"
     if doc.due_date is not None and doc.due_date < today:
         return "overdue"
     return "partially_paid" if paid > 0 else "open"
+
+
+def _status(doc: BillingDocument, paid: Decimal, today: date) -> str:
+    """Derived status (ADR-0009): never stored."""
+    if doc.status != ISSUED:
+        return doc.status
+    if doc.kind == QUOTE:
+        return _quote_status(doc, today)
+    return _invoice_status(doc, paid, today) if doc.kind == INVOICE else ISSUED
 
 
 async def _client_ref(session: AsyncSession, client_id: uuid.UUID) -> ClientRef:
@@ -190,9 +220,12 @@ def _summary(doc: BillingDocument, client: ClientRef, paid: Decimal, today: date
         "currency": c,
         "issue_date": doc.issue_date,
         "due_date": doc.due_date,
+        "valid_until": doc.valid_until,
         "total": _round(doc.total, c),
         "paid": _round(paid, c),
-        "balance": _round(max(doc.total - paid, ZERO) if doc.status == ISSUED else ZERO, c),
+        "balance": _round(
+            max(doc.total - paid, ZERO) if doc.status == ISSUED and doc.kind != QUOTE else ZERO, c
+        ),
         "created_at": doc.created_at,
     }
 
@@ -250,6 +283,7 @@ async def to_out(ctx: TenantContext, doc: BillingDocument) -> BillingDocumentOut
                 )
             ).all()
         )
+    lines = await _lines(ctx.session, doc.id)
     return BillingDocumentOut(
         **_summary(doc, await _client_ref(ctx.session, doc.client_id), paid, today),
         lines=[
@@ -261,12 +295,14 @@ async def to_out(ctx: TenantContext, doc: BillingDocument) -> BillingDocumentOut
                 unit_price=_round(line.unit_price, c),
                 discount_rate=format(line.discount_rate.normalize(), "f"),
                 tax_code=line.tax_code,
+                section=line.section,
+                optional=line.optional,
                 tax_rate=format(line.tax_rate.normalize(), "f"),
                 net=_round(line.net, c),
                 tax=_round(line.tax, c),
                 total=_round(line.total, c),
             )
-            for line in await _lines(ctx.session, doc.id)
+            for line in lines
         ],
         subtotal=_round(doc.subtotal, c),
         discount=_round(doc.discount, c),
@@ -287,6 +323,11 @@ async def to_out(ctx: TenantContext, doc: BillingDocument) -> BillingDocumentOut
         reference=doc.reference,
         notes=doc.notes,
         terms=doc.terms,
+        optional_total=_round(sum((line.total for line in lines if line.optional), ZERO), c),
+        response_status=doc.response_status,
+        responded_at=doc.responded_at,
+        response=doc.response,
+        converted_document_id=doc.converted_document_id,
         issued_at=doc.issued_at,
         voided_at=doc.voided_at,
         void_reason=doc.void_reason,
@@ -298,6 +339,20 @@ async def to_out(ctx: TenantContext, doc: BillingDocument) -> BillingDocumentOut
 
 
 # ---------------------------------------------------------------- drafts
+
+
+def _as_input(line: BillingLine, *, optional: bool | None = None) -> LineInput:
+    """A stored line as input again (editing a draft, crediting an invoice, invoicing a quote)."""
+    return LineInput(
+        item_id=line.item_id,
+        description=line.description,
+        quantity=line.quantity,
+        unit_price=line.unit_price,
+        discount_rate=line.discount_rate,
+        tax_code=line.tax_code,
+        section=line.section,
+        optional=line.optional if optional is None else optional,
+    )
 
 
 async def _apply_lines(
@@ -321,18 +376,30 @@ async def _apply_lines(
         ):  # schema-checked; for the type checker
             raise BillingInputError("Each line needs a description, a price and a tax code")
         rows.append((line, description, price, code))
+    if doc.kind != QUOTE and any(line.optional for line, *_ in rows):
+        raise BillingInputError("Only quotes can have optional lines")
+    if all(line.optional for line, *_ in rows):
+        raise BillingInputError("At least one line must be part of the total")
+
+    def calc_lines(selected: list[tuple[LineInput, str, Decimal, str]]) -> list[LineIn]:
+        return [
+            LineIn(
+                quantity=line.quantity,
+                unit_price=price,
+                discount_rate=line.discount_rate,
+                tax_code=code,
+            )
+            for line, _, price, code in selected
+        ]
+
     try:
+        # Per line (rounded per line), then the document totals over the lines that count.
+        every = calculate_invoice(
+            pack, calc_lines(rows), currency=doc.currency, prices_include_tax=prices_include_tax
+        )
         totals = calculate_invoice(
             pack,
-            [
-                LineIn(
-                    quantity=line.quantity,
-                    unit_price=price,
-                    discount_rate=line.discount_rate,
-                    tax_code=code,
-                )
-                for line, _, price, code in rows
-            ],
+            calc_lines([r for r in rows if not r[0].optional]),
             currency=doc.currency,
             prices_include_tax=prices_include_tax,
         )
@@ -340,7 +407,7 @@ async def _apply_lines(
         raise BillingInputError(str(exc)) from None
     await ctx.session.execute(delete(BillingLine).where(BillingLine.document_id == doc.id))
     for position, ((line, description, price, _), out) in enumerate(
-        zip(rows, totals.lines, strict=True), start=1
+        zip(rows, every.lines, strict=True), start=1
     ):
         ctx.session.add(
             BillingLine(
@@ -353,6 +420,8 @@ async def _apply_lines(
                 unit_price=price,
                 discount_rate=line.discount_rate,
                 tax_code=out.tax_code,
+                section=line.section,
+                optional=line.optional,
                 tax_rate=out.tax_rate,
                 net=out.net,
                 tax=out.tax,
@@ -396,6 +465,75 @@ async def create_invoice(ctx: TenantContext, body: InvoiceCreate) -> BillingDocu
     return doc
 
 
+async def create_sales_quote(ctx: TenantContext, body: SalesQuoteCreate) -> BillingDocument:
+    client = await clients.get_visible_client(ctx, body.client_id)
+    tenant = await tenancy.get_tenant(ctx.session, ctx.tenant_id)
+    today = await tenancy.today(ctx.session, ctx.tenant_id)
+    doc = BillingDocument(
+        tenant_id=ctx.tenant_id,
+        kind=QUOTE,
+        client_id=client.id,
+        owner_user_id=client.owner_user_id or ctx.principal.user_id,
+        currency=tenant.default_currency,
+        valid_until=today + timedelta(days=body.valid_days),
+        reference=body.reference,
+        notes=body.notes,
+        terms=body.terms,
+        created_by=ctx.principal.user_id,
+        updated_by=ctx.principal.user_id,
+    )
+    ctx.session.add(doc)
+    await ctx.session.flush()
+    await _apply_lines(ctx, doc, body.lines, body.prices_include_tax)
+    await ctx.session.flush()
+    await ctx.session.refresh(doc)
+    await audit.record(ctx, "sales_quote.created", entity_type="quote", entity_id=doc.id)
+    return doc
+
+
+async def convert_quote(ctx: TenantContext, quote_id: uuid.UUID) -> BillingDocument:
+    """A draft invoice from a quote: its lines, plus the extras the client chose (as ordinary lines)."""
+    quote = await get_document(ctx, quote_id, kind=QUOTE, lock=True)
+    state = _status(quote, ZERO, await tenancy.today(ctx.session, ctx.tenant_id))
+    if state not in {"sent", "accepted", "expired"}:
+        raise BillingStateError(f"A {state} quote cannot be invoiced")
+    chosen = set(quote.response.get("addons", [])) if quote.response_status == "accepted" else set()
+    lines = [
+        _as_input(line, optional=False)
+        for line in await _lines(ctx.session, quote.id)
+        if not line.optional or line.position in chosen
+    ]
+    today = await tenancy.today(ctx.session, ctx.tenant_id)
+    invoice = BillingDocument(
+        tenant_id=ctx.tenant_id,
+        kind=INVOICE,
+        client_id=quote.client_id,
+        owner_user_id=quote.owner_user_id,
+        currency=quote.currency,
+        due_date=today + timedelta(days=14),
+        reference=quote.reference or quote.number,
+        notes=quote.notes,
+        terms=quote.terms,
+        created_by=ctx.principal.user_id,
+        updated_by=ctx.principal.user_id,
+    )
+    ctx.session.add(invoice)
+    await ctx.session.flush()
+    await _apply_lines(ctx, invoice, lines, quote.prices_include_tax)
+    quote.converted_document_id = invoice.id
+    quote.updated_by = ctx.principal.user_id
+    await audit.record(
+        ctx,
+        "sales_quote.invoiced",
+        entity_type="quote",
+        entity_id=quote.id,
+        changes={"invoice_id": str(invoice.id)},
+    )
+    await ctx.session.flush()
+    await ctx.session.refresh(invoice)
+    return invoice
+
+
 async def update_draft(
     ctx: TenantContext, document_id: uuid.UUID, body: InvoiceUpdate, if_match: str | None
 ) -> BillingDocument:
@@ -409,24 +547,18 @@ async def update_draft(
     for field in ("reference", "notes", "terms"):
         if field in data:
             setattr(doc, field, data[field])
-    if body.due_in_days is not None:
+    if body.valid_days is not None and doc.kind == QUOTE:
+        doc.valid_until = await tenancy.today(ctx.session, ctx.tenant_id) + timedelta(
+            days=body.valid_days
+        )
+    if body.due_in_days is not None and doc.kind == INVOICE:
         doc.due_date = await tenancy.today(ctx.session, ctx.tenant_id) + timedelta(
             days=body.due_in_days
         )
     if body.lines is not None or body.prices_include_tax is not None:
         lines = body.lines
         if lines is None:
-            lines = [
-                LineInput(
-                    item_id=line.item_id,
-                    description=line.description,
-                    quantity=line.quantity,
-                    unit_price=line.unit_price,
-                    discount_rate=line.discount_rate,
-                    tax_code=line.tax_code,
-                )
-                for line in await _lines(ctx.session, doc.id)
-            ]
+            lines = [_as_input(line) for line in await _lines(ctx.session, doc.id)]
         include = (
             doc.prices_include_tax if body.prices_include_tax is None else body.prices_include_tax
         )
@@ -454,17 +586,7 @@ async def create_credit_note(ctx: TenantContext, body: CreditNoteCreate) -> Bill
     )
     ctx.session.add(doc)
     await ctx.session.flush()
-    lines = body.lines or [
-        LineInput(
-            item_id=line.item_id,
-            description=line.description,
-            quantity=line.quantity,
-            unit_price=line.unit_price,
-            discount_rate=line.discount_rate,
-            tax_code=line.tax_code,
-        )
-        for line in await _lines(ctx.session, invoice.id)
-    ]
+    lines = body.lines or [_as_input(line) for line in await _lines(ctx.session, invoice.id)]
     await _apply_lines(ctx, doc, lines, invoice.prices_include_tax)
     credited = sum(
         (
@@ -548,6 +670,10 @@ async def issue(ctx: TenantContext, document_id: uuid.UUID, body: Issue) -> Bill
     on = body.issue_date or await tenancy.today(ctx.session, ctx.tenant_id)
     if doc.kind == INVOICE and doc.due_date is not None and doc.due_date < on:
         doc.due_date = on
+    if doc.kind == QUOTE and (doc.valid_until is None or doc.valid_until < on):
+        raise BillingInputError(
+            "The quote's validity has passed: set how many days it is valid for"
+        )
     doc.number = (
         await numbering.allocate_number(ctx.session, ctx.tenant_id, doc.kind, on=on)
     ).number
@@ -559,26 +685,29 @@ async def issue(ctx: TenantContext, document_id: uuid.UUID, body: Issue) -> Bill
             Leg("revenue", credit=doc.subtotal),
             Leg("tax_payable", credit=doc.tax),
         ]
-    else:
+    elif doc.kind == CREDIT_NOTE:
         legs = [
             Leg("revenue", debit=doc.subtotal),
             Leg("tax_payable", debit=doc.tax),
             Leg("client_credit", credit=doc.total),
         ]
+    else:
+        legs = []  # a quote is an offer: nothing to book until it becomes an invoice
     doc.status = ISSUED
     await ctx.session.flush()
-    await ledger.post(
-        ctx.session,
-        tenant_id=ctx.tenant_id,
-        occurred_on=on,
-        source_type=doc.kind,
-        source_id=doc.id,
-        memo=f"{doc.kind.replace('_', ' ').capitalize()} {doc.number}",
-        currency=doc.currency,
-        client_id=doc.client_id,
-        legs=legs,
-        actor=ctx.principal.user_id,
-    )
+    if legs:
+        await ledger.post(
+            ctx.session,
+            tenant_id=ctx.tenant_id,
+            occurred_on=on,
+            source_type=doc.kind,
+            source_id=doc.id,
+            memo=f"{doc.kind.replace('_', ' ').capitalize()} {doc.number}",
+            currency=doc.currency,
+            client_id=doc.client_id,
+            legs=legs,
+            actor=ctx.principal.user_id,
+        )
     if doc.kind == CREDIT_NOTE and doc.credits_document_id is not None:
         invoice = await get_document(ctx, doc.credits_document_id, lock=True)
         balance = invoice.total - (await _paid(ctx.session, [invoice])).get(invoice.id, ZERO)
@@ -631,7 +760,9 @@ async def void(ctx: TenantContext, document_id: uuid.UUID, body: Void) -> Billin
         )
     doc.status, doc.voided_at, doc.void_reason = VOID, datetime.now(UTC), body.reason
     doc.updated_by = ctx.principal.user_id
-    await links.revoke_for_entity(ctx, doc.kind, doc.id)
+    if doc.kind == QUOTE and doc.converted_document_id is not None:
+        raise BillingStateError("This quote became an invoice: void or credit the invoice instead")
+    await links.revoke_for_entity(ctx, LINK_ENTITY[doc.kind], doc.id)
     await audit.record(
         ctx,
         f"{doc.kind}.voided",
@@ -675,7 +806,10 @@ async def list_documents(
             BillingDocumentSummary(**_summary(d, refs[d.client_id], paid.get(d.id, ZERO), today))
         )
     if status and status not in {DRAFT, VOID}:
-        wanted = {"unpaid": {"open", "partially_paid", "overdue"}}.get(status, {status})
+        wanted = {
+            "unpaid": {"open", "partially_paid", "overdue"},
+            "awaiting": {"sent"},
+        }.get(status, {status})
         out = [d for d in out if d.status in wanted]
     return out
 
@@ -1009,10 +1143,11 @@ async def document_view(
     elif doc.kind == INVOICE and paid >= doc.total:
         stamp = "PAID"
     return DocumentView(
-        doc_type="invoice" if doc.kind == INVOICE else "credit_note",
+        doc_type={INVOICE: "invoice", CREDIT_NOTE: "credit_note", QUOTE: "quote"}[doc.kind],  # type: ignore[arg-type]
         number=doc.number,
         issue_date=doc.issue_date or datetime.now(UTC).date(),
         due_date=doc.due_date if doc.kind == INVOICE else None,
+        valid_until=doc.valid_until if doc.kind == QUOTE else None,
         reference=doc.reference,
         currency=doc.currency,
         seller=await _seller(session, tenant_id),
@@ -1027,6 +1162,8 @@ async def document_view(
                 quantity=line.quantity.normalize(),
                 unit_price=line.unit_price,
                 amount=line.net,
+                section=line.section,
+                optional=line.optional,
             )
             for line in lines
         ],
@@ -1089,17 +1226,24 @@ async def send(
     renderer: PdfRenderer,
 ) -> tuple[BillingDocument, str, str | None, str | None]:
     doc = await get_document(ctx, document_id, lock=True)
+    if doc.kind == QUOTE and doc.status == DRAFT:
+        doc = await issue(ctx, document_id, Issue())  # sending a quote is what issues it
     if doc.status != ISSUED:
         raise BillingStateError("Issue the document before sending it")
+    if (
+        doc.kind == QUOTE
+        and _status(doc, ZERO, await tenancy.today(ctx.session, ctx.tenant_id)) != "sent"
+    ):
+        raise BillingStateError("Only a quote awaiting an answer can be sent")
     doc.document_id = await _pdf(ctx, doc, storage, renderer)
     client = await clients.get_visible_client(ctx, doc.client_id)
     email = str(body.email) if body.email else client.email
     _, token = await links.create_link(
         ctx,
         links.LinkCreate(
-            entity_type=doc.kind,
+            entity_type=LINK_ENTITY[doc.kind],
             entity_id=doc.id,
-            scopes=["view"],
+            scopes=["view", "accept"] if doc.kind == QUOTE else ["view"],
             expires_in_days=180,
             send_to=links.SendTo(email=email, name=client.display_name, message=body.message)
             if email
@@ -1111,7 +1255,7 @@ async def send(
     url = links.link_url(token, settings)
     whatsapp = None
     if client.phone:
-        label = "invoice" if doc.kind == INVOICE else "credit note"
+        label = {INVOICE: "invoice", CREDIT_NOTE: "credit note", QUOTE: "quotation"}[doc.kind]
         text = f"Hello {client.display_name}, here is your {label} {doc.number}: {url}"
         whatsapp = f"https://wa.me/{client.phone.lstrip('+')}?text={urlquote(text)}"
     await audit.record(
@@ -1153,13 +1297,27 @@ def _target_for(kind: str) -> links.TargetResolver:
                 )
             ).url
 
-        label = "Invoice" if kind == INVOICE else "Credit note"
+        label = {INVOICE: "Invoice", CREDIT_NOTE: "Credit note", QUOTE: "Quotation"}[kind]
+        choices: list[dict[str, Any]] = []
+        if kind == QUOTE:
+            choices = [
+                {
+                    "position": line.position,
+                    "label": line.description,
+                    "amount": str(_round(line.total, doc.currency)),
+                    "currency": doc.currency,
+                    "kind": "addon",
+                }
+                for line in await _lines(session, doc.id)
+                if line.optional
+            ]
         return links.PublicContent(
             title=f"{label} {doc.number}",
-            kind=kind,
+            kind=LINK_ENTITY[kind],
             html=html,
             download=download if doc.document_id else None,
             state=_status(doc, paid, today),
+            choices=choices,
         )
 
     return target
@@ -1167,6 +1325,74 @@ def _target_for(kind: str) -> links.TargetResolver:
 
 links.register_target(INVOICE, _target_for(INVOICE))
 links.register_target(CREDIT_NOTE, _target_for(CREDIT_NOTE))
+links.register_target(LINK_ENTITY[QUOTE], _target_for(QUOTE))
+
+
+async def _quote_action(
+    *,
+    session: AsyncSession,
+    settings: Settings,
+    link: links.PublicLink,
+    action: str,
+    body: dict[str, Any],
+    evidence: dict[str, Any],
+) -> str:
+    """The client accepts (with any add-ons) or declines a sales quote on the link."""
+    doc = (
+        await session.scalars(
+            select(BillingDocument).where(BillingDocument.id == link.entity_id).with_for_update()
+        )
+    ).first()
+    if doc is None or doc.kind != QUOTE:
+        raise links.LinkGoneError()
+    state = _status(doc, ZERO, await tenancy.today(session, link.tenant_id))
+    if state != "sent":
+        raise BillingStateError(f"This quotation is {state} and can no longer be answered")
+    if action == "accept":
+        accepted = QuoteAccept.model_validate(body)
+        optional = {line.position for line in await _lines(session, doc.id) if line.optional}
+        if not set(accepted.addons) <= optional:
+            raise NotFoundError("That extra is not on this quotation")
+        doc.response_status = "accepted"
+        doc.response = {
+            "action": "accept",
+            "name": accepted.name,
+            "phone": accepted.phone,
+            "email": str(accepted.email) if accepted.email else None,
+            "addons": sorted(accepted.addons),
+            "agreed_terms": True,
+            **evidence,
+        }
+        title = f"{accepted.name} accepted quotation {doc.number}"
+    else:
+        declined = QuoteDecline.model_validate(body)
+        doc.response_status = "declined"
+        doc.response = {"action": "decline", "reason": declined.reason, **evidence}
+        title = f"Quotation {doc.number} was declined"
+    doc.responded_at = datetime.now(UTC)
+    await audit.record_actor(
+        session,
+        link.tenant_id,
+        f"sales_quote.{doc.response_status}",
+        actor_type="client",
+        actor_id=None,
+        entity_type="quote",
+        entity_id=doc.id,
+        changes={"addons": doc.response.get("addons", [])},
+    )
+    await notifications.notify(
+        session,
+        settings,
+        tenant_id=link.tenant_id,
+        user_ids=[doc.owner_user_id],
+        kind="quote.answered",
+        title=title,
+        link=f"/invoices/{doc.id}",
+    )
+    return doc.response_status
+
+
+links.register_actions(LINK_ENTITY[QUOTE], _quote_action)
 
 
 async def receipt_url(
@@ -1256,3 +1482,185 @@ async def list_payments(
         )
     ).all()
     return [await payment_out(ctx, p) for p in rows]
+
+
+# ---------------------------------------------------------------- reminders (jobs)
+
+REMIND_BILLING = "billing.remind"
+
+
+async def enqueue_billing_reminders(session: AsyncSession) -> int:
+    """Cross-tenant scan through the narrow SECURITY DEFINER function, then one job per reminder."""
+    rows = (
+        await session.execute(
+            text(
+                "SELECT tenant_id, document_id, kind, offset_days "
+                "FROM app.billing_documents_due_for_reminder()"
+            )
+        )
+    ).all()
+    for tenant_id, document_id, kind, offset in rows:
+        await events.enqueue(
+            session,
+            REMIND_BILLING,
+            {
+                "tenant_id": str(tenant_id),
+                "document_id": str(document_id),
+                "kind": kind,
+                "offset_days": offset,
+            },
+            queueing_lock=f"billing-remind:{document_id}:{kind}:{offset}",
+        )
+    return len(rows)
+
+
+async def send_billing_reminder(
+    session: AsyncSession,
+    settings: Settings,
+    tenant_id: uuid.UUID,
+    *,
+    document_id: uuid.UUID,
+    kind: str,
+    offset_days: int,
+) -> bool:
+    """Email the client once per (document, kind, offset). Idempotent; re-checks that it still applies."""
+    doc = await session.get(BillingDocument, document_id, with_for_update=True)
+    tenant = await tenancy.get_tenant(session, tenant_id)
+    if doc is None or doc.status != ISSUED or not tenant.billing_reminders:
+        return False
+    today = await tenancy.today(session, tenant_id)
+    paid = (await _paid(session, [doc])).get(doc.id, ZERO) if doc.kind == INVOICE else ZERO
+    state = _status(doc, paid, today)
+    if (kind == "quote_expiring" and state != "sent") or (
+        kind in {"due", "overdue"} and state not in {"open", "partially_paid", "overdue"}
+    ):
+        return False
+    client = (
+        await session.scalars(select(clients.Client).where(clients.Client.id == doc.client_id))
+    ).one()
+    inserted = await session.scalar(
+        insert(BillingReminder)
+        .values(
+            tenant_id=tenant_id,
+            document_id=doc.id,
+            kind=kind,
+            offset_days=offset_days,
+            emailed_to=client.email,
+        )
+        .on_conflict_do_nothing()
+        .returning(BillingReminder.id)
+    )
+    if inserted is None or not client.email:
+        return False
+    c = doc.currency
+    common = {
+        "recipient_name": client.first_name or client.display_name,
+        "tenant_name": tenant.name,
+        "number": doc.number or "",
+    }
+    if kind == "quote_expiring":
+        event = "quote.expiring"
+        context = common | {
+            "valid_until": f"{doc.valid_until:%d %b %Y}" if doc.valid_until else "",
+            "total": f"{c} {_round(doc.total, c):,}",
+        }
+    else:
+        event = "invoice.reminder"
+        context = common | {
+            "amount_due": f"{c} {_round(doc.total - paid, c):,}",
+            "due_date": f"{doc.due_date:%d %b %Y}" if doc.due_date else "",
+            "payment_reference": doc.payment_reference or "",
+            "overdue": "yes" if kind == "overdue" else "",
+        }
+    await messaging.queue_email(
+        session,
+        tenant_id=tenant_id,
+        event=event,
+        to=client.email,
+        context=context,
+        entity_type=LINK_ENTITY[doc.kind],
+        entity_id=doc.id,
+    )
+    return True
+
+
+# ---------------------------------------------------------------- dashboard
+
+
+async def billing_summary(ctx: TenantContext) -> BillingSummary:
+    tenant = await tenancy.get_tenant(ctx.session, ctx.tenant_id)
+    currency = tenant.default_currency
+    today = await tenancy.today(ctx.session, ctx.tenant_id)
+    base = _scoped(select(BillingDocument), ctx, BillingDocument.owner_user_id).where(
+        BillingDocument.status == ISSUED, BillingDocument.currency == currency
+    )
+    invoices = list((await ctx.session.scalars(base.where(BillingDocument.kind == INVOICE))).all())
+    paid = await _paid(ctx.session, invoices)
+    buckets = [
+        ("Not yet due", 0, 0),
+        ("1-30 days", 1, 30),
+        ("31-60 days", 31, 60),
+        ("61-90 days", 61, 90),
+        ("Over 90 days", 91, 10**6),
+    ]
+    ageing: dict[str, list[Decimal]] = {label: [ZERO, ZERO] for label, _, _ in buckets}
+    outstanding = overdue = ZERO
+    overdue_count = 0
+    first_month = (today.replace(day=1) - timedelta(days=330)).replace(day=1)
+    months: dict[str, list[Decimal]] = {}
+    cursor = first_month
+    while cursor <= today:
+        months[f"{cursor:%Y-%m}"] = [ZERO, ZERO]
+        cursor = (cursor + timedelta(days=32)).replace(day=1)
+    for doc in invoices:
+        if doc.issue_date and f"{doc.issue_date:%Y-%m}" in months:
+            months[f"{doc.issue_date:%Y-%m}"][0] += doc.total
+        balance = doc.total - paid.get(doc.id, ZERO)
+        if balance <= 0:
+            continue
+        outstanding += balance
+        late = (today - doc.due_date).days if doc.due_date else 0
+        if late > 0:
+            overdue += balance
+            overdue_count += 1
+        label = next(label for label, low, high in buckets if low <= max(late, 0) <= high)
+        ageing[label][0] += balance
+        ageing[label][1] += 1
+    pay_stmt = select(Payment).where(
+        Payment.voided_at.is_(None),
+        Payment.currency == currency,
+        Payment.received_on >= first_month,
+    )
+    owner = own_scope(ctx.principal, Perm.CLIENT_READ_ALL)
+    if owner is not None:
+        pay_stmt = pay_stmt.join(clients.Client, clients.Client.id == Payment.client_id).where(
+            clients.Client.owner_user_id == owner
+        )
+    for payment in (await ctx.session.scalars(pay_stmt)).all():
+        key = f"{payment.received_on:%Y-%m}"
+        if key in months:
+            months[key][1] += payment.amount
+    quotes = [
+        q
+        for q in (await ctx.session.scalars(base.where(BillingDocument.kind == QUOTE))).all()
+        if _quote_status(q, today) == "sent"
+    ]
+    this_month = f"{today:%Y-%m}"
+    return BillingSummary(
+        currency=currency,
+        outstanding=_round(outstanding, currency),
+        overdue=_round(overdue, currency),
+        overdue_count=overdue_count,
+        ageing=[
+            AgeingBucket(label=label, amount=_round(v[0], currency), count=int(v[1]))
+            for label, v in ageing.items()
+        ],
+        invoiced_this_month=_round(months[this_month][0], currency),
+        collected_this_month=_round(months[this_month][1], currency),
+        quotes_awaiting=len(quotes),
+        quotes_awaiting_total=_round(sum((q.total for q in quotes), ZERO), currency),
+        months=[
+            MonthBilling(month=m, invoiced=_round(v[0], currency), collected=_round(v[1], currency))
+            for m, v in months.items()
+        ],
+    )

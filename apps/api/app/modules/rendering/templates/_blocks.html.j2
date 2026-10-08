@@ -35,7 +35,12 @@
     <th scope="col" class="num">Unit price</th><th scope="col" class="num">Amount</th>
   </tr></thead>
   <tbody>
-  {% for line in doc.lines %}
+  {% set ns = namespace(section=None) %}
+  {% for line in doc.lines if not line.optional %}
+    {% if line.section and line.section != ns.section %}
+    <tr><th scope="rowgroup" colspan="4" style="text-align:left" dir="auto">{{ line.section }}</th></tr>
+    {% set ns.section = line.section %}
+    {% endif %}
     <tr>
       <td dir="auto">{{ line.description }}{% if line.details %}<div class="muted small pre">{{ line.details }}</div>{% endif %}</td>
       <td class="num">{{ line.quantity | qty }}</td>
@@ -45,6 +50,22 @@
   {% endfor %}
   </tbody>
 </table>
+{% set extras = doc.lines | selectattr("optional") | list %}
+{% if extras %}
+<table class="lines" aria-label="Optional extras">
+  <caption class="muted small" style="text-align:left">Optional extras, not included in the total</caption>
+  <tbody>
+  {% for line in extras %}
+    <tr>
+      <td dir="auto">{{ line.description }}{% if line.details %}<div class="muted small pre">{{ line.details }}</div>{% endif %}</td>
+      <td class="num">{{ line.quantity | qty }}</td>
+      <td class="num">{{ line.unit_price | money(doc.currency) }}</td>
+      <td class="num">{{ line.amount | money(doc.currency) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 {% endmacro %}
 
 {% macro options(doc) %}

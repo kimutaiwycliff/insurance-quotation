@@ -11,6 +11,7 @@ from app.modules.billing import service
 from app.modules.billing.schemas import (
     BillingDocumentOut,
     BillingDocumentSummary,
+    BillingSummary,
     ClientAccount,
     CreditNoteCreate,
     DocumentSent,
@@ -20,6 +21,7 @@ from app.modules.billing.schemas import (
     Issue,
     PaymentCreate,
     ReceivedPayment,
+    SalesQuoteCreate,
     Send,
     Void,
 )
@@ -58,6 +60,56 @@ async def list_invoices(
     return await service.list_documents(
         ctx, kind="invoice", client_id=client_id, status=status, limit=limit
     )
+
+
+QuoteStatusQ = Annotated[
+    str | None, Query(pattern="^(draft|awaiting|sent|accepted|declined|expired|invoiced|void)$")
+]
+
+
+@router.get("/sales-quotes", operation_id="sales_quotes_list")
+async def list_sales_quotes(
+    ctx: Read,
+    client_id: uuid.UUID | None = None,
+    status: QuoteStatusQ = None,
+    limit: Annotated[int, Query(ge=1, le=500)] = 200,
+) -> list[BillingDocumentSummary]:
+    """Quotes for goods and services (insurance quotes are under /quotes)."""
+    return await service.list_documents(
+        ctx, kind="quote", client_id=client_id, status=status, limit=limit
+    )
+
+
+@router.post(
+    "/sales-quotes",
+    operation_id="sales_quotes_create",
+    status_code=201,
+    response_model=BillingDocumentOut,
+)
+async def create_sales_quote(
+    ctx: Write,
+    body: SalesQuoteCreate,
+    idem: Annotated[Idempotency, Depends(idempotency_dependency(_write))],
+) -> Response:
+    """Draft a quote: sections, optional extras, validity. Sending it issues it."""
+    if (replay := await idem.replay()) is not None:
+        return replay
+    doc = await service.create_sales_quote(ctx, body)
+    return await idem.respond(201, await service.to_out(ctx, doc), {"ETag": etag(doc.version)})
+
+
+@router.post(
+    "/sales-quotes/{quote_id}/convert", operation_id="sales_quotes_convert", status_code=201
+)
+async def convert_sales_quote(ctx: IssueCtx, quote_id: uuid.UUID) -> BillingDocumentOut:
+    """A draft invoice from the quote, with the extras the client chose."""
+    return await service.to_out(ctx, await service.convert_quote(ctx, quote_id))
+
+
+@router.get("/billing/summary", operation_id="billing_summary")
+async def billing_summary(ctx: Read) -> BillingSummary:
+    """Outstanding and overdue, ageing, this month's invoicing and collections, quotes awaiting."""
+    return await service.billing_summary(ctx)
 
 
 @router.get("/credit-notes", operation_id="credit_notes_list")

@@ -36,7 +36,11 @@ class BillingDocument(TenantScoped, Audited, Versioned, Base):
         ),
         Index("ix_billing_documents_client", "tenant_id", "client_id", "kind", "status"),
         Index("ix_billing_documents_due", "tenant_id", "status", "due_date"),
-        CheckConstraint("kind IN ('invoice', 'credit_note')", name="kind"),
+        ForeignKeyConstraint(
+            ["tenant_id", "converted_document_id"],
+            ["billing_documents.tenant_id", "billing_documents.id"],
+        ),
+        CheckConstraint("kind IN ('invoice', 'credit_note', 'quote')", name="kind"),
         CheckConstraint("status IN ('draft', 'issued', 'void')", name="status"),
     )
 
@@ -65,6 +69,12 @@ class BillingDocument(TenantScoped, Audited, Versioned, Base):
     issued_by: Mapped[str | None]
     voided_at: Mapped[datetime | None]
     void_reason: Mapped[str | None]
+    # Sales quotes: validity, the client's answer on the link and the invoice it became.
+    valid_until: Mapped[date | None]
+    response_status: Mapped[str | None]  # accepted | declined
+    responded_at: Mapped[datetime | None]
+    response: Mapped[dict[str, Any]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    converted_document_id: Mapped[uuid.UUID | None]
 
 
 class BillingLine(TenantScoped, Base):
@@ -86,6 +96,10 @@ class BillingLine(TenantScoped, Base):
     unit_price: Mapped[Decimal] = mapped_column(MoneyColumn)
     discount_rate: Mapped[Decimal] = mapped_column(RateColumn, server_default="0")
     tax_code: Mapped[str]
+    section: Mapped[str | None]  # heading the line sits under (quotes)
+    optional: Mapped[bool] = mapped_column(
+        server_default=text("false")
+    )  # quote add-on, not in the total
     tax_rate: Mapped[Decimal] = mapped_column(RateColumn)
     net: Mapped[Decimal] = mapped_column(MoneyColumn)
     tax: Mapped[Decimal] = mapped_column(MoneyColumn)
@@ -147,4 +161,23 @@ class Allocation(TenantScoped, Base):
     invoice_id: Mapped[uuid.UUID]
     amount: Mapped[Decimal] = mapped_column(MoneyColumn)
     created_by: Mapped[str | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class BillingReminder(TenantScoped, Base):
+    """One row per reminder sent (due soon, overdue, quote expiring), so the daily job never repeats one."""
+
+    __tablename__ = "billing_reminders"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "id"),
+        UniqueConstraint("tenant_id", "document_id", "kind", "offset_days"),
+        ForeignKeyConstraint(
+            ["tenant_id", "document_id"], ["billing_documents.tenant_id", "billing_documents.id"]
+        ),
+    )
+
+    document_id: Mapped[uuid.UUID]
+    kind: Mapped[str]  # due | overdue | quote_expiring
+    offset_days: Mapped[int]
+    emailed_to: Mapped[str | None]
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())

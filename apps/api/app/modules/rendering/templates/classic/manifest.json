@@ -3,8 +3,13 @@
   "name": "Classic",
   "description": "Clean and simple: logo, clear table, totals. Works for every document.",
   "tier": "free",
-  "version": 2,
-  "doc_types": ["quote", "invoice", "receipt", "credit_note"],
+  "version": 3,
+  "doc_types": [
+    "quote",
+    "invoice",
+    "receipt",
+    "credit_note"
+  ],
   "paper": "A4",
   "font_pair": "sans",
   "default_primary": "#1F4E79",

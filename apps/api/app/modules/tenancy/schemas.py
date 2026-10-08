@@ -65,6 +65,9 @@ class OrganizationOut(BaseModel):
     multi_insurer_quotes: bool
     renewal_reminder_days: list[int]
     renewal_client_emails: bool
+    billing_reminders: bool
+    invoice_reminder_days_before: list[int]
+    invoice_reminder_days_after: list[int]
     version: int
 
 
@@ -98,6 +101,23 @@ class OrganizationUpdate(_Strict):
     renewal_client_emails: bool | None = Field(
         default=None, description="Also email clients a renewal reminder (agent is always reminded)"
     )
+    billing_reminders: bool | None = Field(
+        default=None,
+        description="Email clients before and after invoices fall due, and before quotes expire",
+    )
+    invoice_reminder_days_before: (
+        Annotated[list[Annotated[int, Field(ge=1, le=60)]], Field(min_length=1, max_length=4)]
+        | None
+    ) = None
+    invoice_reminder_days_after: (
+        Annotated[list[Annotated[int, Field(ge=1, le=120)]], Field(min_length=1, max_length=6)]
+        | None
+    ) = None
+
+    @field_validator("invoice_reminder_days_before", "invoice_reminder_days_after")
+    @classmethod
+    def _offsets(cls, value: list[int] | None) -> list[int] | None:
+        return sorted(set(value)) if value is not None else None
 
     @field_validator("renewal_reminder_days")
     @classmethod

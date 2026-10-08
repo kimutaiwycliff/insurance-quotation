@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import date, datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, model_validator
 
@@ -32,6 +32,12 @@ class LineInput(_Strict):
     tax_code: Annotated[str, StringConstraints(max_length=40)] | None = Field(
         default=None, description="Defaults to the item's tax code"
     )
+    section: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)] | None = (
+        Field(default=None, description="Quotes: the heading this line sits under")
+    )
+    optional: bool = Field(
+        default=False, description="Quotes only: an add-on the client may choose; not in the total"
+    )
 
     @model_validator(mode="after")
     def _item_or_details(self) -> LineInput:
@@ -55,6 +61,11 @@ class InvoiceCreate(_Document):
     due_in_days: Annotated[int, Field(ge=0, le=365)] = 14
 
 
+class SalesQuoteCreate(_Document):
+    client_id: uuid.UUID
+    valid_days: Annotated[int, Field(ge=1, le=180)] = 30
+
+
 class InvoiceUpdate(_Strict):
     lines: list[LineInput] | None = Field(default=None, min_length=1, max_length=200)
     prices_include_tax: bool | None = None
@@ -62,6 +73,9 @@ class InvoiceUpdate(_Strict):
     notes: Note | None = None
     terms: Note | None = None
     due_in_days: Annotated[int, Field(ge=0, le=365)] | None = None
+    valid_days: Annotated[int, Field(ge=1, le=180)] | None = Field(
+        default=None, description="Quotes: validity from today"
+    )
 
 
 class CreditNoteCreate(_Strict):
@@ -112,6 +126,8 @@ class BillingLineOut(BaseModel):
     unit_price: AmountStr
     discount_rate: str
     tax_code: str
+    section: str | None
+    optional: bool
     tax_rate: str
     net: AmountStr
     tax: AmountStr
@@ -137,21 +153,36 @@ class PaymentAllocationOut(BaseModel):
     created_at: datetime
 
 
-Status = Literal["draft", "open", "partially_paid", "paid", "overdue", "issued", "void"]
+Status = Literal[
+    "draft",
+    "open",
+    "partially_paid",
+    "paid",
+    "overdue",
+    "issued",
+    "sent",
+    "accepted",
+    "declined",
+    "expired",
+    "invoiced",
+    "void",
+]
 
 
 class BillingDocumentSummary(BaseModel):
     id: uuid.UUID
-    kind: Literal["invoice", "credit_note"]
+    kind: Literal["invoice", "credit_note", "quote"]
     number: str | None
     client: ClientRef
     status: Status = Field(
         description="Invoices: draft, open, partially_paid, paid, overdue or void. "
-        "Credit notes: draft, issued or void."
+        "Credit notes: draft, issued or void. "
+        "Quotes: draft, sent, accepted, declined, expired, invoiced or void."
     )
     currency: str
     issue_date: date | None
     due_date: date | None
+    valid_until: date | None
     total: AmountStr
     paid: AmountStr = Field(description="Allocated to an invoice, or applied from a credit note")
     balance: AmountStr
@@ -176,6 +207,13 @@ class BillingDocumentOut(BillingDocumentSummary):
     allocations: list[PaymentAllocationOut]
     credit_notes: list[uuid.UUID] = Field(description="Credit notes issued against this invoice")
     document_id: uuid.UUID | None
+    optional_total: AmountStr = Field(
+        description="Quotes: the add-ons, if the client takes them all"
+    )
+    response_status: str | None
+    responded_at: datetime | None
+    response: dict[str, Any]
+    converted_document_id: uuid.UUID | None
     version: int
 
 
@@ -213,3 +251,49 @@ class DocumentSent(BaseModel):
 
 class FileLink(BaseModel):
     url: str
+
+
+class AgeingBucket(BaseModel):
+    label: str
+    amount: AmountStr
+    count: int
+
+
+class MonthBilling(BaseModel):
+    month: str = Field(description="YYYY-MM")
+    invoiced: AmountStr
+    collected: AmountStr
+
+
+class BillingSummary(BaseModel):
+    currency: str
+    outstanding: AmountStr
+    overdue: AmountStr
+    overdue_count: int
+    ageing: list[AgeingBucket]
+    invoiced_this_month: AmountStr
+    collected_this_month: AmountStr
+    quotes_awaiting: int
+    quotes_awaiting_total: AmountStr
+    months: list[MonthBilling]
+
+
+class QuoteAccept(BaseModel):
+    """What the client sends from the link to accept a sales quote."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=120)]
+    phone: Annotated[str, StringConstraints(strip_whitespace=True, max_length=30)] | None = None
+    email: EmailStr | None = None
+    addons: list[Annotated[int, Field(ge=1, le=200)]] = Field(
+        default_factory=list, description="Positions of the optional lines the client wants"
+    )
+    agree_terms: Literal[True]
+    option: None = None
+
+
+class QuoteDecline(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] = ""
