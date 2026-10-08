@@ -105,7 +105,8 @@
     "switchAgency": "Switch agency",
     "theme": "Theme",
     "leads": "Leads",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "calculator": "Premium calculator"
   },
   "home": {
     "greeting": "Welcome, {name}",
@@ -126,7 +127,8 @@
     "members": "Team",
     "numbering": "Document numbers",
     "branding": "Documents & brand",
-    "security": "Security"
+    "security": "Security",
+    "insurers": "Insurers & products"
   },
   "organization": {
     "name": "Trading name",

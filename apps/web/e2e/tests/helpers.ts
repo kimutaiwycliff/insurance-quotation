@@ -37,3 +37,19 @@ export async function mailLink(page: Page, to: string, fragment: string): Promis
 export function uniqueEmail(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}@example.com`;
 }
+
+/** Sign up and create an agency quickly (the golden path covers the full onboarding). */
+export async function newAgency(page: Page, project: string): Promise<void> {
+  const email = uniqueEmail(`crm-${project}`);
+  await page.goto("/sign-up");
+  await page.getByLabel("Your name").fill("Achieng Otieno");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("correct-horse-battery-9");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await page.goto(await mailLink(page, email, "/api/auth/verify-email"));
+  await page.getByRole("link", { name: "Set up my agency" }).click();
+  await page.getByLabel("Agency name").fill(`Otieno ${project} Agency`);
+  await page.getByRole("button", { name: "Create agency" }).click();
+  await expect(page.getByRole("heading", { name: "Agency details" })).toBeVisible();
+}
+

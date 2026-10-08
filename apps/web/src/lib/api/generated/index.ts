@@ -6,6 +6,7 @@ export * from './dashboard/dashboard';
 export * from './documents/documents';
 export * from './health/health';
 export * from './identity/identity';
+export * from './insurers/insurers';
 export * from './leads/leads';
 export * from './members/members';
 export * from './messaging/messaging';

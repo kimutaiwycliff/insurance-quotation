@@ -99,3 +99,24 @@ describe("randomId", () => {
     expect(new Set(Array.from({ length: 100 }, randomId)).size).toBe(100);
   });
 });
+
+describe("percent strings", () => {
+  it.each([
+    ["4", "0.04"],
+    ["0.25", "0.0025"],
+    ["3.5", "0.035"],
+    ["10", "0.1"],
+    ["100", "1"],
+    ["0", "0"],
+    ["12.345678", "0.12345678"],
+  ])("%s%% → %s", async (percent, fraction) => {
+    const { percentToFraction, fractionToPercent } = await import("@/lib/format");
+    expect(percentToFraction(percent)).toBe(fraction);
+    expect(fractionToPercent(fraction)).toBe(percent);
+  });
+
+  it("rejects junk", async () => {
+    const { percentToFraction } = await import("@/lib/format");
+    for (const bad of ["", "abc", "-1", "1e2", "4%"]) expect(percentToFraction(bad)).toBeNull();
+  });
+});

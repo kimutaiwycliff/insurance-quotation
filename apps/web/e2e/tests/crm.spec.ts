@@ -1,21 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-import { expectAccessible, mailLink, uniqueEmail } from "./helpers";
-
-/** Sign up and create an agency quickly (the golden path covers the full onboarding). */
-async function newAgency(page: Page, project: string): Promise<void> {
-  const email = uniqueEmail(`crm-${project}`);
-  await page.goto("/sign-up");
-  await page.getByLabel("Your name").fill("Achieng Otieno");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill("correct-horse-battery-9");
-  await page.getByRole("button", { name: "Create account" }).click();
-  await page.goto(await mailLink(page, email, "/api/auth/verify-email"));
-  await page.getByRole("link", { name: "Set up my agency" }).click();
-  await page.getByLabel("Agency name").fill(`Otieno ${project} Agency`);
-  await page.getByRole("button", { name: "Create agency" }).click();
-  await expect(page.getByRole("heading", { name: "Agency details" })).toBeVisible();
-}
+import { expectAccessible, newAgency } from "./helpers";
 
 test("an agent works a lead into a client and follows up", async ({ page }, testInfo) => {
   await newAgency(page, testInfo.project.name);

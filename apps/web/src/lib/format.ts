@@ -40,3 +40,25 @@ export function formatPhone(e164: string | null | undefined): string | null {
 export function whatsappLink(e164: string): string {
   return `https://wa.me/${e164.replace(/\D/g, "")}`;
 }
+
+/** "4" → "0.04", "0.25" → "0.0025" by shifting the decimal point in the string (never via floats). */
+export function percentToFraction(percent: string): string | null {
+  const value = percent.trim();
+  if (!/^\d{1,3}(\.\d{1,6})?$/.test(value)) return null;
+  const [whole = "0", fraction = ""] = value.split(".");
+  const digits = (whole.padStart(3, "0") + fraction).replace(/^0+(?=\d)/, "");
+  const padded = digits.padStart(fraction.length + 3, "0");
+  const point = padded.length - fraction.length - 2;
+  const result = `${padded.slice(0, point)}.${padded.slice(point)}`.replace(/^0*(?=\d\.)/, "").replace(/\.?0+$/, "");
+  return result === "" ? "0" : result.startsWith(".") ? `0${result}` : result;
+}
+
+/** "0.04" → "4", "0.0025" → "0.25" (display of stored fractions). */
+export function fractionToPercent(fraction: string | null | undefined): string {
+  if (!fraction) return "";
+  const [whole = "0", digits = ""] = fraction.split(".");
+  const padded = digits.padEnd(2, "0");
+  const intPart = String(Number(`${whole}${padded.slice(0, 2)}`));
+  const rest = padded.slice(2).replace(/0+$/, "");
+  return rest ? `${intPart}.${rest}` : intPart;
+}
