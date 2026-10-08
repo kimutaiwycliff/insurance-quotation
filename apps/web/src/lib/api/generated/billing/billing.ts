@@ -26,6 +26,7 @@ import type {
 import type {
   BillingDocumentOut,
   BillingDocumentSummary,
+  BillingSummary,
   ClientAccount,
   CreditNoteCreate,
   CreditNotesListParams,
@@ -39,6 +40,8 @@ import type {
   PaymentCreate,
   PaymentsListParams,
   ReceivedPayment,
+  SalesQuoteCreate,
+  SalesQuotesListParams,
   Send,
   Void
 } from '../model';
@@ -619,7 +622,108 @@ export const useBillingDocumentsVoid = <TError = HTTPValidationError,
       > => {
       return useMutation(getBillingDocumentsVoidMutationOptions(options), queryClient);
     }
-    export const getClientsAccountUrl = (clientId: string,) => {
+    export const getBillingSummaryUrl = () => {
+
+
+
+
+  return `/api/v1/billing/summary`
+}
+
+/**
+ * Outstanding and overdue, ageing, this month's invoicing and collections, quotes awaiting.
+ * @summary Billing Summary
+ */
+export const billingSummary = async ( options?: Parameters<typeof apiFetch>[1]): Promise<BillingSummary> => {
+
+  return apiFetch<BillingSummary>(getBillingSummaryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getBillingSummaryQueryKey = () => {
+    return [
+    `/api/v1/billing/summary`
+    ] as const;
+    }
+
+
+export const getBillingSummaryQueryOptions = <TData = Awaited<ReturnType<typeof billingSummary>>, TError = HTTPValidationError>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof billingSummary>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBillingSummaryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof billingSummary>>> = ({ signal }) => billingSummary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof billingSummary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BillingSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof billingSummary>>>
+export type BillingSummaryQueryError = HTTPValidationError
+
+
+export function useBillingSummary<TData = Awaited<ReturnType<typeof billingSummary>>, TError = HTTPValidationError>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof billingSummary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof billingSummary>>,
+          TError,
+          Awaited<ReturnType<typeof billingSummary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBillingSummary<TData = Awaited<ReturnType<typeof billingSummary>>, TError = HTTPValidationError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof billingSummary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof billingSummary>>,
+          TError,
+          Awaited<ReturnType<typeof billingSummary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBillingSummary<TData = Awaited<ReturnType<typeof billingSummary>>, TError = HTTPValidationError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof billingSummary>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Billing Summary
+ */
+
+export function useBillingSummary<TData = Awaited<ReturnType<typeof billingSummary>>, TError = HTTPValidationError>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof billingSummary>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBillingSummaryQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getClientsAccountUrl = (clientId: string,) => {
 
 
 
@@ -1666,4 +1770,274 @@ export const usePaymentsVoid = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getPaymentsVoidMutationOptions(options), queryClient);
+    }
+    export const getSalesQuotesListUrl = (params?: SalesQuotesListParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/sales-quotes?${stringifiedParams}` : `/api/v1/sales-quotes`
+}
+
+/**
+ * Quotes for goods and services (insurance quotes are under /quotes).
+ * @summary List Sales Quotes
+ */
+export const salesQuotesList = async (params?: SalesQuotesListParams, options?: Parameters<typeof apiFetch>[1]): Promise<BillingDocumentSummary[]> => {
+
+  return apiFetch<BillingDocumentSummary[]>(getSalesQuotesListUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSalesQuotesListQueryKey = (params?: SalesQuotesListParams,) => {
+    return [
+    `/api/v1/sales-quotes`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSalesQuotesListQueryOptions = <TData = Awaited<ReturnType<typeof salesQuotesList>>, TError = HTTPValidationError>(params?: SalesQuotesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof salesQuotesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSalesQuotesListQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof salesQuotesList>>> = ({ signal }) => salesQuotesList(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof salesQuotesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SalesQuotesListQueryResult = NonNullable<Awaited<ReturnType<typeof salesQuotesList>>>
+export type SalesQuotesListQueryError = HTTPValidationError
+
+
+export function useSalesQuotesList<TData = Awaited<ReturnType<typeof salesQuotesList>>, TError = HTTPValidationError>(
+ params: undefined |  SalesQuotesListParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof salesQuotesList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof salesQuotesList>>,
+          TError,
+          Awaited<ReturnType<typeof salesQuotesList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSalesQuotesList<TData = Awaited<ReturnType<typeof salesQuotesList>>, TError = HTTPValidationError>(
+ params?: SalesQuotesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof salesQuotesList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof salesQuotesList>>,
+          TError,
+          Awaited<ReturnType<typeof salesQuotesList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSalesQuotesList<TData = Awaited<ReturnType<typeof salesQuotesList>>, TError = HTTPValidationError>(
+ params?: SalesQuotesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof salesQuotesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Sales Quotes
+ */
+
+export function useSalesQuotesList<TData = Awaited<ReturnType<typeof salesQuotesList>>, TError = HTTPValidationError>(
+ params?: SalesQuotesListParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof salesQuotesList>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSalesQuotesListQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getSalesQuotesCreateUrl = () => {
+
+
+
+
+  return `/api/v1/sales-quotes`
+}
+
+/**
+ * Draft a quote: sections, optional extras, validity. Sending it issues it.
+ * @summary Create Sales Quote
+ */
+export const salesQuotesCreate = async (salesQuoteCreate: SalesQuoteCreate, options?: Parameters<typeof apiFetch>[1]): Promise<BillingDocumentOut> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<BillingDocumentOut>(getSalesQuotesCreateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(salesQuoteCreate)
+  }
+);}
+
+
+
+
+
+export const getSalesQuotesCreateMutationKey = () => ['salesQuotesCreate'] as const;
+
+export const getSalesQuotesCreateMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof salesQuotesCreate>>, TError,SalesQuotesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof salesQuotesCreate>>, TError,SalesQuotesCreateMutationVariables, TContext> => {
+
+const mutationKey = getSalesQuotesCreateMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof salesQuotesCreate>>, SalesQuotesCreateMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  salesQuotesCreate(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SalesQuotesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof salesQuotesCreate>>>
+    export type SalesQuotesCreateMutationBody = SalesQuoteCreate
+    export type SalesQuotesCreateMutationError = HTTPValidationError
+    export type SalesQuotesCreateMutationVariables = {data: SalesQuoteCreate}
+
+    /**
+ * @summary Create Sales Quote
+ */
+export const useSalesQuotesCreate = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof salesQuotesCreate>>, TError,SalesQuotesCreateMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof salesQuotesCreate>>,
+        TError,
+        SalesQuotesCreateMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSalesQuotesCreateMutationOptions(options), queryClient);
+    }
+    export const getSalesQuotesConvertUrl = (quoteId: string,) => {
+
+
+
+
+  return `/api/v1/sales-quotes/${quoteId}/convert`
+}
+
+/**
+ * A draft invoice from the quote, with the extras the client chose.
+ * @summary Convert Sales Quote
+ */
+export const salesQuotesConvert = async (quoteId: string, options?: Parameters<typeof apiFetch>[1]): Promise<BillingDocumentOut> => {
+
+  return apiFetch<BillingDocumentOut>(getSalesQuotesConvertUrl(quoteId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getSalesQuotesConvertMutationKey = () => ['salesQuotesConvert'] as const;
+
+export const getSalesQuotesConvertMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof salesQuotesConvert>>, TError,SalesQuotesConvertMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof salesQuotesConvert>>, TError,SalesQuotesConvertMutationVariables, TContext> => {
+
+const mutationKey = getSalesQuotesConvertMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof salesQuotesConvert>>, SalesQuotesConvertMutationVariables> = (props) => {
+          const {quoteId} = props ?? {};
+
+          return  salesQuotesConvert(quoteId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SalesQuotesConvertMutationResult = NonNullable<Awaited<ReturnType<typeof salesQuotesConvert>>>
+
+    export type SalesQuotesConvertMutationError = HTTPValidationError
+    export type SalesQuotesConvertMutationVariables = {quoteId: string}
+
+    /**
+ * @summary Convert Sales Quote
+ */
+export const useSalesQuotesConvert = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof salesQuotesConvert>>, TError,SalesQuotesConvertMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof salesQuotesConvert>>,
+        TError,
+        SalesQuotesConvertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSalesQuotesConvertMutationOptions(options), queryClient);
     }

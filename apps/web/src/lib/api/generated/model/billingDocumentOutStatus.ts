@@ -6,7 +6,7 @@
  */
 
 /**
- * Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.
+ * Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void.
  */
 export type BillingDocumentOutStatus = typeof BillingDocumentOutStatus[keyof typeof BillingDocumentOutStatus];
 
@@ -18,5 +18,10 @@ export const BillingDocumentOutStatus = {
   paid: 'paid',
   overdue: 'overdue',
   issued: 'issued',
+  sent: 'sent',
+  accepted: 'accepted',
+  declined: 'declined',
+  expired: 'expired',
+  invoiced: 'invoiced',
   void: 'void',
 } as const;

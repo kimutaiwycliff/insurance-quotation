@@ -16,9 +16,11 @@ Read this first when resuming work. Update it at the end of every session (newes
   - web: `/commission`, `/policies/import`, the commission panel on policies, the home "This year" section.
 - **R1 (agent MVP) is complete.** Repo: https://github.com/kimutaiwycliff/insurance-quotation. `main` is
   protected (all CI jobs required, linear history); work goes through pull requests.
-- **In review: R2.1 invoicing core** on `feat/r2-1-invoicing`. R2 slices: plan Amendment A1.2.
-- **Next: R2.2** sales quotes for SMEs, reminder rules, invoicing dashboard. Open question: `openpyxl` for
-  `.xlsx` imports (ADR-0001)?
+- **Done: R2.1 invoicing core** (PR #2, merged).
+- **In review: R2.2** sales quotes, billing reminders, invoicing overview on `feat/r2-2-sales-quotes`.
+- **Next: R2.3** online payments (Paystack on the tenant's own account, webhook ingress, pay from the link).
+  This needs Paystack test keys from the product owner. Open question: `openpyxl` for `.xlsx` imports
+  (ADR-0001)?
 - **Done: R1.2** (insurers, premium engine, KE pack pending sign-off, calculator) on `feat/r1-2-insurers-calc`
   (stacked, not merged, no remote). The notes below describe what it contains.
   - Backend done and tested, not yet committed at the time of writing:

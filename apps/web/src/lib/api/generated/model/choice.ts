@@ -4,10 +4,13 @@
  * BrokerOS API
  * OpenAPI spec version: 1.0.0
  */
+import type { ChoiceKind } from './choiceKind';
 
 export interface Choice {
   amount: string;
   currency: string;
+  /** option: choose one (insurance quotes); addon: tick any (sales quotes) */
+  kind?: ChoiceKind;
   label: string;
   position: number;
   recommended?: boolean;

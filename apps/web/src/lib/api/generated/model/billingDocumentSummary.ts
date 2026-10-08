@@ -24,8 +24,9 @@ export interface BillingDocumentSummary {
      * @pattern ^-?\d{1,16}(\.\d{1,4})?$
      */
   paid: string;
-  /** Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. */
+  /** Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void. */
   status: BillingDocumentSummaryStatus;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   total: string;
+  valid_until: string | null;
 }

@@ -243,6 +243,30 @@
         "title": "AdjustmentIn",
         "type": "object"
       },
+      "AgeingBucket": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "amount",
+          "count"
+        ],
+        "title": "AgeingBucket",
+        "type": "object"
+      },
       "AllocationIn": {
         "additionalProperties": false,
         "properties": {
@@ -498,6 +522,18 @@
           "client": {
             "$ref": "#/components/schemas/ClientRef"
           },
+          "converted_document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Converted Document Id"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -589,7 +625,8 @@
           "kind": {
             "enum": [
               "invoice",
-              "credit_note"
+              "credit_note",
+              "quote"
             ],
             "title": "Kind",
             "type": "string"
@@ -623,6 +660,12 @@
             ],
             "title": "Number"
           },
+          "optional_total": {
+            "description": "Quotes: the add-ons, if the client takes them all",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Optional Total",
+            "type": "string"
+          },
           "paid": {
             "description": "Allocated to an invoice, or applied from a credit note",
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
@@ -655,8 +698,36 @@
             ],
             "title": "Reference"
           },
+          "responded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "response": {
+            "additionalProperties": true,
+            "title": "Response",
+            "type": "object"
+          },
+          "response_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response Status"
+          },
           "status": {
-            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.",
+            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void.",
             "enum": [
               "draft",
               "open",
@@ -664,6 +735,11 @@
               "paid",
               "overdue",
               "issued",
+              "sent",
+              "accepted",
+              "declined",
+              "expired",
+              "invoiced",
               "void"
             ],
             "title": "Status",
@@ -702,6 +778,18 @@
             "title": "Total",
             "type": "string"
           },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          },
           "version": {
             "title": "Version",
             "type": "integer"
@@ -739,6 +827,7 @@
           "currency",
           "issue_date",
           "due_date",
+          "valid_until",
           "total",
           "paid",
           "balance",
@@ -760,6 +849,11 @@
           "allocations",
           "credit_notes",
           "document_id",
+          "optional_total",
+          "response_status",
+          "responded_at",
+          "response",
+          "converted_document_id",
           "version"
         ],
         "title": "BillingDocumentOut",
@@ -816,7 +910,8 @@
           "kind": {
             "enum": [
               "invoice",
-              "credit_note"
+              "credit_note",
+              "quote"
             ],
             "title": "Kind",
             "type": "string"
@@ -839,7 +934,7 @@
             "type": "string"
           },
           "status": {
-            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.",
+            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void. Quotes: draft, sent, accepted, declined, expired, invoiced or void.",
             "enum": [
               "draft",
               "open",
@@ -847,6 +942,11 @@
               "paid",
               "overdue",
               "issued",
+              "sent",
+              "accepted",
+              "declined",
+              "expired",
+              "invoiced",
               "void"
             ],
             "title": "Status",
@@ -856,6 +956,18 @@
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
             "title": "Total",
             "type": "string"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
           }
         },
         "required": [
@@ -867,6 +979,7 @@
           "currency",
           "issue_date",
           "due_date",
+          "valid_until",
           "total",
           "paid",
           "balance",
@@ -902,6 +1015,10 @@
             "title": "Net",
             "type": "string"
           },
+          "optional": {
+            "title": "Optional",
+            "type": "boolean"
+          },
           "position": {
             "title": "Position",
             "type": "integer"
@@ -910,6 +1027,17 @@
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
             "title": "Quantity",
             "type": "string"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
           },
           "tax": {
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
@@ -943,12 +1071,83 @@
           "unit_price",
           "discount_rate",
           "tax_code",
+          "section",
+          "optional",
           "tax_rate",
           "net",
           "tax",
           "total"
         ],
         "title": "BillingLineOut",
+        "type": "object"
+      },
+      "BillingSummary": {
+        "properties": {
+          "ageing": {
+            "items": {
+              "$ref": "#/components/schemas/AgeingBucket"
+            },
+            "title": "Ageing",
+            "type": "array"
+          },
+          "collected_this_month": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Collected This Month",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "invoiced_this_month": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Invoiced This Month",
+            "type": "string"
+          },
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/MonthBilling"
+            },
+            "title": "Months",
+            "type": "array"
+          },
+          "outstanding": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Outstanding",
+            "type": "string"
+          },
+          "overdue": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Overdue",
+            "type": "string"
+          },
+          "overdue_count": {
+            "title": "Overdue Count",
+            "type": "integer"
+          },
+          "quotes_awaiting": {
+            "title": "Quotes Awaiting",
+            "type": "integer"
+          },
+          "quotes_awaiting_total": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Quotes Awaiting Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency",
+          "outstanding",
+          "overdue",
+          "overdue_count",
+          "ageing",
+          "invoiced_this_month",
+          "collected_this_month",
+          "quotes_awaiting",
+          "quotes_awaiting_total",
+          "months"
+        ],
+        "title": "BillingSummary",
         "type": "object"
       },
       "BookStats": {
@@ -1756,6 +1955,16 @@
           },
           "currency": {
             "title": "Currency",
+            "type": "string"
+          },
+          "kind": {
+            "default": "option",
+            "description": "option: choose one (insurance quotes); addon: tick any (sales quotes)",
+            "enum": [
+              "option",
+              "addon"
+            ],
+            "title": "Kind",
             "type": "string"
           },
           "label": {
@@ -5086,6 +5295,20 @@
               }
             ],
             "title": "Terms"
+          },
+          "valid_days": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Quotes: validity from today",
+            "title": "Valid Days"
           }
         },
         "title": "InvoiceUpdate",
@@ -5859,6 +6082,12 @@
             ],
             "title": "Item Id"
           },
+          "optional": {
+            "default": false,
+            "description": "Quotes only: an add-on the client may choose; not in the total",
+            "title": "Optional",
+            "type": "boolean"
+          },
           "quantity": {
             "anyOf": [
               {
@@ -5873,6 +6102,19 @@
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
             "title": "Quantity",
             "type": "string"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Quotes: the heading this line sits under",
+            "title": "Section"
           },
           "tax_code": {
             "anyOf": [
@@ -6692,6 +6934,32 @@
         "title": "MoneyModel",
         "type": "object"
       },
+      "MonthBilling": {
+        "properties": {
+          "collected": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Collected",
+            "type": "string"
+          },
+          "invoiced": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Invoiced",
+            "type": "string"
+          },
+          "month": {
+            "description": "YYYY-MM",
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month",
+          "invoiced",
+          "collected"
+        ],
+        "title": "MonthBilling",
+        "type": "object"
+      },
       "MonthRow": {
         "properties": {
           "expected_net": {
@@ -6942,6 +7210,10 @@
             "title": "Address",
             "type": "object"
           },
+          "billing_reminders": {
+            "title": "Billing Reminders",
+            "type": "boolean"
+          },
           "country_code": {
             "title": "Country Code",
             "type": "string"
@@ -6973,6 +7245,20 @@
           "intermediary_type": {
             "title": "Intermediary Type",
             "type": "string"
+          },
+          "invoice_reminder_days_after": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Invoice Reminder Days After",
+            "type": "array"
+          },
+          "invoice_reminder_days_before": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Invoice Reminder Days Before",
+            "type": "array"
           },
           "legal_name": {
             "anyOf": [
@@ -7136,6 +7422,9 @@
           "multi_insurer_quotes",
           "renewal_reminder_days",
           "renewal_client_emails",
+          "billing_reminders",
+          "invoice_reminder_days_before",
+          "invoice_reminder_days_after",
           "version"
         ],
         "title": "OrganizationOut",
@@ -7158,6 +7447,18 @@
               }
             ],
             "title": "Address"
+          },
+          "billing_reminders": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Email clients before and after invoices fall due, and before quotes expire",
+            "title": "Billing Reminders"
           },
           "default_currency": {
             "anyOf": [
@@ -7210,6 +7511,42 @@
               }
             ],
             "title": "Intermediary Type"
+          },
+          "invoice_reminder_days_after": {
+            "anyOf": [
+              {
+                "items": {
+                  "maximum": 120.0,
+                  "minimum": 1.0,
+                  "type": "integer"
+                },
+                "maxItems": 6,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Reminder Days After"
+          },
+          "invoice_reminder_days_before": {
+            "anyOf": [
+              {
+                "items": {
+                  "maximum": 60.0,
+                  "minimum": 1.0,
+                  "type": "integer"
+                },
+                "maxItems": 4,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Reminder Days Before"
           },
           "legal_name": {
             "anyOf": [
@@ -11334,6 +11671,79 @@
         "title": "RowResult",
         "type": "object"
       },
+      "SalesQuoteCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/LineInput"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Lines",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "prices_include_tax": {
+            "default": false,
+            "title": "Prices Include Tax",
+            "type": "boolean"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "terms": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms"
+          },
+          "valid_days": {
+            "default": 30,
+            "maximum": 180.0,
+            "minimum": 1.0,
+            "title": "Valid Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lines",
+          "client_id"
+        ],
+        "title": "SalesQuoteCreate",
+        "type": "object"
+      },
       "SchemeCreate": {
         "additionalProperties": false,
         "properties": {
@@ -13108,6 +13518,38 @@
           }
         },
         "summary": "Void",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing/summary": {
+      "get": {
+        "description": "Outstanding and overdue, ageing, this month's invoicing and collections, quotes awaiting.",
+        "operationId": "billing_summary",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Billing Summary",
         "tags": [
           "billing"
         ]
@@ -19841,6 +20283,192 @@
         "summary": "List Roles",
         "tags": [
           "members"
+        ]
+      }
+    },
+    "/api/v1/sales-quotes": {
+      "get": {
+        "description": "Quotes for goods and services (insurance quotes are under /quotes).",
+        "operationId": "sales_quotes_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(draft|awaiting|sent|accepted|declined|expired|invoiced|void)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BillingDocumentSummary"
+                  },
+                  "title": "Response Sales Quotes List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Sales Quotes",
+        "tags": [
+          "billing"
+        ]
+      },
+      "post": {
+        "description": "Draft a quote: sections, optional extras, validity. Sending it issues it.",
+        "operationId": "sales_quotes_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalesQuoteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingDocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Sales Quote",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/sales-quotes/{quote_id}/convert": {
+      "post": {
+        "description": "A draft invoice from the quote, with the extras the client chose.",
+        "operationId": "sales_quotes_convert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingDocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Convert Sales Quote",
+        "tags": [
+          "billing"
         ]
       }
     },

@@ -7,12 +7,17 @@ const LABELS: Record<string, string> = {
   paid: "Paid",
   overdue: "Overdue",
   issued: "Issued",
+  sent: "Awaiting answer",
+  accepted: "Accepted",
+  declined: "Declined",
+  expired: "Expired",
+  invoiced: "Invoiced",
   void: "Void",
 };
 
 export function BillingStatus({ status }: { status: string }) {
   const variant =
-    status === "paid" ? "default" : status === "overdue" ? "destructive" : status === "draft" || status === "void" ? "secondary" : "outline";
+    status === "paid" || status === "accepted" || status === "invoiced" ? "default" : status === "overdue" || status === "declined" || status === "expired" ? "destructive" : status === "draft" || status === "void" ? "secondary" : "outline";
   return <Badge variant={variant}>{LABELS[status] ?? status}</Badge>;
 }
 

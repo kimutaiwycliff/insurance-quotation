@@ -12,10 +12,14 @@ import type { OrganizationUpdateIntermediaryType } from './organizationUpdateInt
  */
 export interface OrganizationUpdate {
   address?: OrganizationUpdateAddress;
+  /** Email clients before and after invoices fall due, and before quotes expire */
+  billing_reminders?: boolean | null;
   default_currency?: string | null;
   email?: string | null;
   fiscal_year_start_month?: number | null;
   intermediary_type?: OrganizationUpdateIntermediaryType;
+  invoice_reminder_days_after?: number[] | null;
+  invoice_reminder_days_before?: number[] | null;
   legal_name?: string | null;
   licence_expiry?: string | null;
   licence_number?: string | null;

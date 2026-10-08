@@ -13,4 +13,6 @@ export interface InvoiceUpdate {
   prices_include_tax?: boolean | null;
   reference?: string | null;
   terms?: string | null;
+  /** Quotes: validity from today */
+  valid_days?: number | null;
 }

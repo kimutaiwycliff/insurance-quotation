@@ -5,6 +5,19 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: R2.2 Sales quotes, reminders, invoicing dashboard (2026-10-08)
+- **Sales quotes:**
+  - section headings and optional extras;
+  - sending issues the quote with a link where the client ticks the extras they want and accepts, or
+    declines;
+  - "Create invoice" turns an accepted quote into a draft invoice with the chosen extras;
+  - expiry is derived from the validity date.
+- **Reminder emails to clients** (off until the business turns them on): before invoices fall due, after they
+  are overdue (default 1, 7 and 14 days) and before quotes expire, each sent once.
+- **Invoicing overview:** what clients owe, overdue amount, ageing, collected this month, quotes awaiting an
+  answer.
+- Document templates show section headings and an "Optional extras" table (template version 3).
+
 ### Added: R2.1 Invoicing core (2026-10-08)
 - **Item catalogue** (Settings → Items & prices) with default price and tax code.
 - **Invoices and credit notes:**

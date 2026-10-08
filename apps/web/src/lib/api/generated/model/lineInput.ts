@@ -14,8 +14,12 @@ export interface LineInput {
      */
   discount_rate?: string;
   item_id?: string | null;
+  /** Quotes only: an add-on the client may choose; not in the total */
+  optional?: boolean;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   quantity: string;
+  /** Quotes: the heading this line sits under */
+  section?: string | null;
   /** Defaults to the item's tax code */
   tax_code?: string | null;
   /** Defaults to the item's price */
