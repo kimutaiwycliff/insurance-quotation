@@ -12,5 +12,8 @@ export interface Dashboard {
   documents_expiring_30d: number;
   new_clients_30d: number;
   pipeline: Pipeline | null;
+  policies_active: number;
+  premiums_to_remit: number;
+  renewals_due_30d: number;
   tasks: TaskCounts | null;
 }

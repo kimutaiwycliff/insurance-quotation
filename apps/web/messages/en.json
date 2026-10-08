@@ -119,6 +119,9 @@
     "followUps": "Lead follow-ups due",
     "newClients": "New clients in 30 days",
     "expiring": "Documents expiring in 30 days",
+    "renewalsDue": "Renewals due in 30 days",
+    "toRemit": "Premiums to pass on to insurers",
+    "activePolicies": "Active policies",
     "pipeline": "Pipeline"
   },
   "settings": {
@@ -278,7 +281,8 @@
     "whatsappAction": "WhatsApp",
     "emailAction": "Email",
     "owner": "Agent",
-    "quotes": "Quotes"
+    "quotes": "Quotes",
+    "policies": "Policies"
   },
   "leads": {
     "title": "Leads",

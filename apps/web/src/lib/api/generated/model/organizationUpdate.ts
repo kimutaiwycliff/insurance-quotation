@@ -26,6 +26,10 @@ export interface OrganizationUpdate {
   quiet_hours_end?: string | null;
   quiet_hours_start?: string | null;
   registration_number?: string | null;
+  /** Also email clients a renewal reminder (agent is always reminded) */
+  renewal_client_emails?: boolean | null;
+  /** Days before expiry on which renewals are reminded */
+  renewal_reminder_days?: number[] | null;
   tax_pin?: string | null;
   timezone?: string | null;
 }

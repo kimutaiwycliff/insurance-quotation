@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Copy, FileDown, MessageCircle, Send } from "lucide-react";
+import { Copy, FileDown, MessageCircle, Send, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -71,6 +71,9 @@ export function QuoteDetail({ quoteId }: { quoteId: string }) {
         </div>
         <div className="flex flex-wrap gap-2">
           {q.document_id && <Button variant="outline" onClick={openPdf}><FileDown aria-hidden="true" /> PDF</Button>}
+          {canWrite && ["accepted", "sent", "expired"].includes(q.status) && (
+            <Button asChild variant={q.status === "accepted" ? "default" : "outline"}><Link href={`/policies/new?quote=${q.id}`}><ShieldCheck aria-hidden="true" /> {q.status === "accepted" ? "Create policy" : "Client accepted by phone"}</Link></Button>
+          )}
           {canWrite && ["draft", "sent"].includes(q.status) && (
             <Button onClick={() => setSending(true)}><Send aria-hidden="true" /> {q.status === "draft" ? "Send to client" : "Send again"}</Button>
           )}
@@ -83,7 +86,7 @@ export function QuoteDetail({ quoteId }: { quoteId: string }) {
       {q.response && Object.keys(q.response).length > 0 && (
         <p className={cn("rounded-md border px-3 py-2", q.status === "accepted" ? "border-primary bg-accent" : "border-destructive/40")}>
           {q.status === "accepted"
-            ? <>Accepted option {q.accepted_position} by <strong>{String(q.response.name)}</strong> on {formatDate(q.responded_at ?? "")}{q.response.phone ? ` (${String(q.response.phone)})` : ""}. Next: confirm cover with the insurer.</>
+            ? <>Accepted option {q.accepted_position} by <strong>{String(q.response.name)}</strong> on {formatDate(q.responded_at ?? "")}{q.response.phone ? ` (${String(q.response.phone)})` : ""}. Next: confirm cover with the insurer and create the policy.</>
             : <>Declined on {formatDate(q.responded_at ?? "")}{q.response.reason ? `: “${String(q.response.reason)}”` : ""}.</>}
         </p>
       )}

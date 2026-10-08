@@ -14,22 +14,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { useClientsGet } from "@/lib/api/generated/clients/clients";
 import { useJurisdictionPackGet, useProductsList } from "@/lib/api/generated/insurers/insurers";
 import { useOrganizationGet } from "@/lib/api/generated/organization/organization";
+import type { PolicyOut } from "@/lib/api/generated/model";
+import { policiesRenewalQuote, usePoliciesGet } from "@/lib/api/generated/policies/policies";
 import { quotesCreate } from "@/lib/api/generated/quotes/quotes";
+import { formatDate } from "@/lib/format";
 import { ApiError, problemMessage } from "@/lib/problem";
 
-export function NewQuote({ clientId }: { clientId: string }) {
+export function NewQuote({ clientId, renewalOf }: { clientId: string; renewalOf?: string }) {
+  const previous = usePoliciesGet(renewalOf ?? "", { query: { enabled: Boolean(renewalOf) } });
+  if (renewalOf && !previous.data) return <Skeleton className="h-96 w-full" />;
+  return <QuoteForm clientId={clientId} renewal={renewalOf ? previous.data : undefined} />;
+}
+
+function QuoteForm({ clientId, renewal }: { clientId: string; renewal?: PolicyOut }) {
   const router = useRouter();
   const client = useClientsGet(clientId);
   const pack = useJurisdictionPackGet();
   const products = useProductsList();
   const org = useOrganizationGet();
-  const [classCode, setClassCode] = useState<string | null>(null);
+  const [classCode, setClassCode] = useState<string | null>(renewal?.class_code ?? null);
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [recommended, setRecommended] = useState<string | null>(null);
-  const [sumInsured, setSumInsured] = useState("");
+  const [sumInsured, setSumInsured] = useState(renewal?.sum_insured ? renewal.sum_insured.replace(/\.0+$/, "") : "");
   const [members, setMembers] = useState<Record<string, string>>({});
   const [benefits, setBenefits] = useState<Set<string>>(new Set());
-  const [details, setDetails] = useState([{ label: "Vehicle", value: "" }]);
+  const [details, setDetails] = useState(renewal?.details.length ? renewal.details : [{ label: "Vehicle", value: "" }]);
   const [notes, setNotes] = useState("");
   const [validDays, setValidDays] = useState("30");
   const [stampDuty, setStampDuty] = useState("");
@@ -58,8 +67,7 @@ export function NewQuote({ clientId }: { clientId: string }) {
     setBusy(true);
     setError(null);
     try {
-      const quote = await quotesCreate({
-        client_id: clientId,
+      const body = {
         product_ids: selected.map((p) => p.id),
         recommended_product_id: recommended && chosen.has(recommended) ? recommended : undefined,
         risk: {
@@ -71,7 +79,8 @@ export function NewQuote({ clientId }: { clientId: string }) {
         details: details.filter((d) => d.label && d.value),
         notes: notes || undefined,
         valid_days: Number(validDays) || 30,
-      });
+      };
+      const quote = renewal ? await policiesRenewalQuote(renewal.id, body) : await quotesCreate({ client_id: clientId, ...body });
       router.push(`/quotes/${quote.id}`);
     } catch (e) {
       setError(e instanceof ApiError ? problemMessage(e.problem) : "The quote was not created. Try again.");
@@ -83,8 +92,10 @@ export function NewQuote({ clientId }: { clientId: string }) {
   return (
     <form onSubmit={submit} className="grid max-w-2xl gap-6">
       <div>
-        <h1 className="text-3xl">New quote</h1>
-        <p className="mt-1 text-muted-foreground">For {client.data.display_name}</p>
+        <h1 className="text-3xl">{renewal ? "Renewal quote" : "New quote"}</h1>
+        <p className="mt-1 text-muted-foreground">
+          For {client.data.display_name}{renewal ? `: ${renewal.description}, now with ${renewal.insurer_name} until ${formatDate(renewal.end_date)}` : ""}
+        </p>
       </div>
       <PackBanner />
       <FormError message={error} />

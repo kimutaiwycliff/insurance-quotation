@@ -35,4 +35,5 @@ export const Perm = {
   'insurer:manage': 'insurer:manage',
   'commission:read:own': 'commission:read:own',
   'commission:read:all': 'commission:read:all',
+  'premium:write': 'premium:write',
 } as const;

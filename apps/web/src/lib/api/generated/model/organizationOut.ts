@@ -24,6 +24,8 @@ export interface OrganizationOut {
   quiet_hours_end: string | null;
   quiet_hours_start: string | null;
   registration_number: string | null;
+  renewal_client_emails: boolean;
+  renewal_reminder_days: number[];
   slug: string | null;
   status: string;
   tax_pin: string | null;

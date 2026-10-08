@@ -13,6 +13,7 @@ export * from './messaging/messaging';
 export * from './notifications/notifications';
 export * from './numbering/numbering';
 export * from './organization/organization';
+export * from './policies/policies';
 export * from './public/public';
 export * from './public-links/public-links';
 export * from './quotes/quotes';

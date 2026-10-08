@@ -35,8 +35,8 @@ export const NAV: NavItem[] = [
   { href: "/tasks", key: "tasks", icon: ListChecks },
   { href: "/calculator", key: "calculator", icon: Calculator },
   { href: "/quotes", key: "quotes", icon: FileText },
-  { href: "/policies", key: "policies", icon: ShieldCheck, soon: true },
-  { href: "/renewals", key: "renewals", icon: CalendarClock, soon: true },
+  { href: "/policies", key: "policies", icon: ShieldCheck },
+  { href: "/renewals", key: "renewals", icon: CalendarClock },
   { href: "/settings", key: "settings", icon: Settings },
 ];
 

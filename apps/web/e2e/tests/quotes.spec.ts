@@ -68,4 +68,17 @@ test("an agent sends a comparison quote and the client accepts it", async ({ pag
   await page.reload();
   await expect(page.getByText(/Accepted option 1 by/)).toBeVisible();
   await expect(page.getByText("Accepted", { exact: true })).toBeVisible();
+
+  // The insurer confirms cover and the client has paid: the accepted option becomes an active policy.
+  await page.getByRole("link", { name: "Create policy" }).click();
+  await expect(page.getByText(/The client accepted option 1/)).toBeVisible();
+  await page.getByLabel("The premium has been paid").check();
+  await expect(page.getByLabel("Amount (KES)")).toHaveValue("70355.00");
+  await page.getByLabel("Reference").fill("SJK12AB34C");
+  await page.getByLabel(/The insurer has confirmed cover/).check();
+  await page.getByRole("button", { name: "Save policy" }).click();
+  await expect(page.getByRole("heading", { name: "KDA 123A, Toyota Axio 2019" })).toBeVisible();
+  await expect(page.getByText("Active", { exact: true })).toBeVisible();
+  await expect(page.getByText(/SJK12AB34C/)).toBeVisible();
+  await expectAccessible(page, "policy");
 });

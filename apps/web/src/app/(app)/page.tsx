@@ -45,6 +45,9 @@ export default async function HomePage() {
         {board.tasks && <Stat href="/tasks" value={board.tasks.overdue} label={t("tasksOverdue")} urgent />}
         {board.tasks && <Stat href="/tasks" value={board.tasks.today} label={t("tasksToday")} />}
         {board.pipeline && <Stat href="/leads" value={board.pipeline.follow_ups_due} label={t("followUps")} urgent />}
+        <Stat href="/renewals" value={board.renewals_due_30d} label={t("renewalsDue")} urgent />
+        {board.premiums_to_remit > 0 && <Stat href="/tasks" value={board.premiums_to_remit} label={t("toRemit")} urgent />}
+        <Stat href="/policies" value={board.policies_active} label={t("activePolicies")} />
         <Stat href="/clients" value={board.new_clients_30d} label={t("newClients")} />
         {board.documents_expiring_30d > 0 && <Stat href="/clients" value={board.documents_expiring_30d} label={t("expiring")} urgent />}
       </section>
