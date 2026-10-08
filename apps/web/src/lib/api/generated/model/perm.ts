@@ -23,4 +23,12 @@ export const Perm = {
   'link:manage': 'link:manage',
   'message:read': 'message:read',
   'message_template:manage': 'message_template:manage',
+  'client:read:all': 'client:read:all',
+  'client:read:own': 'client:read:own',
+  'client:write': 'client:write',
+  'lead:read:all': 'lead:read:all',
+  'lead:read:own': 'lead:read:own',
+  'lead:write': 'lead:write',
+  'task:read:all': 'task:read:all',
+  'task:write': 'task:write',
 } as const;

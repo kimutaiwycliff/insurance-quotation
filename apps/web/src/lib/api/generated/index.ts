@@ -1,9 +1,12 @@
 export * from './audit/audit';
 export * from './branches/branches';
 export * from './branding/branding';
+export * from './clients/clients';
+export * from './dashboard/dashboard';
 export * from './documents/documents';
 export * from './health/health';
 export * from './identity/identity';
+export * from './leads/leads';
 export * from './members/members';
 export * from './messaging/messaging';
 export * from './notifications/notifications';
@@ -11,3 +14,4 @@ export * from './numbering/numbering';
 export * from './organization/organization';
 export * from './public/public';
 export * from './public-links/public-links';
+export * from './tasks/tasks';

@@ -57,7 +57,7 @@ services:
         && alembic downgrade base
         && alembic upgrade head
         && python -m scripts.storage_init
-        && pytest -n auto --cov=app --cov-report=term-missing --cov-fail-under=80
+        && pytest -n auto --dist loadgroup --cov=app --cov-report=term-missing --cov-fail-under=80
     depends_on:
       postgres: { condition: service_healthy }
       valkey: { condition: service_healthy }

@@ -28,3 +28,15 @@ export function relativeTime(value: string | Date, now: Date = new Date()): stri
   }
   return rtf.format(seconds, "second");
 }
+
+/** "+254712345678" → "0712 345 678" for Kenyan numbers; other numbers stay international. */
+export function formatPhone(e164: string | null | undefined): string | null {
+  if (!e164) return null;
+  const ke = e164.match(/^\+254(\d{3})(\d{3})(\d{3})$/);
+  return ke ? `0${ke[1]} ${ke[2]} ${ke[3]}` : e164;
+}
+
+/** wa.me link (digits only, no plus). */
+export function whatsappLink(e164: string): string {
+  return `https://wa.me/${e164.replace(/\D/g, "")}`;
+}
