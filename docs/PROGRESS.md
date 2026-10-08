@@ -14,9 +14,11 @@ Read this first when resuming work. Update it at the end of every session (newes
   - modules `app/modules/commissions` and `app/modules/imports` (READMEs), `app/calc/commission.py`;
   - migration 0008;
   - web: `/commission`, `/policies/import`, the commission panel on policies, the home "This year" section.
-- **R1 (agent MVP) is complete.** Next: pilot hardening, then R2 (invoicing tier, online payments, eTIMS) per
-  Plan A1. Open question to the product owner: add `openpyxl` (ADR-0001) so agents can import `.xlsx`
-  directly?
+- **R1 (agent MVP) is complete.** Repo: https://github.com/kimutaiwycliff/insurance-quotation. `main` is
+  protected (all CI jobs required, linear history); work goes through pull requests.
+- **In review: R2.1 invoicing core** on `feat/r2-1-invoicing`. R2 slices: plan Amendment A1.2.
+- **Next: R2.2** sales quotes for SMEs, reminder rules, invoicing dashboard. Open question: `openpyxl` for
+  `.xlsx` imports (ADR-0001)?
 - **Done: R1.2** (insurers, premium engine, KE pack pending sign-off, calculator) on `feat/r1-2-insurers-calc`
   (stacked, not merged, no remote). The notes below describe what it contains.
   - Backend done and tested, not yet committed at the time of writing:

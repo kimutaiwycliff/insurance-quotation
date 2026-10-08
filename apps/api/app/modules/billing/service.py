@@ -31,19 +31,19 @@ from app.modules.billing.models import Allocation, BillingDocument, BillingLine,
 
 __all__ = ["BillingDocument"]
 from app.modules.billing.schemas import (
-    AllocationIn,
-    AllocationOut,
+    BillingDocumentOut,
+    BillingDocumentSummary,
+    BillingLineOut,
     ClientAccount,
     CreditNoteCreate,
-    DocumentOut,
-    DocumentSummary,
     InvoiceCreate,
     InvoiceUpdate,
     Issue,
     LineInput,
-    LineOut,
+    PaymentAllocationIn,
+    PaymentAllocationOut,
     PaymentCreate,
-    PaymentOut,
+    ReceivedPayment,
     Send,
     TaxLine,
     Void,
@@ -199,7 +199,7 @@ def _summary(doc: BillingDocument, client: ClientRef, paid: Decimal, today: date
 
 async def _allocation_out(
     session: AsyncSession, allocations: list[Allocation], currency: str
-) -> list[AllocationOut]:
+) -> list[PaymentAllocationOut]:
     numbers: dict[uuid.UUID, str | None] = {}
     ids = {a.invoice_id for a in allocations} | {
         a.credit_note_id for a in allocations if a.credit_note_id
@@ -216,7 +216,7 @@ async def _allocation_out(
         source_id = a.payment_id or a.credit_note_id
         assert source_id is not None  # noqa: S101 - one source per allocation (DB check)
         out.append(
-            AllocationOut(
+            PaymentAllocationOut(
                 id=a.id,
                 invoice_id=a.invoice_id,
                 invoice_number=numbers.get(a.invoice_id),
@@ -230,7 +230,7 @@ async def _allocation_out(
     return out
 
 
-async def to_out(ctx: TenantContext, doc: BillingDocument) -> DocumentOut:
+async def to_out(ctx: TenantContext, doc: BillingDocument) -> BillingDocumentOut:
     today = await tenancy.today(ctx.session, ctx.tenant_id)
     paid = (await _paid(ctx.session, [doc])).get(doc.id, ZERO)
     c = doc.currency
@@ -250,10 +250,10 @@ async def to_out(ctx: TenantContext, doc: BillingDocument) -> DocumentOut:
                 )
             ).all()
         )
-    return DocumentOut(
+    return BillingDocumentOut(
         **_summary(doc, await _client_ref(ctx.session, doc.client_id), paid, today),
         lines=[
-            LineOut(
+            BillingLineOut(
                 position=line.position,
                 item_id=line.item_id,
                 description=line.description,
@@ -649,7 +649,7 @@ async def void(ctx: TenantContext, document_id: uuid.UUID, body: Void) -> Billin
 
 async def list_documents(
     ctx: TenantContext, *, kind: str, client_id: uuid.UUID | None, status: str | None, limit: int
-) -> list[DocumentSummary]:
+) -> list[BillingDocumentSummary]:
     today = await tenancy.today(ctx.session, ctx.tenant_id)
     stmt = _scoped(
         select(BillingDocument).where(BillingDocument.kind == kind),
@@ -671,7 +671,9 @@ async def list_documents(
     for d in docs:
         if d.client_id not in refs:
             refs[d.client_id] = await _client_ref(ctx.session, d.client_id)
-        out.append(DocumentSummary(**_summary(d, refs[d.client_id], paid.get(d.id, ZERO), today)))
+        out.append(
+            BillingDocumentSummary(**_summary(d, refs[d.client_id], paid.get(d.id, ZERO), today))
+        )
     if status and status not in {DRAFT, VOID}:
         wanted = {"unpaid": {"open", "partially_paid", "overdue"}}.get(status, {status})
         out = [d for d in out if d.status in wanted]
@@ -692,13 +694,13 @@ async def get_payment(ctx: TenantContext, payment_id: uuid.UUID, *, lock: bool =
     return payment
 
 
-async def payment_out(ctx: TenantContext, payment: Payment) -> PaymentOut:
+async def payment_out(ctx: TenantContext, payment: Payment) -> ReceivedPayment:
     allocations = (
         [] if payment.voided_at else await _live_allocations(ctx.session, payment_ids=[payment.id])
     )
     applied = sum((a.amount for a in allocations), ZERO)
     c = payment.currency
-    return PaymentOut(
+    return ReceivedPayment(
         id=payment.id,
         number=payment.number,
         client=await _client_ref(ctx.session, payment.client_id),
@@ -743,7 +745,7 @@ async def _apply(
     currency: str,
     amount: Decimal,
     on: date,
-    explicit: list[AllocationIn] | None,
+    explicit: list[PaymentAllocationIn] | None,
     payment: Payment | None = None,
     credit_note: BillingDocument | None = None,
 ) -> Decimal:
@@ -1241,7 +1243,7 @@ async def receipt_url(
 
 async def list_payments(
     ctx: TenantContext, *, client_id: uuid.UUID | None, limit: int
-) -> list[PaymentOut]:
+) -> list[ReceivedPayment]:
     stmt = select(Payment).join(clients.Client, clients.Client.id == Payment.client_id)
     owner = own_scope(ctx.principal, Perm.CLIENT_READ_ALL)
     if owner is not None:

@@ -5,6 +5,29 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: R2.1 Invoicing core (2026-10-08)
+- **Item catalogue** (Settings → Items & prices) with default price and tax code.
+- **Invoices and credit notes:**
+  - drafts with catalogue or free-text lines, discounts, prices with or without VAT; VAT per line from the
+    jurisdiction pack;
+  - issue: gapless number, M-Pesa payment reference, frozen by a database trigger;
+  - credit notes against an invoice (never more than its total), voids;
+  - PDF, tracked link, email and WhatsApp share.
+- **Payments received:**
+  - applied to invoices oldest first or as chosen; excess kept as client credit and usable later;
+  - voids reverse everything a payment paid; numbered receipt PDFs;
+  - client account (owes you / credit on account), payments list.
+- **Double-entry ledger (ADR-0012):** each entry's balance is enforced at commit, and the journal is
+  append-only. Tested with random operation sequences.
+- ADR-0009 (document states) and plan amendment A1.2 (R2 slices).
+- Permissions `invoice:write`, `invoice:issue`, `payment:write`, `catalog:manage`.
+
+### Changed
+- CI runs the end-to-end suites on pull requests. `main` is protected: every CI job must pass and history
+  stays linear.
+- The jurisdiction pack endpoint lists tax codes.
+- A test fails when two modules export the same schema name, which would break the generated web client.
+
 ### Security
 - Runtime images apply Debian security updates and no longer ship package managers: npm, corepack and yarn
   are gone from the web and auth images, and the system pip from the API image. The CI Trivy scan is clean.

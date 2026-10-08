@@ -243,6 +243,121 @@
         "title": "AdjustmentIn",
         "type": "object"
       },
+      "AllocationIn": {
+        "additionalProperties": false,
+        "properties": {
+          "gross": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "Gross commission the insurer paid for this policy",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "policy_id": {
+            "format": "uuid",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "wht": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "ge": 0,
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "As on the insurer's statement; defaults to the pack rate",
+            "title": "Wht"
+          }
+        },
+        "required": [
+          "policy_id",
+          "gross"
+        ],
+        "title": "AllocationIn",
+        "type": "object"
+      },
+      "AllocationOut": {
+        "properties": {
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "gross": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Net",
+            "type": "string"
+          },
+          "policy_id": {
+            "format": "uuid",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "vat": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Vat",
+            "type": "string"
+          },
+          "wht": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy_id",
+          "client_name",
+          "description",
+          "policy_number",
+          "gross",
+          "wht",
+          "vat",
+          "net"
+        ],
+        "title": "AllocationOut",
+        "type": "object"
+      },
       "Amounts": {
         "properties": {
           "gross": {
@@ -364,6 +479,476 @@
           }
         },
         "title": "Beacon",
+        "type": "object"
+      },
+      "BillingDocumentOut": {
+        "properties": {
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentAllocationOut"
+            },
+            "title": "Allocations",
+            "type": "array"
+          },
+          "balance": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Balance",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "credit_notes": {
+            "description": "Credit notes issued against this invoice",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Credit Notes",
+            "type": "array"
+          },
+          "credits_document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credits Document Id"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "discount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Discount",
+            "type": "string"
+          },
+          "document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "kind": {
+            "enum": [
+              "invoice",
+              "credit_note"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/BillingLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "paid": {
+            "description": "Allocated to an invoice, or applied from a credit note",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Paid",
+            "type": "string"
+          },
+          "payment_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Reference"
+          },
+          "prices_include_tax": {
+            "title": "Prices Include Tax",
+            "type": "boolean"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "status": {
+            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.",
+            "enum": [
+              "draft",
+              "open",
+              "partially_paid",
+              "paid",
+              "overdue",
+              "issued",
+              "void"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subtotal": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Subtotal",
+            "type": "string"
+          },
+          "tax": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Tax",
+            "type": "string"
+          },
+          "taxes": {
+            "items": {
+              "$ref": "#/components/schemas/TaxLine"
+            },
+            "title": "Taxes",
+            "type": "array"
+          },
+          "terms": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms"
+          },
+          "total": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "void_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Void Reason"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "number",
+          "client",
+          "status",
+          "currency",
+          "issue_date",
+          "due_date",
+          "total",
+          "paid",
+          "balance",
+          "created_at",
+          "lines",
+          "subtotal",
+          "discount",
+          "tax",
+          "taxes",
+          "prices_include_tax",
+          "payment_reference",
+          "credits_document_id",
+          "reference",
+          "notes",
+          "terms",
+          "issued_at",
+          "voided_at",
+          "void_reason",
+          "allocations",
+          "credit_notes",
+          "document_id",
+          "version"
+        ],
+        "title": "BillingDocumentOut",
+        "type": "object"
+      },
+      "BillingDocumentSummary": {
+        "properties": {
+          "balance": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Balance",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "kind": {
+            "enum": [
+              "invoice",
+              "credit_note"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "paid": {
+            "description": "Allocated to an invoice, or applied from a credit note",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Paid",
+            "type": "string"
+          },
+          "status": {
+            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.",
+            "enum": [
+              "draft",
+              "open",
+              "partially_paid",
+              "paid",
+              "overdue",
+              "issued",
+              "void"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "number",
+          "client",
+          "status",
+          "currency",
+          "issue_date",
+          "due_date",
+          "total",
+          "paid",
+          "balance",
+          "created_at"
+        ],
+        "title": "BillingDocumentSummary",
+        "type": "object"
+      },
+      "BillingLineOut": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "discount_rate": {
+            "title": "Discount Rate",
+            "type": "string"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Net",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "quantity": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "tax": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Tax",
+            "type": "string"
+          },
+          "tax_code": {
+            "title": "Tax Code",
+            "type": "string"
+          },
+          "tax_rate": {
+            "title": "Tax Rate",
+            "type": "string"
+          },
+          "total": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total",
+            "type": "string"
+          },
+          "unit_price": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Unit Price",
+            "type": "string"
+          }
+        },
+        "required": [
+          "position",
+          "item_id",
+          "description",
+          "quantity",
+          "unit_price",
+          "discount_rate",
+          "tax_code",
+          "tax_rate",
+          "net",
+          "tax",
+          "total"
+        ],
+        "title": "BillingLineOut",
         "type": "object"
       },
       "BookStats": {
@@ -1095,7 +1680,7 @@
           },
           "lines": {
             "items": {
-              "$ref": "#/components/schemas/app__modules__insurers__schemas__LineOut"
+              "$ref": "#/components/schemas/LineOut"
             },
             "title": "Lines",
             "type": "array"
@@ -1213,7 +1798,7 @@
           },
           "open_invoices": {
             "items": {
-              "$ref": "#/components/schemas/DocumentSummary"
+              "$ref": "#/components/schemas/BillingDocumentSummary"
             },
             "title": "Open Invoices",
             "type": "array"
@@ -3173,26 +3758,29 @@
         "title": "DocumentLinkOut",
         "type": "object"
       },
-      "DocumentSummary": {
+      "DocumentOut": {
         "properties": {
-          "balance": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Balance",
+          "category": {
+            "title": "Category",
             "type": "string"
-          },
-          "client": {
-            "$ref": "#/components/schemas/ClientRef"
           },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
             "type": "string"
           },
-          "currency": {
-            "title": "Currency",
-            "type": "string"
+          "current_version_no": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version No"
           },
-          "due_date": {
+          "expires_on": {
             "anyOf": [
               {
                 "format": "date",
@@ -3202,85 +3790,78 @@
                 "type": "null"
               }
             ],
-            "title": "Due Date"
+            "title": "Expires On"
           },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
           },
-          "issue_date": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Issue Date"
-          },
-          "kind": {
-            "enum": [
-              "invoice",
-              "credit_note"
-            ],
-            "title": "Kind",
-            "type": "string"
-          },
-          "number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Number"
-          },
-          "paid": {
-            "description": "Allocated to an invoice, or applied from a credit note",
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Paid",
-            "type": "string"
-          },
           "status": {
-            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.",
-            "enum": [
-              "draft",
-              "open",
-              "partially_paid",
-              "paid",
-              "overdue",
-              "issued",
-              "void"
-            ],
             "title": "Status",
             "type": "string"
           },
-          "total": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Total",
+          "title": {
+            "title": "Title",
             "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
           }
         },
         "required": [
           "id",
-          "kind",
-          "number",
-          "client",
+          "category",
+          "title",
           "status",
-          "currency",
-          "issue_date",
-          "due_date",
-          "total",
-          "paid",
-          "balance",
-          "created_at"
+          "current_version_no",
+          "expires_on",
+          "created_at",
+          "version"
         ],
-        "title": "DocumentSummary",
+        "title": "DocumentOut",
+        "type": "object"
+      },
+      "DocumentSent": {
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/BillingDocumentOut"
+          },
+          "emailed_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emailed To"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "whatsapp_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Url"
+          }
+        },
+        "required": [
+          "document",
+          "url",
+          "emailed_to",
+          "whatsapp_url"
+        ],
+        "title": "DocumentSent",
         "type": "object"
       },
       "DocumentUpdate": {
@@ -5336,6 +5917,76 @@
         "title": "LineInput",
         "type": "object"
       },
+      "LineOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "charged_to": {
+            "title": "Charged To",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "kind",
+          "amount",
+          "charged_to",
+          "rule_id",
+          "source",
+          "note"
+        ],
+        "title": "LineOut",
+        "type": "object"
+      },
       "LinkCreate": {
         "additionalProperties": false,
         "properties": {
@@ -6760,6 +7411,13 @@
             "title": "Signed",
             "type": "boolean"
           },
+          "tax_codes": {
+            "items": {
+              "$ref": "#/components/schemas/TaxCodeOut"
+            },
+            "title": "Tax Codes",
+            "type": "array"
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -6775,7 +7433,8 @@
           "title",
           "signed",
           "sign_off_note",
-          "classes"
+          "classes",
+          "tax_codes"
         ],
         "title": "PackOut",
         "type": "object"
@@ -6840,7 +7499,7 @@
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/app__modules__documents__schemas__DocumentOut"
+              "$ref": "#/components/schemas/DocumentOut"
             },
             "title": "Items",
             "type": "array"
@@ -6920,6 +7579,108 @@
         "title": "Page[NotificationOut]",
         "type": "object"
       },
+      "PaymentAllocationIn": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "invoice_id": {
+            "format": "uuid",
+            "title": "Invoice Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoice_id",
+          "amount"
+        ],
+        "title": "PaymentAllocationIn",
+        "type": "object"
+      },
+      "PaymentAllocationOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invoice_id": {
+            "format": "uuid",
+            "title": "Invoice Id",
+            "type": "string"
+          },
+          "invoice_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Number"
+          },
+          "source": {
+            "enum": [
+              "payment",
+              "credit_note"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Number"
+          }
+        },
+        "required": [
+          "id",
+          "invoice_id",
+          "invoice_number",
+          "source",
+          "source_id",
+          "source_number",
+          "amount",
+          "created_at"
+        ],
+        "title": "PaymentAllocationOut",
+        "type": "object"
+      },
       "PaymentCreate": {
         "additionalProperties": false,
         "properties": {
@@ -6927,7 +7688,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__AllocationIn"
+                  "$ref": "#/components/schemas/PaymentAllocationIn"
                 },
                 "maxItems": 100,
                 "type": "array"
@@ -7172,6 +7933,127 @@
           "paid_on"
         ],
         "title": "PaymentIn",
+        "type": "object"
+      },
+      "PaymentOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "paid_to": {
+            "title": "Paid To",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "remittance_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remittance Reference"
+          },
+          "remitted_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remitted On"
+          },
+          "void_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Void Reason"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "paid_on",
+          "method",
+          "reference",
+          "paid_to",
+          "remitted_on",
+          "remittance_reference",
+          "voided_at",
+          "void_reason",
+          "created_by",
+          "created_at"
+        ],
+        "title": "PaymentOut",
         "type": "object"
       },
       "PdfLink": {
@@ -7671,7 +8553,7 @@
           },
           "payments": {
             "items": {
-              "$ref": "#/components/schemas/app__modules__policies__schemas__PaymentOut"
+              "$ref": "#/components/schemas/PaymentOut"
             },
             "title": "Payments",
             "type": "array"
@@ -9357,7 +10239,7 @@
           },
           "lines": {
             "items": {
-              "$ref": "#/components/schemas/app__modules__commissions__schemas__AllocationIn"
+              "$ref": "#/components/schemas/AllocationIn"
             },
             "maxItems": 500,
             "minItems": 1,
@@ -9453,7 +10335,7 @@
           },
           "lines": {
             "items": {
-              "$ref": "#/components/schemas/app__modules__commissions__schemas__AllocationOut"
+              "$ref": "#/components/schemas/AllocationOut"
             },
             "title": "Lines",
             "type": "array"
@@ -9554,6 +10436,120 @@
           "lines"
         ],
         "title": "ReceiptOut",
+        "type": "object"
+      },
+      "ReceivedPayment": {
+        "properties": {
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentAllocationOut"
+            },
+            "title": "Allocations",
+            "type": "array"
+          },
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "received_on": {
+            "format": "date",
+            "title": "Received On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "unallocated": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Unallocated",
+            "type": "string"
+          },
+          "void_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Void Reason"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "client",
+          "received_on",
+          "amount",
+          "currency",
+          "method",
+          "reference",
+          "notes",
+          "unallocated",
+          "allocations",
+          "voided_at",
+          "void_reason",
+          "created_at"
+        ],
+        "title": "ReceivedPayment",
         "type": "object"
       },
       "Remind": {
@@ -10559,6 +11555,48 @@
         "title": "SendTo",
         "type": "object"
       },
+      "Sent": {
+        "properties": {
+          "emailed_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emailed To"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/QuoteOut"
+          },
+          "url": {
+            "description": "Tracked link for the client (share on WhatsApp if not emailed)",
+            "title": "Url",
+            "type": "string"
+          },
+          "whatsapp_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Url"
+          }
+        },
+        "required": [
+          "quote",
+          "url",
+          "emailed_to",
+          "whatsapp_url"
+        ],
+        "title": "Sent",
+        "type": "object"
+      },
       "StageSummary": {
         "properties": {
           "count": {
@@ -11094,6 +12132,35 @@
         "title": "TaskUpdate",
         "type": "object"
       },
+      "TaxCodeOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rate": {
+            "description": "Fraction, e.g. 0.16",
+            "title": "Rate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "rate",
+          "kind"
+        ],
+        "title": "TaxCodeOut",
+        "type": "object"
+      },
       "TaxLine": {
         "properties": {
           "code": {
@@ -11381,7 +12448,7 @@
       "UploadStarted": {
         "properties": {
           "document": {
-            "$ref": "#/components/schemas/app__modules__documents__schemas__DocumentOut"
+            "$ref": "#/components/schemas/DocumentOut"
           },
           "upload": {
             "$ref": "#/components/schemas/UploadTicket"
@@ -11627,1036 +12694,6 @@
         ],
         "title": "WhtCertificate",
         "type": "object"
-      },
-      "app__modules__billing__schemas__AllocationIn": {
-        "additionalProperties": false,
-        "properties": {
-          "amount": {
-            "anyOf": [
-              {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
-              },
-              {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                "type": "string"
-              }
-            ],
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Amount",
-            "type": "string"
-          },
-          "invoice_id": {
-            "format": "uuid",
-            "title": "Invoice Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "invoice_id",
-          "amount"
-        ],
-        "title": "AllocationIn",
-        "type": "object"
-      },
-      "app__modules__billing__schemas__AllocationOut": {
-        "properties": {
-          "amount": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Amount",
-            "type": "string"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "invoice_id": {
-            "format": "uuid",
-            "title": "Invoice Id",
-            "type": "string"
-          },
-          "invoice_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Invoice Number"
-          },
-          "source": {
-            "enum": [
-              "payment",
-              "credit_note"
-            ],
-            "title": "Source",
-            "type": "string"
-          },
-          "source_id": {
-            "format": "uuid",
-            "title": "Source Id",
-            "type": "string"
-          },
-          "source_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source Number"
-          }
-        },
-        "required": [
-          "id",
-          "invoice_id",
-          "invoice_number",
-          "source",
-          "source_id",
-          "source_number",
-          "amount",
-          "created_at"
-        ],
-        "title": "AllocationOut",
-        "type": "object"
-      },
-      "app__modules__billing__schemas__DocumentOut": {
-        "properties": {
-          "allocations": {
-            "items": {
-              "$ref": "#/components/schemas/app__modules__billing__schemas__AllocationOut"
-            },
-            "title": "Allocations",
-            "type": "array"
-          },
-          "balance": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Balance",
-            "type": "string"
-          },
-          "client": {
-            "$ref": "#/components/schemas/ClientRef"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "credit_notes": {
-            "description": "Credit notes issued against this invoice",
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "title": "Credit Notes",
-            "type": "array"
-          },
-          "credits_document_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Credits Document Id"
-          },
-          "currency": {
-            "title": "Currency",
-            "type": "string"
-          },
-          "discount": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Discount",
-            "type": "string"
-          },
-          "document_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Document Id"
-          },
-          "due_date": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Due Date"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "issue_date": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Issue Date"
-          },
-          "issued_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Issued At"
-          },
-          "kind": {
-            "enum": [
-              "invoice",
-              "credit_note"
-            ],
-            "title": "Kind",
-            "type": "string"
-          },
-          "lines": {
-            "items": {
-              "$ref": "#/components/schemas/app__modules__billing__schemas__LineOut"
-            },
-            "title": "Lines",
-            "type": "array"
-          },
-          "notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Notes"
-          },
-          "number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Number"
-          },
-          "paid": {
-            "description": "Allocated to an invoice, or applied from a credit note",
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Paid",
-            "type": "string"
-          },
-          "payment_reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Payment Reference"
-          },
-          "prices_include_tax": {
-            "title": "Prices Include Tax",
-            "type": "boolean"
-          },
-          "reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reference"
-          },
-          "status": {
-            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.",
-            "enum": [
-              "draft",
-              "open",
-              "partially_paid",
-              "paid",
-              "overdue",
-              "issued",
-              "void"
-            ],
-            "title": "Status",
-            "type": "string"
-          },
-          "subtotal": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Subtotal",
-            "type": "string"
-          },
-          "tax": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Tax",
-            "type": "string"
-          },
-          "taxes": {
-            "items": {
-              "$ref": "#/components/schemas/TaxLine"
-            },
-            "title": "Taxes",
-            "type": "array"
-          },
-          "terms": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Terms"
-          },
-          "total": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Total",
-            "type": "string"
-          },
-          "version": {
-            "title": "Version",
-            "type": "integer"
-          },
-          "void_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Void Reason"
-          },
-          "voided_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Voided At"
-          }
-        },
-        "required": [
-          "id",
-          "kind",
-          "number",
-          "client",
-          "status",
-          "currency",
-          "issue_date",
-          "due_date",
-          "total",
-          "paid",
-          "balance",
-          "created_at",
-          "lines",
-          "subtotal",
-          "discount",
-          "tax",
-          "taxes",
-          "prices_include_tax",
-          "payment_reference",
-          "credits_document_id",
-          "reference",
-          "notes",
-          "terms",
-          "issued_at",
-          "voided_at",
-          "void_reason",
-          "allocations",
-          "credit_notes",
-          "document_id",
-          "version"
-        ],
-        "title": "DocumentOut",
-        "type": "object"
-      },
-      "app__modules__billing__schemas__LineOut": {
-        "properties": {
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "discount_rate": {
-            "title": "Discount Rate",
-            "type": "string"
-          },
-          "item_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Item Id"
-          },
-          "net": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Net",
-            "type": "string"
-          },
-          "position": {
-            "title": "Position",
-            "type": "integer"
-          },
-          "quantity": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Quantity",
-            "type": "string"
-          },
-          "tax": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Tax",
-            "type": "string"
-          },
-          "tax_code": {
-            "title": "Tax Code",
-            "type": "string"
-          },
-          "tax_rate": {
-            "title": "Tax Rate",
-            "type": "string"
-          },
-          "total": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Total",
-            "type": "string"
-          },
-          "unit_price": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Unit Price",
-            "type": "string"
-          }
-        },
-        "required": [
-          "position",
-          "item_id",
-          "description",
-          "quantity",
-          "unit_price",
-          "discount_rate",
-          "tax_code",
-          "tax_rate",
-          "net",
-          "tax",
-          "total"
-        ],
-        "title": "LineOut",
-        "type": "object"
-      },
-      "app__modules__billing__schemas__PaymentOut": {
-        "properties": {
-          "allocations": {
-            "items": {
-              "$ref": "#/components/schemas/app__modules__billing__schemas__AllocationOut"
-            },
-            "title": "Allocations",
-            "type": "array"
-          },
-          "amount": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Amount",
-            "type": "string"
-          },
-          "client": {
-            "$ref": "#/components/schemas/ClientRef"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "currency": {
-            "title": "Currency",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "method": {
-            "title": "Method",
-            "type": "string"
-          },
-          "notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Notes"
-          },
-          "number": {
-            "title": "Number",
-            "type": "string"
-          },
-          "received_on": {
-            "format": "date",
-            "title": "Received On",
-            "type": "string"
-          },
-          "reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reference"
-          },
-          "unallocated": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Unallocated",
-            "type": "string"
-          },
-          "void_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Void Reason"
-          },
-          "voided_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Voided At"
-          }
-        },
-        "required": [
-          "id",
-          "number",
-          "client",
-          "received_on",
-          "amount",
-          "currency",
-          "method",
-          "reference",
-          "notes",
-          "unallocated",
-          "allocations",
-          "voided_at",
-          "void_reason",
-          "created_at"
-        ],
-        "title": "PaymentOut",
-        "type": "object"
-      },
-      "app__modules__billing__schemas__Sent": {
-        "properties": {
-          "document": {
-            "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
-          },
-          "emailed_to": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Emailed To"
-          },
-          "url": {
-            "title": "Url",
-            "type": "string"
-          },
-          "whatsapp_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Whatsapp Url"
-          }
-        },
-        "required": [
-          "document",
-          "url",
-          "emailed_to",
-          "whatsapp_url"
-        ],
-        "title": "Sent",
-        "type": "object"
-      },
-      "app__modules__commissions__schemas__AllocationIn": {
-        "additionalProperties": false,
-        "properties": {
-          "gross": {
-            "anyOf": [
-              {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
-              },
-              {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                "type": "string"
-              }
-            ],
-            "description": "Gross commission the insurer paid for this policy",
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Gross",
-            "type": "string"
-          },
-          "policy_id": {
-            "format": "uuid",
-            "title": "Policy Id",
-            "type": "string"
-          },
-          "wht": {
-            "anyOf": [
-              {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                    "type": "string"
-                  }
-                ],
-                "ge": 0,
-                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "As on the insurer's statement; defaults to the pack rate",
-            "title": "Wht"
-          }
-        },
-        "required": [
-          "policy_id",
-          "gross"
-        ],
-        "title": "AllocationIn",
-        "type": "object"
-      },
-      "app__modules__commissions__schemas__AllocationOut": {
-        "properties": {
-          "client_name": {
-            "title": "Client Name",
-            "type": "string"
-          },
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "gross": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Gross",
-            "type": "string"
-          },
-          "net": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Net",
-            "type": "string"
-          },
-          "policy_id": {
-            "format": "uuid",
-            "title": "Policy Id",
-            "type": "string"
-          },
-          "policy_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Policy Number"
-          },
-          "vat": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Vat",
-            "type": "string"
-          },
-          "wht": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Wht",
-            "type": "string"
-          }
-        },
-        "required": [
-          "policy_id",
-          "client_name",
-          "description",
-          "policy_number",
-          "gross",
-          "wht",
-          "vat",
-          "net"
-        ],
-        "title": "AllocationOut",
-        "type": "object"
-      },
-      "app__modules__documents__schemas__DocumentOut": {
-        "properties": {
-          "category": {
-            "title": "Category",
-            "type": "string"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "current_version_no": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Current Version No"
-          },
-          "expires_on": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expires On"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "version": {
-            "title": "Version",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "category",
-          "title",
-          "status",
-          "current_version_no",
-          "expires_on",
-          "created_at",
-          "version"
-        ],
-        "title": "DocumentOut",
-        "type": "object"
-      },
-      "app__modules__insurers__schemas__LineOut": {
-        "properties": {
-          "amount": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Amount",
-            "type": "string"
-          },
-          "charged_to": {
-            "title": "Charged To",
-            "type": "string"
-          },
-          "code": {
-            "title": "Code",
-            "type": "string"
-          },
-          "kind": {
-            "title": "Kind",
-            "type": "string"
-          },
-          "label": {
-            "title": "Label",
-            "type": "string"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "rule_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rule Id"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source"
-          }
-        },
-        "required": [
-          "code",
-          "label",
-          "kind",
-          "amount",
-          "charged_to",
-          "rule_id",
-          "source",
-          "note"
-        ],
-        "title": "LineOut",
-        "type": "object"
-      },
-      "app__modules__policies__schemas__PaymentOut": {
-        "properties": {
-          "amount": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Amount",
-            "type": "string"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "created_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created By"
-          },
-          "currency": {
-            "title": "Currency",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "method": {
-            "title": "Method",
-            "type": "string"
-          },
-          "paid_on": {
-            "format": "date",
-            "title": "Paid On",
-            "type": "string"
-          },
-          "paid_to": {
-            "title": "Paid To",
-            "type": "string"
-          },
-          "reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reference"
-          },
-          "remittance_reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Remittance Reference"
-          },
-          "remitted_on": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Remitted On"
-          },
-          "void_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Void Reason"
-          },
-          "voided_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Voided At"
-          }
-        },
-        "required": [
-          "id",
-          "amount",
-          "currency",
-          "paid_on",
-          "method",
-          "reference",
-          "paid_to",
-          "remitted_on",
-          "remittance_reference",
-          "voided_at",
-          "void_reason",
-          "created_by",
-          "created_at"
-        ],
-        "title": "PaymentOut",
-        "type": "object"
-      },
-      "app__modules__quotes__schemas__Sent": {
-        "properties": {
-          "emailed_to": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Emailed To"
-          },
-          "quote": {
-            "$ref": "#/components/schemas/QuoteOut"
-          },
-          "url": {
-            "description": "Tracked link for the client (share on WhatsApp if not emailed)",
-            "title": "Url",
-            "type": "string"
-          },
-          "whatsapp_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Whatsapp Url"
-          }
-        },
-        "required": [
-          "quote",
-          "url",
-          "emailed_to",
-          "whatsapp_url"
-        ],
-        "title": "Sent",
-        "type": "object"
       }
     }
   },
@@ -12782,7 +12819,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/BillingDocumentOut"
                 }
               }
             },
@@ -12850,7 +12887,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/BillingDocumentOut"
                 }
               }
             },
@@ -12904,7 +12941,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/BillingDocumentOut"
                 }
               }
             },
@@ -13000,7 +13037,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__Sent"
+                  "$ref": "#/components/schemas/DocumentSent"
                 }
               }
             },
@@ -13053,7 +13090,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/BillingDocumentOut"
                 }
               }
             },
@@ -14459,7 +14496,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/DocumentSummary"
+                    "$ref": "#/components/schemas/BillingDocumentSummary"
                   },
                   "title": "Response Credit Notes List",
                   "type": "array"
@@ -14520,7 +14557,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/BillingDocumentOut"
                 }
               }
             },
@@ -14859,7 +14896,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__documents__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/DocumentOut"
                 }
               }
             },
@@ -15135,7 +15172,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__documents__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/DocumentOut"
                 }
               }
             },
@@ -15715,7 +15752,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/DocumentSummary"
+                    "$ref": "#/components/schemas/BillingDocumentSummary"
                   },
                   "title": "Response Invoices List",
                   "type": "array"
@@ -15776,7 +15813,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/BillingDocumentOut"
                 }
               }
             },
@@ -15820,7 +15857,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                  "$ref": "#/components/schemas/BillingDocumentOut"
                 }
               }
             },
@@ -17317,7 +17354,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/app__modules__billing__schemas__PaymentOut"
+                    "$ref": "#/components/schemas/ReceivedPayment"
                   },
                   "title": "Response Payments List",
                   "type": "array"
@@ -17378,7 +17415,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__PaymentOut"
+                  "$ref": "#/components/schemas/ReceivedPayment"
                 }
               }
             },
@@ -17421,7 +17458,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__PaymentOut"
+                  "$ref": "#/components/schemas/ReceivedPayment"
                 }
               }
             },
@@ -17517,7 +17554,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__billing__schemas__PaymentOut"
+                  "$ref": "#/components/schemas/ReceivedPayment"
                 }
               }
             },
@@ -19642,7 +19679,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__modules__quotes__schemas__Sent"
+                  "$ref": "#/components/schemas/Sent"
                 }
               }
             },

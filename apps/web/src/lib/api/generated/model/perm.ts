@@ -37,4 +37,8 @@ export const Perm = {
   'commission:read:all': 'commission:read:all',
   'commission:manage': 'commission:manage',
   'premium:write': 'premium:write',
+  'invoice:write': 'invoice:write',
+  'invoice:issue': 'invoice:issue',
+  'payment:write': 'payment:write',
+  'catalog:manage': 'catalog:manage',
 } as const;

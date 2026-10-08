@@ -165,6 +165,13 @@ class InsuranceClassOut(BaseModel):
     rating_hint: str
 
 
+class TaxCodeOut(BaseModel):
+    code: str
+    name: str
+    rate: str = Field(description="Fraction, e.g. 0.16")
+    kind: str
+
+
 class PackOut(BaseModel):
     code: str
     version: str
@@ -172,6 +179,7 @@ class PackOut(BaseModel):
     signed: bool
     sign_off_note: str
     classes: list[InsuranceClassOut]
+    tax_codes: list[TaxCodeOut]
 
 
 # ---- calculator

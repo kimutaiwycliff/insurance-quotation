@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 import { ClientForm, fromClient, toUpdate } from "@/components/clients/client-form";
+import { ClientBilling } from "@/components/billing/client-billing";
 import { PoliciesList } from "@/components/policies/policies-list";
 import { QuotesList } from "@/components/quotes/quotes-list";
 import { TaskList } from "@/components/tasks/task-list";
@@ -38,7 +39,7 @@ import { ApiError, problemMessage } from "@/lib/problem";
 import { uploadDocument } from "@/lib/upload";
 import { cn } from "@/lib/utils";
 
-type Tab = "overview" | "timeline" | "quotes" | "policies" | "documents" | "tasks";
+type Tab = "overview" | "timeline" | "quotes" | "policies" | "billing" | "documents" | "tasks";
 
 function Overview({ client }: { client: ClientOut }) {
   const t = useTranslations("clients");
@@ -234,12 +235,13 @@ export function ClientDetail({ clientId }: { clientId: string }) {
   const queryClient = useQueryClient();
   const client = useClientsGet(clientId);
   const canWrite = useCan("client:write");
+  const canInvoice = useCan("invoice:write");
   const [tab, setTab] = useState<Tab>("overview");
   const [editing, setEditing] = useState(false);
 
   if (!client.data) return <Skeleton className="h-96 w-full" />;
   const c = client.data;
-  const tabs: Tab[] = ["overview", "timeline", "quotes", "policies", "documents", "tasks"];
+  const tabs: Tab[] = ["overview", "timeline", "quotes", "policies", ...(canInvoice ? (["billing"] as const) : []), "documents", "tasks"];
 
   return (
     <div className="grid gap-6">
@@ -261,6 +263,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
           {c.email && <Button asChild variant="outline"><a href={`mailto:${c.email}`}><Mail aria-hidden="true" /> {t("emailAction")}</a></Button>}
           {canWrite && <Button asChild variant="outline"><Link href={`/quotes/new?client=${c.id}`}>New quote</Link></Button>}
           {canWrite && <Button asChild variant="outline"><Link href={`/policies/new?client=${c.id}`}>Add policy</Link></Button>}
+          {canInvoice && <Button asChild variant="outline"><Link href={`/invoices/new?client=${c.id}`}>New invoice</Link></Button>}
           {canWrite && <Button onClick={() => setEditing(true)}>{t("edit")}</Button>}
         </div>
       </div>
@@ -286,6 +289,7 @@ export function ClientDetail({ clientId }: { clientId: string }) {
         {tab === "timeline" && <Timeline clientId={c.id} />}
         {tab === "quotes" && <QuotesList clientId={c.id} />}
         {tab === "policies" && <PoliciesList clientId={c.id} />}
+        {tab === "billing" && <ClientBilling clientId={c.id} />}
         {tab === "documents" && <Documents clientId={c.id} />}
         {tab === "tasks" && <TaskList entity={{ entity_type: "client", entity_id: c.id, label: c.display_name }} />}
       </div>
