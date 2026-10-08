@@ -3,11 +3,22 @@
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
 ## Current state (2026-10-08)
-- **Done:** R0 (M0–M2, W1) and **R1.1 agent CRM** (clients, households, leads, tasks, dashboard) on branch
-  `feat/r1-clients-leads`, stacked on `feat/w1-web-foundation` and not merged (no remote).
-- **R1 plan:** slices R1.1–R1.5 are in IMPLEMENTATION_PLAN Amendment A1.1. Next is **R1.2**: insurers and
-  products, calc engine v1, KE jurisdiction pack (values flagged *pending sign-off* until D4).
-- **Green:** `make check`, `make test`, `make e2e`, `make e2e-web` (golden path + CRM journey), web checks.
+- **Done:**
+  - R0 (M0–M2, W1);
+  - **R1.1 agent CRM**, committed on `feat/r1-clients-leads`.
+- **Done: R1.2** (insurers, premium engine, KE pack pending sign-off, calculator) on `feat/r1-2-insurers-calc`
+  (stacked, not merged, no remote). The notes below describe what it contains.
+  - Backend done and tested, not yet committed at the time of writing:
+    - `app/calc/pack.py` (pack model) and `app/calc/premium.py` (pure engine);
+    - `app/jurisdictions/` (YAML packs `ke/2026.1` *pending sign-off*, `generic/2026.1`, loader);
+    - golden scenarios `tests/golden/ke_premium.yaml` (14, hand-calculated, awaiting D4);
+    - `app/modules/insurers` (insurers, products, `/jurisdiction-pack`, `/premium/calculate`,
+      `/premium/compare`; commission hidden without `commission:read:*`);
+    - migration 0005.
+  - Web: Settings → Insurers & products, Premium calculator (Playwright journey green).
+- **Then:** R1.3 insurance quotes (snapshot calculator results into quotes, send by tracked link, accept).
+- **Env:** the `cadaster-upload` containers were stopped (with the user's OK) for Docker headroom. Restart:
+  `docker start cadaster-upload_postgres cadaster-upload_minio cadaster-upload_redis`.
 
 ## Decisions made
 | Date | Decision | Where |
@@ -29,6 +40,8 @@ Read this first when resuming work. Update it at the end of every session (newes
 - Long-lead applications to start: KRA eTIMS integrator certification, ODPC registration, Paystack, Daraja, Meta (WhatsApp), Africa's Talking, SES.
 
 ## Known quirks / gotchas
+- YAML 1.1: keys like `on`, `yes` and `no` parse as booleans (the pack field is `signed_on`, not `on`).
+- Money and rates never accept JSON numbers: `AmountStr`/`RateStr` carry `NoFloat` (422 on floats).
 - Pydantic `StringConstraints(to_upper=True, pattern=...)` checks the pattern *before* upper-casing; patterns
   must accept both cases.
 - Scope helpers use a TypeVarTuple (`def _scoped[*Ts](stmt: Select[*Ts], ...)`) so aggregate selects type-check.

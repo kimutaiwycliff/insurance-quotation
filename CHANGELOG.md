@@ -5,6 +5,27 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added — R1.2 Insurers, premium engine and Kenya pack (2026-10-08)
+- **Jurisdiction packs** (ADR-0013): versioned YAML, validated on load.
+  - `ke` 2026.1, **pending adviser sign-off**: training levy 0.2% (general), PCF 0.25% (client) plus the
+    insurer-borne 0.25%, stamp duty KES 40 / life KES 7.50 per 10,000 / marine and travel entered manually,
+    premium and commission VAT-exempt, WHT 10% agent / 5% broker / 20% non-resident, excise 20% on fees
+    (pending confirmation), 24 classes of business.
+  - `generic` 2026.1.
+- **Premium engine** (`app/calc`, pure):
+  - rating bases, minimum premium, benefits, loadings and discounts;
+  - levies by business line, class and document kind, effective dates;
+  - stamp-duty rule types; fees with tax; commission (gross, WHT, net);
+  - every line cites its rule and legal source;
+  - 14 hand-calculated golden scenarios and property tests.
+- **Insurers and products:** each agency's appointments, rates, member tiers, benefits, excess wording and
+  commission rates.
+- **Premium calculator and multi-insurer comparison:** API and screen, cheapest first, with a breakdown and the
+  agent's commission. Commission is hidden from assistants and viewers.
+- **Web:** Settings → Insurers & products; Premium calculator; a sign-off banner wherever statutory amounts
+  appear.
+- **Money and rates reject JSON numbers** (strings only), enforced by shared `NoFloat` types.
+
 ### Added — R1.1 Agent CRM: clients, leads, tasks (2026-10-08)
 - **Clients and households:**
   - individual and corporate clients with phones normalised to E.164;
