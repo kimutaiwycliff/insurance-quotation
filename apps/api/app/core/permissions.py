@@ -42,6 +42,10 @@ class Perm(StrEnum):
         "commission:manage"  # record commission received from insurers, set expectations
     )
     PREMIUM_WRITE = "premium:write"  # record, void and remit premium payments on policies
+    INVOICE_WRITE = "invoice:write"  # create and edit draft invoices and credit notes
+    INVOICE_ISSUE = "invoice:issue"  # issue, void, credit and send invoices
+    PAYMENT_WRITE = "payment:write"  # record, allocate and void payments received
+    CATALOG_MANAGE = "catalog:manage"  # items and prices
 
 
 class Role(StrEnum):
@@ -82,7 +86,14 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Perm]] = {
     Role.AGENT: _READ_BASICS
     | _CLIENT_WORK
     | _OWN_BOOK
-    | {Perm.NUMBERING_READ, Perm.COMMISSION_READ_OWN, Perm.PREMIUM_WRITE},
+    | {
+        Perm.NUMBERING_READ,
+        Perm.COMMISSION_READ_OWN,
+        Perm.PREMIUM_WRITE,
+        Perm.INVOICE_WRITE,
+        Perm.INVOICE_ISSUE,
+        Perm.PAYMENT_WRITE,
+    },
     Role.ACCOUNTS: _READ_BASICS
     | _CLIENT_WORK
     | {
@@ -94,8 +105,12 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Perm]] = {
         Perm.COMMISSION_READ_ALL,
         Perm.COMMISSION_MANAGE,
         Perm.PREMIUM_WRITE,
+        Perm.INVOICE_WRITE,
+        Perm.INVOICE_ISSUE,
+        Perm.PAYMENT_WRITE,
+        Perm.CATALOG_MANAGE,
     },
-    Role.ASSISTANT: _READ_BASICS | _CLIENT_WORK | _AGENCY_BOOK,
+    Role.ASSISTANT: _READ_BASICS | _CLIENT_WORK | _AGENCY_BOOK | {Perm.INVOICE_WRITE},
     Role.VIEWER: frozenset(
         {
             Perm.ORG_READ,

@@ -243,121 +243,6 @@
         "title": "AdjustmentIn",
         "type": "object"
       },
-      "AllocationIn": {
-        "additionalProperties": false,
-        "properties": {
-          "gross": {
-            "anyOf": [
-              {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
-              },
-              {
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                "type": "string"
-              }
-            ],
-            "description": "Gross commission the insurer paid for this policy",
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Gross",
-            "type": "string"
-          },
-          "policy_id": {
-            "format": "uuid",
-            "title": "Policy Id",
-            "type": "string"
-          },
-          "wht": {
-            "anyOf": [
-              {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-                    "type": "string"
-                  }
-                ],
-                "ge": 0,
-                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "As on the insurer's statement; defaults to the pack rate",
-            "title": "Wht"
-          }
-        },
-        "required": [
-          "policy_id",
-          "gross"
-        ],
-        "title": "AllocationIn",
-        "type": "object"
-      },
-      "AllocationOut": {
-        "properties": {
-          "client_name": {
-            "title": "Client Name",
-            "type": "string"
-          },
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "gross": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Gross",
-            "type": "string"
-          },
-          "net": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Net",
-            "type": "string"
-          },
-          "policy_id": {
-            "format": "uuid",
-            "title": "Policy Id",
-            "type": "string"
-          },
-          "policy_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Policy Number"
-          },
-          "vat": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Vat",
-            "type": "string"
-          },
-          "wht": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Wht",
-            "type": "string"
-          }
-        },
-        "required": [
-          "policy_id",
-          "client_name",
-          "description",
-          "policy_number",
-          "gross",
-          "wht",
-          "vat",
-          "net"
-        ],
-        "title": "AllocationOut",
-        "type": "object"
-      },
       "Amounts": {
         "properties": {
           "gross": {
@@ -1210,7 +1095,7 @@
           },
           "lines": {
             "items": {
-              "$ref": "#/components/schemas/LineOut"
+              "$ref": "#/components/schemas/app__modules__insurers__schemas__LineOut"
             },
             "title": "Lines",
             "type": "array"
@@ -1309,6 +1194,45 @@
           "currency"
         ],
         "title": "Choice",
+        "type": "object"
+      },
+      "ClientAccount": {
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "credit": {
+            "description": "Paid or credited but not yet applied to an invoice",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Credit",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "open_invoices": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentSummary"
+            },
+            "title": "Open Invoices",
+            "type": "array"
+          },
+          "owed": {
+            "description": "Receivable: open invoice balances (from the ledger)",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Owed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client",
+          "currency",
+          "owed",
+          "credit",
+          "open_invoices"
+        ],
+        "title": "ClientAccount",
         "type": "object"
       },
       "ClientCreate": {
@@ -2931,6 +2855,44 @@
         "title": "Converted",
         "type": "object"
       },
+      "CreditNoteCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "invoice_id": {
+            "format": "uuid",
+            "title": "Invoice Id",
+            "type": "string"
+          },
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/LineInput"
+                },
+                "maxItems": 200,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omit to credit the whole invoice",
+            "title": "Lines"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoice_id",
+          "reason"
+        ],
+        "title": "CreditNoteCreate",
+        "type": "object"
+      },
       "Dashboard": {
         "properties": {
           "book": {
@@ -3211,29 +3173,26 @@
         "title": "DocumentLinkOut",
         "type": "object"
       },
-      "DocumentOut": {
+      "DocumentSummary": {
         "properties": {
-          "category": {
-            "title": "Category",
+          "balance": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Balance",
             "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
           },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
             "type": "string"
           },
-          "current_version_no": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Current Version No"
+          "currency": {
+            "title": "Currency",
+            "type": "string"
           },
-          "expires_on": {
+          "due_date": {
             "anyOf": [
               {
                 "format": "date",
@@ -3243,37 +3202,85 @@
                 "type": "null"
               }
             ],
-            "title": "Expires On"
+            "title": "Due Date"
           },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
           },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "kind": {
+            "enum": [
+              "invoice",
+              "credit_note"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "paid": {
+            "description": "Allocated to an invoice, or applied from a credit note",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Paid",
+            "type": "string"
+          },
           "status": {
+            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.",
+            "enum": [
+              "draft",
+              "open",
+              "partially_paid",
+              "paid",
+              "overdue",
+              "issued",
+              "void"
+            ],
             "title": "Status",
             "type": "string"
           },
-          "title": {
-            "title": "Title",
+          "total": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total",
             "type": "string"
-          },
-          "version": {
-            "title": "Version",
-            "type": "integer"
           }
         },
         "required": [
           "id",
-          "category",
-          "title",
+          "kind",
+          "number",
+          "client",
           "status",
-          "current_version_no",
-          "expires_on",
-          "created_at",
-          "version"
+          "currency",
+          "issue_date",
+          "due_date",
+          "total",
+          "paid",
+          "balance",
+          "created_at"
         ],
-        "title": "DocumentOut",
+        "title": "DocumentSummary",
         "type": "object"
       },
       "DocumentUpdate": {
@@ -3545,6 +3552,19 @@
           "required"
         ],
         "title": "FieldInfo",
+        "type": "object"
+      },
+      "FileLink": {
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "FileLink",
         "type": "object"
       },
       "FromQuote": {
@@ -4334,6 +4354,425 @@
         "title": "InsurerUpdate",
         "type": "object"
       },
+      "InvoiceCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "due_in_days": {
+            "default": 14,
+            "maximum": 365.0,
+            "minimum": 0.0,
+            "title": "Due In Days",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/LineInput"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Lines",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "prices_include_tax": {
+            "default": false,
+            "title": "Prices Include Tax",
+            "type": "boolean"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "terms": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms"
+          }
+        },
+        "required": [
+          "lines",
+          "client_id"
+        ],
+        "title": "InvoiceCreate",
+        "type": "object"
+      },
+      "InvoiceUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "due_in_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due In Days"
+          },
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/LineInput"
+                },
+                "maxItems": 200,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "prices_include_tax": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prices Include Tax"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "terms": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms"
+          }
+        },
+        "title": "InvoiceUpdate",
+        "type": "object"
+      },
+      "Issue": {
+        "additionalProperties": false,
+        "properties": {
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to today",
+            "title": "Issue Date"
+          }
+        },
+        "title": "Issue",
+        "type": "object"
+      },
+      "ItemIn": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "maxLength": 3,
+                "minLength": 3,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to the agency's currency",
+            "title": "Currency"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "tax_code": {
+            "description": "A tax code of the jurisdiction pack, e.g. vat_standard",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Tax Code",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Unit Price",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "unit_price",
+          "tax_code"
+        ],
+        "title": "ItemIn",
+        "type": "object"
+      },
+      "ItemOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "tax_code": {
+            "title": "Tax Code",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "unit_price": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Unit Price",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "unit",
+          "unit_price",
+          "currency",
+          "tax_code",
+          "active",
+          "version",
+          "created_at"
+        ],
+        "title": "ItemOut",
+        "type": "object"
+      },
+      "ItemUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "tax_code": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Code"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "ge": 0,
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price"
+          }
+        },
+        "title": "ItemUpdate",
+        "type": "object"
+      },
       "LeadCreate": {
         "additionalProperties": false,
         "properties": {
@@ -4792,74 +5231,109 @@
         "title": "LeadUpdate",
         "type": "object"
       },
-      "LineOut": {
+      "LineInput": {
+        "additionalProperties": false,
         "properties": {
-          "amount": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to the item's name",
+            "title": "Description"
+          },
+          "discount_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "default": 0,
+            "description": "Fraction, e.g. 0.1 = 10% off",
+            "ge": 0,
+            "le": 1,
+            "pattern": "^(0(\\.\\d{1,8})?|1(\\.0+)?)$",
+            "title": "Discount Rate",
+            "type": "string"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Amount",
+            "title": "Quantity",
             "type": "string"
           },
-          "charged_to": {
-            "title": "Charged To",
-            "type": "string"
-          },
-          "code": {
-            "title": "Code",
-            "type": "string"
-          },
-          "kind": {
-            "title": "Kind",
-            "type": "string"
-          },
-          "label": {
-            "title": "Label",
-            "type": "string"
-          },
-          "note": {
+          "tax_code": {
             "anyOf": [
               {
+                "maxLength": 40,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Note"
+            "description": "Defaults to the item's tax code",
+            "title": "Tax Code"
           },
-          "rule_id": {
+          "unit_price": {
             "anyOf": [
               {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "ge": 0,
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Rule Id"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source"
+            "description": "Defaults to the item's price",
+            "title": "Unit Price"
           }
         },
         "required": [
-          "code",
-          "label",
-          "kind",
-          "amount",
-          "charged_to",
-          "rule_id",
-          "source",
-          "note"
+          "quantity"
         ],
-        "title": "LineOut",
+        "title": "LineInput",
         "type": "object"
       },
       "LinkCreate": {
@@ -6366,7 +6840,7 @@
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/DocumentOut"
+              "$ref": "#/components/schemas/app__modules__documents__schemas__DocumentOut"
             },
             "title": "Items",
             "type": "array"
@@ -6444,6 +6918,96 @@
           "items"
         ],
         "title": "Page[NotificationOut]",
+        "type": "object"
+      },
+      "PaymentCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "allocations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__AllocationIn"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omit to apply the payment to the client's open invoices, oldest first",
+            "title": "Allocations"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "method": {
+            "default": "mpesa",
+            "enum": [
+              "mpesa",
+              "bank",
+              "card",
+              "cheque",
+              "cash",
+              "other"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 3000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "received_on": {
+            "format": "date",
+            "title": "Received On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "client_id",
+          "amount",
+          "received_on"
+        ],
+        "title": "PaymentCreate",
         "type": "object"
       },
       "PaymentDefaults": {
@@ -6610,127 +7174,6 @@
         "title": "PaymentIn",
         "type": "object"
       },
-      "PaymentOut": {
-        "properties": {
-          "amount": {
-            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
-            "title": "Amount",
-            "type": "string"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "created_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created By"
-          },
-          "currency": {
-            "title": "Currency",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "method": {
-            "title": "Method",
-            "type": "string"
-          },
-          "paid_on": {
-            "format": "date",
-            "title": "Paid On",
-            "type": "string"
-          },
-          "paid_to": {
-            "title": "Paid To",
-            "type": "string"
-          },
-          "reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reference"
-          },
-          "remittance_reference": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Remittance Reference"
-          },
-          "remitted_on": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Remitted On"
-          },
-          "void_reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Void Reason"
-          },
-          "voided_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Voided At"
-          }
-        },
-        "required": [
-          "id",
-          "amount",
-          "currency",
-          "paid_on",
-          "method",
-          "reference",
-          "paid_to",
-          "remitted_on",
-          "remittance_reference",
-          "voided_at",
-          "void_reason",
-          "created_by",
-          "created_at"
-        ],
-        "title": "PaymentOut",
-        "type": "object"
-      },
       "PdfLink": {
         "properties": {
           "url": {
@@ -6773,7 +7216,11 @@
           "commission:read:own",
           "commission:read:all",
           "commission:manage",
-          "premium:write"
+          "premium:write",
+          "invoice:write",
+          "invoice:issue",
+          "payment:write",
+          "catalog:manage"
         ],
         "title": "Perm",
         "type": "string"
@@ -7224,7 +7671,7 @@
           },
           "payments": {
             "items": {
-              "$ref": "#/components/schemas/PaymentOut"
+              "$ref": "#/components/schemas/app__modules__policies__schemas__PaymentOut"
             },
             "title": "Payments",
             "type": "array"
@@ -8910,7 +9357,7 @@
           },
           "lines": {
             "items": {
-              "$ref": "#/components/schemas/AllocationIn"
+              "$ref": "#/components/schemas/app__modules__commissions__schemas__AllocationIn"
             },
             "maxItems": 500,
             "minItems": 1,
@@ -9006,7 +9453,7 @@
           },
           "lines": {
             "items": {
-              "$ref": "#/components/schemas/AllocationOut"
+              "$ref": "#/components/schemas/app__modules__commissions__schemas__AllocationOut"
             },
             "title": "Lines",
             "type": "array"
@@ -10032,6 +10479,31 @@
         "title": "SchemeUpdate",
         "type": "object"
       },
+      "Send": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "message": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "title": "Send",
+        "type": "object"
+      },
       "SendQuote": {
         "additionalProperties": false,
         "properties": {
@@ -10085,48 +10557,6 @@
           "name"
         ],
         "title": "SendTo",
-        "type": "object"
-      },
-      "Sent": {
-        "properties": {
-          "emailed_to": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Emailed To"
-          },
-          "quote": {
-            "$ref": "#/components/schemas/QuoteOut"
-          },
-          "url": {
-            "description": "Tracked link for the client (share on WhatsApp if not emailed)",
-            "title": "Url",
-            "type": "string"
-          },
-          "whatsapp_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Whatsapp Url"
-          }
-        },
-        "required": [
-          "quote",
-          "url",
-          "emailed_to",
-          "whatsapp_url"
-        ],
-        "title": "Sent",
         "type": "object"
       },
       "StageSummary": {
@@ -10664,6 +11094,41 @@
         "title": "TaskUpdate",
         "type": "object"
       },
+      "TaxLine": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rate": {
+            "title": "Rate",
+            "type": "string"
+          },
+          "tax": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Tax",
+            "type": "string"
+          },
+          "taxable": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Taxable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "rate",
+          "taxable",
+          "tax"
+        ],
+        "title": "TaxLine",
+        "type": "object"
+      },
       "TemplateOut": {
         "properties": {
           "description": {
@@ -10916,7 +11381,7 @@
       "UploadStarted": {
         "properties": {
           "document": {
-            "$ref": "#/components/schemas/DocumentOut"
+            "$ref": "#/components/schemas/app__modules__documents__schemas__DocumentOut"
           },
           "upload": {
             "$ref": "#/components/schemas/UploadTicket"
@@ -11072,6 +11537,22 @@
         "title": "VersionOut",
         "type": "object"
       },
+      "Void": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "Void",
+        "type": "object"
+      },
       "VoidPayment": {
         "additionalProperties": false,
         "properties": {
@@ -11145,6 +11626,1036 @@
           "certificate"
         ],
         "title": "WhtCertificate",
+        "type": "object"
+      },
+      "app__modules__billing__schemas__AllocationIn": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "invoice_id": {
+            "format": "uuid",
+            "title": "Invoice Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invoice_id",
+          "amount"
+        ],
+        "title": "AllocationIn",
+        "type": "object"
+      },
+      "app__modules__billing__schemas__AllocationOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invoice_id": {
+            "format": "uuid",
+            "title": "Invoice Id",
+            "type": "string"
+          },
+          "invoice_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Number"
+          },
+          "source": {
+            "enum": [
+              "payment",
+              "credit_note"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Number"
+          }
+        },
+        "required": [
+          "id",
+          "invoice_id",
+          "invoice_number",
+          "source",
+          "source_id",
+          "source_number",
+          "amount",
+          "created_at"
+        ],
+        "title": "AllocationOut",
+        "type": "object"
+      },
+      "app__modules__billing__schemas__DocumentOut": {
+        "properties": {
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/app__modules__billing__schemas__AllocationOut"
+            },
+            "title": "Allocations",
+            "type": "array"
+          },
+          "balance": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Balance",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "credit_notes": {
+            "description": "Credit notes issued against this invoice",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Credit Notes",
+            "type": "array"
+          },
+          "credits_document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credits Document Id"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "discount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Discount",
+            "type": "string"
+          },
+          "document_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issue_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Date"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "kind": {
+            "enum": [
+              "invoice",
+              "credit_note"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/app__modules__billing__schemas__LineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "paid": {
+            "description": "Allocated to an invoice, or applied from a credit note",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Paid",
+            "type": "string"
+          },
+          "payment_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Reference"
+          },
+          "prices_include_tax": {
+            "title": "Prices Include Tax",
+            "type": "boolean"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "status": {
+            "description": "Invoices: draft, open, partially_paid, paid, overdue or void. Credit notes: draft, issued or void.",
+            "enum": [
+              "draft",
+              "open",
+              "partially_paid",
+              "paid",
+              "overdue",
+              "issued",
+              "void"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subtotal": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Subtotal",
+            "type": "string"
+          },
+          "tax": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Tax",
+            "type": "string"
+          },
+          "taxes": {
+            "items": {
+              "$ref": "#/components/schemas/TaxLine"
+            },
+            "title": "Taxes",
+            "type": "array"
+          },
+          "terms": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms"
+          },
+          "total": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "void_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Void Reason"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "number",
+          "client",
+          "status",
+          "currency",
+          "issue_date",
+          "due_date",
+          "total",
+          "paid",
+          "balance",
+          "created_at",
+          "lines",
+          "subtotal",
+          "discount",
+          "tax",
+          "taxes",
+          "prices_include_tax",
+          "payment_reference",
+          "credits_document_id",
+          "reference",
+          "notes",
+          "terms",
+          "issued_at",
+          "voided_at",
+          "void_reason",
+          "allocations",
+          "credit_notes",
+          "document_id",
+          "version"
+        ],
+        "title": "DocumentOut",
+        "type": "object"
+      },
+      "app__modules__billing__schemas__LineOut": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "discount_rate": {
+            "title": "Discount Rate",
+            "type": "string"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Net",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "quantity": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Quantity",
+            "type": "string"
+          },
+          "tax": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Tax",
+            "type": "string"
+          },
+          "tax_code": {
+            "title": "Tax Code",
+            "type": "string"
+          },
+          "tax_rate": {
+            "title": "Tax Rate",
+            "type": "string"
+          },
+          "total": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Total",
+            "type": "string"
+          },
+          "unit_price": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Unit Price",
+            "type": "string"
+          }
+        },
+        "required": [
+          "position",
+          "item_id",
+          "description",
+          "quantity",
+          "unit_price",
+          "discount_rate",
+          "tax_code",
+          "tax_rate",
+          "net",
+          "tax",
+          "total"
+        ],
+        "title": "LineOut",
+        "type": "object"
+      },
+      "app__modules__billing__schemas__PaymentOut": {
+        "properties": {
+          "allocations": {
+            "items": {
+              "$ref": "#/components/schemas/app__modules__billing__schemas__AllocationOut"
+            },
+            "title": "Allocations",
+            "type": "array"
+          },
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ClientRef"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "received_on": {
+            "format": "date",
+            "title": "Received On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "unallocated": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Unallocated",
+            "type": "string"
+          },
+          "void_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Void Reason"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "client",
+          "received_on",
+          "amount",
+          "currency",
+          "method",
+          "reference",
+          "notes",
+          "unallocated",
+          "allocations",
+          "voided_at",
+          "void_reason",
+          "created_at"
+        ],
+        "title": "PaymentOut",
+        "type": "object"
+      },
+      "app__modules__billing__schemas__Sent": {
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+          },
+          "emailed_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emailed To"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "whatsapp_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Url"
+          }
+        },
+        "required": [
+          "document",
+          "url",
+          "emailed_to",
+          "whatsapp_url"
+        ],
+        "title": "Sent",
+        "type": "object"
+      },
+      "app__modules__commissions__schemas__AllocationIn": {
+        "additionalProperties": false,
+        "properties": {
+          "gross": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "description": "Gross commission the insurer paid for this policy",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "policy_id": {
+            "format": "uuid",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "wht": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                    "type": "string"
+                  }
+                ],
+                "ge": 0,
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "As on the insurer's statement; defaults to the pack rate",
+            "title": "Wht"
+          }
+        },
+        "required": [
+          "policy_id",
+          "gross"
+        ],
+        "title": "AllocationIn",
+        "type": "object"
+      },
+      "app__modules__commissions__schemas__AllocationOut": {
+        "properties": {
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "gross": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Gross",
+            "type": "string"
+          },
+          "net": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Net",
+            "type": "string"
+          },
+          "policy_id": {
+            "format": "uuid",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "policy_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Number"
+          },
+          "vat": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Vat",
+            "type": "string"
+          },
+          "wht": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Wht",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy_id",
+          "client_name",
+          "description",
+          "policy_number",
+          "gross",
+          "wht",
+          "vat",
+          "net"
+        ],
+        "title": "AllocationOut",
+        "type": "object"
+      },
+      "app__modules__documents__schemas__DocumentOut": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "current_version_no": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version No"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "title",
+          "status",
+          "current_version_no",
+          "expires_on",
+          "created_at",
+          "version"
+        ],
+        "title": "DocumentOut",
+        "type": "object"
+      },
+      "app__modules__insurers__schemas__LineOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "charged_to": {
+            "title": "Charged To",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "kind",
+          "amount",
+          "charged_to",
+          "rule_id",
+          "source",
+          "note"
+        ],
+        "title": "LineOut",
+        "type": "object"
+      },
+      "app__modules__policies__schemas__PaymentOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "paid_to": {
+            "title": "Paid To",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "remittance_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remittance Reference"
+          },
+          "remitted_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remitted On"
+          },
+          "void_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Void Reason"
+          },
+          "voided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voided At"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "paid_on",
+          "method",
+          "reference",
+          "paid_to",
+          "remitted_on",
+          "remittance_reference",
+          "voided_at",
+          "void_reason",
+          "created_by",
+          "created_at"
+        ],
+        "title": "PaymentOut",
+        "type": "object"
+      },
+      "app__modules__quotes__schemas__Sent": {
+        "properties": {
+          "emailed_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emailed To"
+          },
+          "quote": {
+            "$ref": "#/components/schemas/QuoteOut"
+          },
+          "url": {
+            "description": "Tracked link for the client (share on WhatsApp if not emailed)",
+            "title": "Url",
+            "type": "string"
+          },
+          "whatsapp_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp Url"
+          }
+        },
+        "required": [
+          "quote",
+          "url",
+          "emailed_to",
+          "whatsapp_url"
+        ],
+        "title": "Sent",
         "type": "object"
       }
     }
@@ -11248,6 +12759,320 @@
         "summary": "List Audit Events",
         "tags": [
           "audit"
+        ]
+      }
+    },
+    "/api/v1/billing-documents/{document_id}": {
+      "get": {
+        "operationId": "billing_documents_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Document",
+        "tags": [
+          "billing"
+        ]
+      },
+      "patch": {
+        "description": "Edit a draft. Issued documents are corrected with a credit note.",
+        "operationId": "billing_documents_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Document",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing-documents/{document_id}/issue": {
+      "post": {
+        "description": "Number it, freeze it and post it to the ledger.",
+        "operationId": "billing_documents_issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Issue"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Issue",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing-documents/{document_id}/pdf": {
+      "get": {
+        "operationId": "billing_documents_pdf",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileLink"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pdf",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing-documents/{document_id}/send": {
+      "post": {
+        "operationId": "billing_documents_send",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Send"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__Sent"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing-documents/{document_id}/void": {
+      "post": {
+        "operationId": "billing_documents_void",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Void"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Void",
+        "tags": [
+          "billing"
         ]
       }
     },
@@ -11907,6 +13732,50 @@
         ]
       }
     },
+    "/api/v1/clients/{client_id}/account": {
+      "get": {
+        "description": "What the client owes (from the ledger), their unapplied credit and open invoices.",
+        "operationId": "clients_account",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientAccount"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Client Account",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
     "/api/v1/clients/{client_id}/activities": {
       "get": {
         "operationId": "clients_activities_list",
@@ -12550,6 +14419,130 @@
         ]
       }
     },
+    "/api/v1/credit-notes": {
+      "get": {
+        "operationId": "credit_notes_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentSummary"
+                  },
+                  "title": "Response Credit Notes List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Credit Notes",
+        "tags": [
+          "billing"
+        ]
+      },
+      "post": {
+        "description": "Draft a credit note against an issued invoice (all of it, or the lines given).",
+        "operationId": "credit_notes_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditNoteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Credit Note",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
     "/api/v1/dashboard": {
       "get": {
         "operationId": "dashboard_get",
@@ -12866,7 +14859,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DocumentOut"
+                  "$ref": "#/components/schemas/app__modules__documents__schemas__DocumentOut"
                 }
               }
             },
@@ -13142,7 +15135,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DocumentOut"
+                  "$ref": "#/components/schemas/app__modules__documents__schemas__DocumentOut"
                 }
               }
             },
@@ -13662,6 +15655,346 @@
         "summary": "Update Insurer",
         "tags": [
           "insurers"
+        ]
+      }
+    },
+    "/api/v1/invoices": {
+      "get": {
+        "operationId": "invoices_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(draft|unpaid|open|partially_paid|overdue|paid|issued|void)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentSummary"
+                  },
+                  "title": "Response Invoices List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Invoices",
+        "tags": [
+          "billing"
+        ]
+      },
+      "post": {
+        "description": "Create a draft invoice (no number yet).",
+        "operationId": "invoices_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Invoice",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/invoices/{invoice_id}/apply-credit": {
+      "post": {
+        "description": "Use the client's unapplied payments and credit notes to pay this invoice.",
+        "operationId": "invoices_apply_credit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__DocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Credit",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/items": {
+      "get": {
+        "operationId": "items_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_inactive",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Inactive",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ItemOut"
+                  },
+                  "title": "Response Items List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Items",
+        "tags": [
+          "catalog"
+        ]
+      },
+      "post": {
+        "operationId": "items_create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Item",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/items/{item_id}": {
+      "patch": {
+        "operationId": "items_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Item",
+        "tags": [
+          "catalog"
         ]
       }
     },
@@ -14941,6 +17274,269 @@
         "summary": "Update Organization",
         "tags": [
           "organization"
+        ]
+      }
+    },
+    "/api/v1/payments": {
+      "get": {
+        "operationId": "payments_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/app__modules__billing__schemas__PaymentOut"
+                  },
+                  "title": "Response Payments List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Payments",
+        "tags": [
+          "billing"
+        ]
+      },
+      "post": {
+        "description": "Record money the client paid into your account; it is applied to their invoices, oldest first.",
+        "operationId": "payments_create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__PaymentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Payment",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/payments/{payment_id}": {
+      "get": {
+        "operationId": "payments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__PaymentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Payment",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/payments/{payment_id}/receipt": {
+      "get": {
+        "operationId": "payments_receipt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileLink"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Receipt",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/payments/{payment_id}/void": {
+      "post": {
+        "operationId": "payments_void",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Void"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__modules__billing__schemas__PaymentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Void Payment",
+        "tags": [
+          "billing"
         ]
       }
     },
@@ -17046,7 +19642,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Sent"
+                  "$ref": "#/components/schemas/app__modules__quotes__schemas__Sent"
                 }
               }
             },

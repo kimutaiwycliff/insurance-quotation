@@ -13,8 +13,10 @@ Write the ADR when the milestone that needs it starts (backlog in `docs/IMPLEMEN
 | [0006](0006-auth-topology.md) | Authentication topology & JWT flow | Accepted | 2026-10-07 |
 | [0007](0007-roles-and-permissions.md) | Roles & permissions (agent-first) | Accepted | 2026-10-07 |
 | [0008](0008-money-and-currencies.md) | Money, currencies & rounding | Accepted | 2026-10-07 |
+| [0009](0009-billing-document-states.md) | Billing document states & immutability | Accepted | 2026-10-08 |
 | [0010](0010-numbering-and-payment-references.md) | Document numbering & payment references | Accepted | 2026-10-07 |
 | [0011](0011-idempotency-and-concurrency.md) | Idempotency keys & optimistic concurrency | Accepted | 2026-10-07 |
+| [0012](0012-ledger.md) | Double-entry ledger for billing | Accepted | 2026-10-08 |
 | [0013](0013-jurisdiction-packs.md) | Jurisdiction pack format & loader | Accepted | 2026-10-08 |
 | [0014](0014-template-rendering-and-public-pages.md) | Template rendering & public-page isolation | Accepted | 2026-10-07 |
 | [0018](0018-pii-encryption.md) | PII encryption & key management | Accepted | 2026-10-08 |

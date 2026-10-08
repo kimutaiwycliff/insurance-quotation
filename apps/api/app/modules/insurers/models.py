@@ -4,13 +4,11 @@ import uuid
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import CHAR, ForeignKeyConstraint, Index, Numeric, UniqueConstraint, text
+from sqlalchemy import CHAR, ForeignKeyConstraint, Index, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import CITEXT, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.models import Audited, Base, MoneyColumn, TenantScoped, Versioned
-
-RateColumn = Numeric(12, 8, asdecimal=True)  # fractions, e.g. 0.035 = 3.5%
+from app.core.models import Audited, Base, MoneyColumn, RateColumn, TenantScoped, Versioned
 
 
 class Insurer(TenantScoped, Audited, Versioned, Base):

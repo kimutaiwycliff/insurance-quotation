@@ -41,6 +41,7 @@ __all__ = [
     "PublicContent",
     "PublicLink",
     "SendTo",
+    "TargetResolver",
     "create_link",
     "link_url",
     "register_actions",

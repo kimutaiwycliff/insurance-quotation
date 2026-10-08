@@ -17,6 +17,8 @@ from app.core.logging import configure_logging
 from app.core.middleware import REQUEST_ID_HEADER, RequestContextMiddleware
 from app.core.security import KeySource
 from app.core.telemetry import configure_sentry
+from app.modules.billing import router as billing_router
+from app.modules.catalog import router as catalog_router
 from app.modules.clients import router as clients_router
 from app.modules.commissions import router as commissions_router
 from app.modules.dashboard import router as dashboard_router
@@ -62,6 +64,8 @@ def api_v1_router() -> APIRouter:
     router.include_router(policies_router.router)
     router.include_router(commissions_router.router)
     router.include_router(imports_router.router)
+    router.include_router(catalog_router.router)
+    router.include_router(billing_router.router)
     router.include_router(notifications_router.router)
     router.include_router(messaging_router.public_router)
     # Anonymous routes (token-scoped, per-IP rate limited); no require_permission by design.
