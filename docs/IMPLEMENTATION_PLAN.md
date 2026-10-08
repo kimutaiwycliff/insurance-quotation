@@ -49,6 +49,19 @@ pull request with all CI checks green (`main` is protected).
 | R2.5 | M-Pesa Daraja direct (STK Push, C2B, unmatched queue, reconciliation) | R2.3; Daraja sandbox |
 | R2.6 | SaaS plans, entitlements and our own subscription billing | D8 prices |
 
+### A1.3 R2 re-sliced after product decisions (2026-10-08)
+Decisions: payments by **M-Pesa Daraja only** (cards shown as "coming soon", Paystack on hold; ADR-0015);
+**eTIMS optional** with a manual reference (ADR-0017); hosting on **one VM with Docker Compose**
+(ADR-0020); plans per `docs/PRICING.md` (D8, proposal); name and domain still open (D7). R2.1 and R2.2 are
+done. Remaining R2 slices replace A1.2 rows R2.3–R2.6:
+
+| Slice | Scope | Blocked by |
+|---|---|---|
+| **R2.3** | M-Pesa Daraja: tenant connections (encrypted), STK Push from the invoice link and the app, STK Query confirmation, C2B confirmation and validation, unmatched-payments queue, daily reconciliation; cards "coming soon" | Daraja sandbox keys for the sandbox smoke test only |
+| R2.4 | Optional eTIMS: tenant toggle, manual CU number and QR on invoices and credit notes | — |
+| R2.5 | Plans and entitlements (Free / Agent / Agency / Business), 30-day trial, M-Pesa subscription billing on the platform shortcode, founding-member and referral offers | D8 sign-off on prices |
+| R2.6 | Production on a VM: `compose.prod.yaml` with Caddy TLS, backups and restore drill, deploy and rollback runbook, monitoring | D7 domain to go live |
+
 ---
 
 ## 1. Strategy in one page
