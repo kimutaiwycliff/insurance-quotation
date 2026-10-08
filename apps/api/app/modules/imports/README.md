@@ -1,8 +1,11 @@
 # imports
 
-Bring an agent's existing book (clients and policies) in from a spreadsheet saved as **CSV** (Plan A1.1 R1.5).
-Excel files (`.xlsx`) would need a new dependency (`openpyxl`, ADR-0001 rule). Until that is approved, agents
-use Excel's "Save as CSV UTF-8".
+Bring an agent's existing book (clients and policies) in from a spreadsheet: **Excel (.xlsx, first sheet)**
+or **CSV** (Plan A1.1 R1.5).
+- Excel cells become the text an agent would have typed: dates as ISO, whole numbers without ".0", booleans
+  as yes/no.
+- Formulas are read as their last saved values.
+- `openpyxl` runs with `defusedxml`; old `.xls` files are refused with a hint to save as `.xlsx`.
 
 - `POST /imports/policies/preview` reads the file and saves nothing:
   - detects the columns from common headings ("Insured", "Reg No", "Inception Date", "Expiry", "Comm %"...);

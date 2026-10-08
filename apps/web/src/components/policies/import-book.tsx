@@ -17,8 +17,26 @@ import { cn } from "@/lib/utils";
 
 const MAX_BYTES = 2_000_000;
 
+interface Picked {
+  name: string;
+  /** CSV text, or the .xlsx file base64-encoded */
+  csv?: string;
+  xlsx?: string;
+}
+
+function toBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+function fileBody(file: Picked) {
+  return file.xlsx ? { filename: file.name, xlsx_base64: file.xlsx } : { filename: file.name, csv: file.csv ?? "" };
+}
+
 export function ImportBook() {
-  const [file, setFile] = useState<{ name: string; text: string } | null>(null);
+  const [file, setFile] = useState<Picked | null>(null);
   const [assumePaid, setAssumePaid] = useState(true);
   const [mapping, setMapping] = useState<Record<string, string> | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
@@ -29,15 +47,14 @@ export function ImportBook() {
   const currency = useOrganizationGet().data?.default_currency ?? "KES";
 
   async function check(
-    next: { name: string; text: string } = file!,
+    next: Picked = file!,
     map: Record<string, string> | null = mapping,
   ) {
     setBusy(true);
     setError(null);
     try {
       const out = await importsPoliciesPreview({
-        filename: next.name,
-        csv: next.text,
+        ...fileBody(next),
         mapping: map ?? undefined,
         assume_paid: assumePaid,
       });
@@ -59,9 +76,14 @@ export function ImportBook() {
     if (!f) return;
     if (f.size > MAX_BYTES)
       return setError("The file is larger than 2 MB. Split it into smaller files.");
-    if (!/\.csv$/i.test(f.name))
-      return setError("Choose a .csv file. In Excel: File, Save As, then 'CSV UTF-8'.");
-    const next = { name: f.name, text: await f.text() };
+    if (/\.xls$/i.test(f.name))
+      return setError(
+        "This is an old Excel file (.xls). In Excel choose File, Save As, then 'Excel Workbook (.xlsx)'.",
+      );
+    if (!/\.(csv|xlsx)$/i.test(f.name)) return setError("Choose an Excel (.xlsx) or CSV file.");
+    const next: Picked = /\.xlsx$/i.test(f.name)
+      ? { name: f.name, xlsx: toBase64(await f.arrayBuffer()) }
+      : { name: f.name, csv: await f.text() };
     setFile(next);
     setResult(null);
     setMapping(null);
@@ -75,8 +97,7 @@ export function ImportBook() {
     try {
       setResult(
         await importsPoliciesRun({
-          filename: file.name,
-          csv: file.text,
+          ...fileBody(file),
           mapping: mapping ?? undefined,
           assume_paid: assumePaid,
           skip_errors: skipErrors,
@@ -126,18 +147,18 @@ export function ImportBook() {
         <h1 className="text-3xl">Import your book</h1>
         <p className="text-muted-foreground mt-1 max-w-prose">
           Bring in the policies you already look after from a spreadsheet: one row per policy, with
-          the client, insurer, class, start date and premium. Save it from Excel or Google Sheets as
-          CSV. You will see every row before anything is saved.
+          the client, insurer, class, start date and premium. Upload the Excel file (.xlsx, first
+          sheet) or a CSV. You will see every row before anything is saved.
         </p>
       </div>
       <FormError message={error} />
       <div className="flex flex-wrap items-center gap-4">
         <label className="bg-card hover:border-primary focus-within:ring-ring inline-flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 font-bold focus-within:ring-2">
           <FileUp className="size-5" aria-hidden="true" />{" "}
-          {file ? "Choose another file" : "Choose CSV file"}
+          {file ? "Choose another file" : "Choose Excel or CSV file"}
           <input
             type="file"
-            accept=".csv,text/csv"
+            accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             className="sr-only"
             onChange={(e) => choose(e.target.files?.[0])}
           />

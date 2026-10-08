@@ -1,6 +1,11 @@
 """Book import from CSV: column detection, row checks, client matching, duplicates, one transaction."""
 
+import base64
+import io
+from datetime import datetime
+
 import httpx
+from openpyxl import Workbook
 
 from tests.support import Org
 
@@ -127,3 +132,43 @@ async def test_mapping_problems_and_unpaid(api: httpx.AsyncClient, ready_org: Or
             headers=viewer,
         )
     ).status_code == 403
+
+
+async def test_import_from_excel(api: httpx.AsyncClient, ready_org: Org) -> None:
+    book = Workbook()
+    sheet = book.active
+    assert sheet is not None
+    sheet.append(
+        ["Client name", "Mobile", "Insurer", "Class", "Policy No", "Start Date", "Premium"]
+    )
+    sheet.append(
+        [
+            "Jane Wairimu",
+            "0733 444 555",
+            "Savanna General",
+            "Home",
+            "SG/H/9",
+            datetime(2026, 2, 1),  # noqa: DTZ001 - Excel dates are naive
+            8000.0,
+        ]
+    )
+    raw = io.BytesIO()
+    book.save(raw)
+    body = {"filename": "book.xlsx", "xlsx_base64": base64.b64encode(raw.getvalue()).decode()}
+    h = ready_org.headers()
+    preview = (await api.post("/api/v1/imports/policies/preview", json=body, headers=h)).json()
+    assert (preview["ok"], preview["errors"]) == (1, 0)
+    assert preview["rows"][0]["start_date"] == "2026-02-01"
+    assert preview["rows"][0]["premium"] == "8000"
+    done = await api.post("/api/v1/imports/policies", json=body, headers=h)
+    assert done.json()["policies_created"] == 1
+    both = await api.post(
+        "/api/v1/imports/policies/preview", json=body | {"csv": "a,b\n1,2\n"}, headers=h
+    )
+    assert both.status_code == 422
+    junk = await api.post(
+        "/api/v1/imports/policies/preview",
+        json={"filename": "x.xlsx", "xlsx_base64": base64.b64encode(b"not excel").decode()},
+        headers=h,
+    )
+    assert junk.json()["code"] == "import_invalid"

@@ -5,6 +5,12 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added
+- Book import accepts **Excel (.xlsx)** files as well as CSV. Dates, numbers and yes/no cells are read as
+  typed; old `.xls` files get a hint to resave.
+- Pricing approved (docs/PRICING.md); payment, eTIMS and hosting decisions recorded (ADR-0015, ADR-0017,
+  ADR-0020).
+
 ### Added: R2.2 Sales quotes, reminders, invoicing dashboard (2026-10-08)
 - **Sales quotes:**
   - section headings and optional extras;

@@ -1,9 +1,11 @@
 """Spreadsheet import helpers: the formats Kenyan agents actually use, and commission arithmetic."""
 
-from datetime import date
+import io
+from datetime import date, datetime
 from decimal import Decimal
 
 import pytest
+from openpyxl import Workbook
 
 from app.calc.commission import commission, withholding
 from app.jurisdictions.loader import pack, pack_for_country
@@ -155,3 +157,42 @@ def test_commission_withholds_10_percent_for_resident_agents() -> None:
     assert withholding(
         pack_for_country("UG"), Decimal(1000), currency="UGX", intermediary="agent"
     ).net == Decimal(1000)
+
+
+def _xlsx(rows: list[list[object]]) -> bytes:
+    book = Workbook()
+    sheet = book.active
+    assert sheet is not None
+    for row in rows:
+        sheet.append([datetime(*v) if isinstance(v, tuple) else v for v in row])  # noqa: DTZ001 - Excel dates are naive
+    out = io.BytesIO()
+    book.save(out)
+    return out.getvalue()
+
+
+def test_read_xlsx_turns_cells_into_text_agents_typed() -> None:
+    data = _xlsx(
+        [
+            ["Insured", "Inception", "Premium", "Comm %", "Paid"],
+            ["Otieno Ochieng", (2026, 3, 1), 38500.0, 0.1, True],
+            [None, None, None, None, None],
+            ["Acacia Traders Ltd", "15/09/2026", 25000, 10, False],
+        ]
+    )
+    headers, rows = parse.read_xlsx(data)
+    assert headers == ["Insured", "Inception", "Premium", "Comm %", "Paid"]
+    assert rows[0] == {
+        "Insured": "Otieno Ochieng",
+        "Inception": "2026-03-01",
+        "Premium": "38500",
+        "Comm %": "0.1",
+        "Paid": "yes",
+    }
+    assert rows[1]["Inception"] == "15/09/2026"
+    assert rows[1]["Paid"] == "no"
+    assert len(rows) == 2  # blank rows are skipped
+
+
+def test_read_xlsx_rejects_other_files() -> None:
+    with pytest.raises(parse.ImportFileError, match="not an Excel"):
+        parse.read_xlsx(b"Name,Phone\nA,B\n")

@@ -9,11 +9,8 @@ import type { ImportRequestMapping } from './importRequestMapping';
 export interface ImportRequest {
   /** Record the premium as paid to the insurer when there is no 'paid' column */
   assume_paid?: boolean;
-  /**
-     * The spreadsheet saved as CSV (UTF-8)
-     * @maxLength 2000000
-     */
-  csv: string;
+  /** The spreadsheet saved as CSV (UTF-8) */
+  csv?: string | null;
   /**
      * @minLength 1
      * @maxLength 200
@@ -23,4 +20,6 @@ export interface ImportRequest {
   mapping?: ImportRequestMapping;
   /** Import the good rows, skip the rest */
   skip_errors?: boolean;
+  /** Or an Excel .xlsx file, base64-encoded (first sheet; up to 2 MB) */
+  xlsx_base64?: string | null;
 }

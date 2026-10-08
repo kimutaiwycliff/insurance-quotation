@@ -10,6 +10,8 @@ date ("Opening balance (import)").
 Everything happens in one transaction: a failure saves nothing.
 """
 
+import base64
+import binascii
 import uuid
 from dataclasses import dataclass, field
 from datetime import date
@@ -152,9 +154,19 @@ def _parse_row(
     _parse_money(row, v, "paid" in mapping, assume_paid)
 
 
+def _read(body: ImportRequest) -> tuple[list[str], list[dict[str, str]]]:
+    if body.xlsx_base64 is None:
+        return parse.read_csv(body.csv or "")
+    try:
+        data = base64.b64decode(body.xlsx_base64, validate=True)
+    except binascii.Error:
+        raise parse.ImportFileError("The Excel file could not be read; upload it again") from None
+    return parse.read_xlsx(data)
+
+
 async def _plan(ctx: TenantContext, body: ImportRequest, settings: Settings) -> _Plan:
     try:
-        headers, raw_rows = parse.read_csv(body.csv)
+        headers, raw_rows = _read(body)
     except parse.ImportFileError as exc:
         raise ImportInvalidError(str(exc)) from None
     mapping = body.mapping if body.mapping is not None else parse.detect_mapping(headers)
