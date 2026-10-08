@@ -84,6 +84,11 @@ jobs:
           persist-credentials: false
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: make test
+        env:
+          DARAJA_SANDBOX_CONSUMER_KEY: ${{ secrets.DARAJA_SANDBOX_CONSUMER_KEY }}
+          DARAJA_SANDBOX_CONSUMER_SECRET: ${{ secrets.DARAJA_SANDBOX_CONSUMER_SECRET }}
+          DARAJA_SANDBOX_SHORTCODE: ${{ secrets.DARAJA_SANDBOX_SHORTCODE }}
+          DARAJA_SANDBOX_PASSKEY: ${{ secrets.DARAJA_SANDBOX_PASSKEY }}
         run: make test
 
   auth:

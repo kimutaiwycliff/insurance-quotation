@@ -120,6 +120,8 @@ ENDPOINTS: list[tuple[str, str, Perm]] = [
     ("POST", "/api/v1/invoices", Perm.INVOICE_WRITE),
     ("POST", "/api/v1/payments", Perm.PAYMENT_WRITE),
     ("POST", "/api/v1/items", Perm.CATALOG_MANAGE),
+    ("PUT", "/api/v1/mpesa/connection", Perm.ORG_UPDATE),
+    ("GET", "/api/v1/mpesa/transactions", Perm.PAYMENT_WRITE),
     ("GET", "/api/v1/commission-receipts", Perm.COMMISSION_READ_ALL),
     ("POST", "/api/v1/commission-receipts", Perm.COMMISSION_MANAGE),
     (

@@ -101,8 +101,8 @@ def test_every_api_route_declares_a_permission(unit_settings: object) -> None:
     for route in app.routes:
         if not isinstance(route, APIRoute) or not route.path.startswith(API_V1_PREFIX):
             continue
-        if route.path.startswith(f"{API_V1_PREFIX}/public/"):
-            continue  # anonymous, token-scoped routes
+        if route.path.startswith((f"{API_V1_PREFIX}/public/", f"{API_V1_PREFIX}/webhooks/")):
+            continue  # anonymous, token-scoped routes and provider callbacks (secret paths)
         calls = [d.call for d in route.dependant.dependencies]
         if not any(hasattr(c, "required_permission") for c in calls):
             undeclared.append(f"{sorted(route.methods or ())} {route.path}")

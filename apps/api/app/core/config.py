@@ -91,6 +91,10 @@ class Settings(BaseSettings):
     public_rate_limit_per_minute: int = 60  # per client IP
     public_link_default_ttl_days: int = 30
 
+    # M-Pesa Daraja callbacks (ADR-0015). They reach the API at public_api_base_url/api/v1/webhooks/...
+    # Comma-separated client IPs allowed to call them; empty = any (the secret path still applies).
+    mpesa_callback_allowed_ips: str = ""
+
     # HTTP
     cors_allowed_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
     readiness_timeout_seconds: float = 2.0

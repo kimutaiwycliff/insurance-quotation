@@ -27,6 +27,7 @@ from app.modules.imports import router as imports_router
 from app.modules.insurers import router as insurers_router
 from app.modules.leads import router as leads_router
 from app.modules.messaging import router as messaging_router
+from app.modules.mpesa import router as mpesa_router
 from app.modules.notifications import router as notifications_router
 from app.modules.numbering import router as numbering_router
 from app.modules.policies import router as policies_router
@@ -66,10 +67,13 @@ def api_v1_router() -> APIRouter:
     router.include_router(imports_router.router)
     router.include_router(catalog_router.router)
     router.include_router(billing_router.router)
+    router.include_router(mpesa_router.router)
     router.include_router(notifications_router.router)
     router.include_router(messaging_router.public_router)
     # Anonymous routes (token-scoped, per-IP rate limited); no require_permission by design.
     router.include_router(public_links_router.public_router)
+    # Safaricom callbacks: a secret path per connection, stored then processed by jobs (ADR-0015).
+    router.include_router(mpesa_router.webhook_router)
     router.include_router(audit.router)
     return router
 

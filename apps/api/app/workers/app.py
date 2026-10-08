@@ -38,6 +38,7 @@ def create_job_app() -> procrastinate.App:
             "app.modules.tasks.tasks",
             "app.modules.policies.tasks",
             "app.modules.billing.tasks",
+            "app.modules.mpesa.tasks",
         ],
     )
 

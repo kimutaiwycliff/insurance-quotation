@@ -23,6 +23,9 @@ from app.modules.public_links.schemas import (
     LinkCreated,
     LinkEventOut,
     LinkOut,
+    PayBody,
+    PaymentAttemptOut,
+    PaymentOfferOut,
     PublicLinkView,
     PublicTenant,
 )
@@ -144,6 +147,9 @@ async def get_public(ctx: Public, resources: ResourcesDep, response: Response) -
         has_download=content.download is not None,
         state=content.state,
         choices=[Choice(**c) for c in content.choices],
+        payment=PaymentOfferOut(amount=offer.amount, currency=offer.currency, methods=offer.methods)
+        if (offer := await service.payment_offer(ctx.session, resources.settings, ctx.link))
+        else None,
     )
 
 
@@ -225,3 +231,42 @@ async def decline(ctx: Public, body: dict[str, Any], resources: ResourcesDep) ->
         user_agent=ctx.user_agent,
     )
     return ActionResult(state=state)
+
+
+@public_router.post("/{token}/pay", operation_id="public_link_pay")
+async def pay(ctx: Public, body: PayBody, resources: ResourcesDep) -> PaymentAttemptOut:
+    """Send a payment prompt to the client's phone (the link needs the `pay` scope)."""
+    payer = service.payer_for(ctx.link)
+    decision = await hit(resources.valkey, f"pay:{ctx.link.id}", limit=5)
+    if not decision.allowed:
+        raise RateLimitedError(decision.retry_after_seconds)
+    attempt = await payer.start(
+        session=ctx.session,
+        settings=resources.settings,
+        http=resources.http,
+        link=ctx.link,
+        phone=body.phone,
+    )
+    await service.record_event(
+        ctx.session, ctx.link, "payment_started", ip_hash=ctx.ip_hash, user_agent=ctx.user_agent
+    )
+    return PaymentAttemptOut(
+        attempt_id=attempt.attempt_id, status=attempt.status, message=attempt.message
+    )
+
+
+@public_router.get("/{token}/pay/{attempt_id}", operation_id="public_link_pay_status")
+async def pay_status(
+    ctx: Public, attempt_id: uuid.UUID, resources: ResourcesDep
+) -> PaymentAttemptOut:
+    """Poll a payment prompt; asks M-Pesa directly when its callback is late."""
+    attempt = await service.payer_for(ctx.link).status(
+        session=ctx.session,
+        settings=resources.settings,
+        http=resources.http,
+        link=ctx.link,
+        attempt_id=attempt_id,
+    )
+    return PaymentAttemptOut(
+        attempt_id=attempt.attempt_id, status=attempt.status, message=attempt.message
+    )

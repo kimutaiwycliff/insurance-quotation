@@ -23,6 +23,8 @@ KINDS: dict[str, tuple[str, bool, bool]] = {
     "task.due": ("A task assigned to you is due", True, False),
     "lead.assigned": ("A lead was assigned to you", True, False),
     "quote.answered": ("A client accepted or declined a quotation", True, True),
+    "payment.received": ("A client paid by M-Pesa", True, False),
+    "payment.unmatched": ("An M-Pesa payment could not be matched to an invoice", True, True),
     "policy.renewal_due": ("A policy you look after is coming up for renewal", True, True),
 }
 
