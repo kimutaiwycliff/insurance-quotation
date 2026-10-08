@@ -38,6 +38,8 @@ NAMING_CONVENTION = {
 
 # Money columns: NUMERIC(20,4) (CLAUDE.md rule 2).
 MoneyColumn = Numeric(20, 4, asdecimal=True)
+# Rates as fractions (0.16 = 16%).
+RateColumn = Numeric(12, 8, asdecimal=True)
 
 
 class Base(DeclarativeBase):

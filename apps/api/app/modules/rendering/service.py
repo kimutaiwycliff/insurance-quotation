@@ -26,17 +26,22 @@ from app.modules.rendering.view import (
     DocType,
     DocumentView,
     KeyValue,
+    LineItem,
     OptionView,
     Party,
     PaymentInstructions,
+    Totals,
 )
 
 __all__ = [
     "AmountLine",
     "DocumentView",
     "KeyValue",
+    "LineItem",
     "OptionView",
     "Party",
+    "PaymentInstructions",
+    "Totals",
     "generate_pdf",
     "render_html_for",
 ]

@@ -35,6 +35,20 @@ Each slice ships backend first (API + tests), then its screens (web + Playwright
 | R1.4 | Policy book (insurer-direct collection), renewal board, reminders (email + WhatsApp click-to-chat) | R1.3 |
 | R1.5 | Commission tracking (expected vs received, 10% WHT), spreadsheet import of the book, dashboard v2 | R1.4 |
 
+### A1.2 R2 delivery slices (2026-10-08)
+R2 = invoicing tier + online payments + eTIMS (plan §6 M3–M5, W2–W3), on top of what R1 already built (clients,
+numbering, rendering, public links, email, tasks, imports). Each slice ships API, screens and tests through a
+pull request with all CI checks green (`main` is protected).
+
+| Slice | Scope | Blocked by |
+|---|---|---|
+| **R2.1** | Invoicing core: item catalogue; invoices and credit notes (lines, VAT inclusive/exclusive, discounts, pack tax codes); issue (number, payment reference, immutable once issued), void; manual payments with allocation and client credit; numbered receipts; double-entry ledger; PDF, tracked link and email | — |
+| R2.2 | Sales quotes for SMEs (sections, optional items, accept, convert to invoice); reminder rules (invoice due/overdue, quote expiring); invoicing dashboard | R2.1 |
+| R2.3 | Online payments: payment connections, Paystack (tenant's own account), webhook ingress, pay from the public link | R2.1; Paystack test keys |
+| R2.4 | KE invoicing pack values and eTIMS: `manual_reference` stopgap, then the OSCU adapter against the KRA sandbox | D4; KRA sandbox access |
+| R2.5 | M-Pesa Daraja direct (STK Push, C2B, unmatched queue, reconciliation) | R2.3; Daraja sandbox |
+| R2.6 | SaaS plans, entitlements and our own subscription billing | D8 prices |
+
 ---
 
 ## 1. Strategy in one page
