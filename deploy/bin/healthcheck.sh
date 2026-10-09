@@ -16,7 +16,7 @@ newest=$(find "$BACKUP_DIR/db" -name 'app-*.dump' -mmin -1560 2>/dev/null | head
 if (( ${#problems[@]} )); then
   log "UNHEALTHY: ${problems[*]}"
   url="$(env_value HEALTHCHECK_UPTIME_URL)"
-  [[ -n "$url" ]] && curl -fsS -m 10 -o /dev/null --data-raw "${problems[*]}" "$url/fail" || true
+  if [[ -n "$url" ]]; then curl -fsS -m 10 -o /dev/null --data-raw "${problems[*]}" "$url/fail" || true; fi
   exit 1
 fi
 ping_url "$(env_value HEALTHCHECK_UPTIME_URL)"

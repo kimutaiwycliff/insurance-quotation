@@ -35,6 +35,9 @@ restic_run() {
 }
 
 # Pings a healthchecks.io-style URL if one is configured; never fails the caller.
-ping_url() { local url="$1"; [[ -n "$url" ]] && curl -fsS -m 10 --retry 3 -o /dev/null "$url" || true; }
+ping_url() {
+  local url="$1"
+  if [[ -n "$url" ]]; then curl -fsS -m 10 --retry 3 -o /dev/null "$url" || true; fi
+}
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
