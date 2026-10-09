@@ -28,3 +28,4 @@ Write the ADR when the milestone that needs it starts (backlog in `docs/IMPLEMEN
 | [0022](0022-api-client-codegen.md) | API client code generation | Accepted | 2026-10-07 |
 | [0023](0023-documents-and-uploads.md) | Documents & uploads | Accepted | 2026-10-07 |
 | [0024](0024-email-delivery.md) | Email delivery | Accepted | 2026-10-07 |
+| [0025](0025-plans-and-entitlements.md) | Plans, entitlements & subscription billing | Accepted | 2026-10-09 |

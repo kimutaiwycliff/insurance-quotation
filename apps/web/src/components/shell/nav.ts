@@ -32,6 +32,8 @@ export interface NavItem {
   soon?: boolean;
   /** Shown only to members with at least one of these permissions. */
   anyOf?: string[];
+  /** Shown only when the plan includes this feature (docs/PRICING.md). */
+  feature?: string;
 }
 
 export const NAV: NavItem[] = [
@@ -39,17 +41,23 @@ export const NAV: NavItem[] = [
   { href: "/clients", key: "clients", icon: Users },
   { href: "/leads", key: "leads", icon: Funnel },
   { href: "/tasks", key: "tasks", icon: ListChecks },
-  { href: "/calculator", key: "calculator", icon: Calculator },
-  { href: "/quotes", key: "quotes", icon: FileText },
-  { href: "/policies", key: "policies", icon: ShieldCheck },
-  { href: "/renewals", key: "renewals", icon: CalendarClock },
+  { href: "/calculator", key: "calculator", icon: Calculator, feature: "insurance" },
+  { href: "/quotes", key: "quotes", icon: FileText, feature: "insurance" },
+  { href: "/policies", key: "policies", icon: ShieldCheck, feature: "insurance" },
+  { href: "/renewals", key: "renewals", icon: CalendarClock, feature: "insurance" },
   { href: "/invoices", key: "invoices", icon: ReceiptText, anyOf: ["invoice:write", "invoice:issue", "client:read:all"] },
-  { href: "/commission", key: "commission", icon: Wallet, anyOf: ["commission:read:own", "commission:read:all"] },
+  { href: "/commission", key: "commission", icon: Wallet, anyOf: ["commission:read:own", "commission:read:all"], feature: "commission" },
   { href: "/settings", key: "settings", icon: Settings },
 ];
 
-export function visibleNav(permissions: readonly string[]): NavItem[] {
-  return NAV.filter((item) => !item.anyOf || item.anyOf.some((p) => permissions.includes(p)));
+export function hasFeature(features: readonly string[], feature: string | undefined): boolean {
+  return !feature || features.includes(feature) || features.includes("*");
+}
+
+export function visibleNav(permissions: readonly string[], features: readonly string[] = ["*"]): NavItem[] {
+  return NAV.filter(
+    (item) => (!item.anyOf || item.anyOf.some((p) => permissions.includes(p))) && hasFeature(features, item.feature),
+  );
 }
 
 export function isActive(pathname: string, href: string): boolean {

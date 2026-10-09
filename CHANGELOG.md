@@ -5,6 +5,25 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: R2.5 plans and subscriptions (2026-10-09)
+- **Plans**: Free, Agent, Agency and Business, with the approved prices (docs/PRICING.md, ADR-0025).
+  - Every new account gets a 30-day Agency trial; existing accounts get one from today.
+  - After the trial an account moves to Free unless it pays.
+- **Settings → Plan & billing**:
+  - current plan, usage meters (clients, documents this month, seats);
+  - plan cards with monthly or yearly prices (2 months free) and the founding price (50% off for 12 months,
+    first 100 accounts);
+  - pay by M-Pesa prompt to the platform's Paybill, followed live; payment history with receipts.
+- **Plan rules enforced by the API** (402 problem+json):
+  - features: `plan_feature` for quotes, policies and renewals (not in Business), commission, Excel/CSV
+    import, comparison quotes, client reminder emails, branding and eTIMS;
+  - limits: `plan_limit` for Free's 50 clients and 10 issued documents a month, and for team seats (checked
+    before invitations are sent or accepted).
+- **Lapsed plans**: 7 days of grace, then read-only (reading, downloads and paying still work), with a
+  banner on every page. A banner also appears in the last 7 days of the trial.
+- Navigation hides what the plan does not include; opening such a page explains how to unlock it.
+- New settings: `PLATFORM_MPESA_*`.
+
 ### Added: R2.4 optional eTIMS (2026-10-09)
 - Settings → **Tax & eTIMS**: off by default.
 - When it is on, issued invoices and credit notes have a KRA eTIMS panel to record the CU invoice number and

@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { visibleNav } from "@/components/shell/nav";
-import { SETTINGS_SECTIONS } from "@/components/settings/sections";
+import { visibleSections } from "@/components/settings/sections";
 import {
   CommandDialog,
   CommandEmpty,
@@ -56,14 +56,14 @@ export function CommandMenu({ me }: { me: Me }) {
         <CommandList>
           <CommandEmpty>No matches.</CommandEmpty>
           <CommandGroup heading={t("home")}>
-            {visibleNav(me.permissions as string[]).filter((item) => !item.soon).map(({ href, key, icon: Icon }) => (
+            {visibleNav(me.permissions as string[], me.features).filter((item) => !item.soon).map(({ href, key, icon: Icon }) => (
               <CommandItem key={key} onSelect={() => go(href)}>
                 <Icon aria-hidden="true" /> {t(key)}
               </CommandItem>
             ))}
           </CommandGroup>
           <CommandGroup heading={s("title")}>
-            {SETTINGS_SECTIONS.filter((x) => !x.permission || (me.permissions as string[]).includes(x.permission)).map(
+            {visibleSections(me.permissions as string[], me.features).map(
               ({ href, key, icon: Icon }) => (
                 <CommandItem key={key} onSelect={() => go(href)}>
                   <Icon aria-hidden="true" /> {s(key)}

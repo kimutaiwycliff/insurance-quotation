@@ -11,6 +11,7 @@ import { CommandMenu } from "@/components/shell/command-menu";
 import { MeProvider, useMe } from "@/components/shell/me-context";
 import { isActive, visibleNav } from "@/components/shell/nav";
 import { NotificationBell } from "@/components/shell/notification-bell";
+import { PlanBanner } from "@/components/shell/plan-banner";
 import { UserMenu } from "@/components/shell/user-menu";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -23,7 +24,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const me = useMe();
   return (
     <nav aria-label="Main" className="grid gap-0.5">
-      {visibleNav(me.permissions as string[]).map(({ href, key, icon: Icon, soon }) => {
+      {visibleNav(me.permissions as string[], me.features).map(({ href, key, icon: Icon, soon }) => {
         const active = isActive(pathname, href);
         if (soon) {
           return (
@@ -98,6 +99,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
             <UserMenu me={me} />
           </div>
         </header>
+        <PlanBanner />
         <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
           {children}
         </main>
