@@ -59,7 +59,7 @@ done. Remaining R2 slices replace A1.2 rows R2.3–R2.6:
 |---|---|---|
 | **R2.3** | M-Pesa Daraja: tenant connections (encrypted), STK Push from the invoice link and the app, STK Query confirmation, C2B confirmation and validation, unmatched-payments queue, daily reconciliation; cards "coming soon" | Daraja sandbox keys for the sandbox smoke test only |
 | R2.4 | Optional eTIMS: tenant toggle, manual CU number and QR on invoices and credit notes | — |
-| R2.5 | Plans and entitlements (Free / Agent / Agency / Business), 30-day trial, M-Pesa subscription billing on the platform shortcode, founding-member and referral offers | D8 sign-off on prices |
+| **R2.5** ✅ | Plans and entitlements (Free / Agent / Agency / Business), 30-day trial, M-Pesa subscription billing on the platform shortcode, founding-member offer (done 2026-10-09, ADR-0025); referrals, renewal reminders and our own receipts follow as R2.5b | — |
 | R2.6 | Production on a VM: `compose.prod.yaml` with Caddy TLS, backups and restore drill, deploy and rollback runbook, monitoring | D7 domain to go live |
 
 ---

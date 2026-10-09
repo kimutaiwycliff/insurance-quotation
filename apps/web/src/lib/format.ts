@@ -81,3 +81,9 @@ export function sumAmounts(amounts: readonly string[]): string {
   const fraction = (abs % 10n ** BigInt(scale)).toString().padStart(scale, "0").slice(0, 2);
   return `${negative ? "-" : ""}${whole}.${fraction}`;
 }
+
+/** Whole days from now until `value`, never negative (a trial ending today is 0). */
+export function daysUntil(value: string | Date, now: Date = new Date()): number {
+  const end = typeof value === "string" ? new Date(value) : value;
+  return Math.max(0, Math.ceil((end.getTime() - now.getTime()) / 86_400_000));
+}

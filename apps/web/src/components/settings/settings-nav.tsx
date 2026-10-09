@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { SETTINGS_SECTIONS } from "@/components/settings/sections";
+import { visibleSections } from "@/components/settings/sections";
 import { useMe } from "@/components/shell/me-context";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ export function SettingsNav() {
   const t = useTranslations("settings");
   const pathname = usePathname();
   const me = useMe();
-  const sections = SETTINGS_SECTIONS.filter((s) => !s.permission || (me.permissions as string[]).includes(s.permission));
+  const sections = visibleSections(me.permissions as string[], me.features);
   return (
     <nav aria-label={t("title")} className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
       <ul className="flex gap-1 md:grid">

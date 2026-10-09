@@ -2,7 +2,15 @@
 
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
-## Current state (2026-10-08)
+## Current state (2026-10-09)
+- **Done: R2.5 plans and subscriptions** on `feat/r2-5-plans` (ADR-0025, migration 0013, module
+  `app/modules/subscriptions`, Settings → Plan & billing, banners, navigation by plan).
+- **Next:**
+  - R2.6 production. The owner is choosing a free test setup: an Oracle Always Free VM running the same
+    Compose stack, or Neon + Render, which needs an in-API worker and migrations on start.
+  - R2.5b: referrals, renewal reminders and receipts for our own billing.
+
+## Earlier state (2026-10-08)
 - **Done:**
   - R0 (M0–M2, W1);
   - **R1.1 agent CRM**, committed on `feat/r1-clients-leads`.
@@ -51,6 +59,7 @@ Read this first when resuming work. Update it at the end of every session (newes
 ## Decisions made
 | Date | Decision | Where |
 |---|---|---|
+| 2026-10-09 | Plans enforced by the API (402 `plan_feature` / `plan_limit` / `subscription_inactive`); 30-day Agency trial; 7-day grace then read-only; billing by M-Pesa prompt, no auto-renew | ADR-0025 |
 | 2026-10-08 | Payments by M-Pesa Daraja only (tenant's own shortcode); cards "coming soon"; Paystack on hold | ADR-0015 |
 | 2026-10-08 | eTIMS optional at launch (manual reference); KRA integration later | ADR-0017 |
 | 2026-10-08 | Hosting: one VM with Docker Compose (Caddy, off-site backups) | ADR-0020 |

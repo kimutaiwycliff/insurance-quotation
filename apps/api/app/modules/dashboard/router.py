@@ -15,6 +15,7 @@ from app.modules.leads import service as leads
 from app.modules.leads.service import Pipeline
 from app.modules.policies import service as policies
 from app.modules.policies.service import BookStats
+from app.modules.subscriptions import service as subscriptions
 from app.modules.tasks import service as tasks
 from app.modules.tasks.service import TaskCounts
 from app.modules.tenancy import service as tenancy
@@ -66,7 +67,11 @@ async def dashboard(
     book = await policies.counts(ctx)
     year_start = (await tenancy.today(ctx.session, ctx.tenant_id)).replace(month=1, day=1)
     stats = await policies.book_stats(ctx, year_start)
-    if not insurers_can_see_commission(perms):
+    # Commission needs both the permission and a plan that includes it.
+    see_commission = insurers_can_see_commission(perms) and (
+        {"*", subscriptions.Feature.COMMISSION} & ctx.principal.features
+    )
+    if not see_commission:
         stats = stats.model_copy(update={"expected_commission": None})
     return Dashboard(
         clients=await clients.count_clients(ctx),
@@ -81,6 +86,6 @@ async def dashboard(
         premiums_to_remit=book["premiums_to_remit"],
         book=stats,
         commission_received=await commissions.received_since(ctx, year_start)
-        if insurers_can_see_commission(perms)
+        if see_commission
         else None,
     )
