@@ -14,6 +14,7 @@ so a client never sees a success that was later rolled back.
 import uuid
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
+from http import HTTPStatus
 from typing import Annotated, Any, Protocol
 
 import structlog
@@ -53,6 +54,25 @@ class Principal:
     role: str
     permissions: frozenset[Perm]
     mfa_enrolled: bool
+    # The tenant's plan (R2.5). "*" grants every feature (system actors such as the M-Pesa jobs).
+    plan: str = "system"
+    features: frozenset[str] = frozenset({"*"})
+    read_only: bool = False  # subscription lapsed: reads only, until the tenant pays again
+
+
+class SubscriptionInactiveError(AppError):
+    status = HTTPStatus.PAYMENT_REQUIRED
+    code = "subscription_inactive"
+    title = "Your subscription has lapsed: renew it in Settings → Plan & billing to make changes"
+
+
+class FeatureNotInPlanError(AppError):
+    status = HTTPStatus.PAYMENT_REQUIRED
+    code = "plan_feature"
+    title = "Your plan does not include this"
+
+
+_SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
 
 class PrincipalResolver(Protocol):
@@ -132,7 +152,10 @@ async def _tenant_context(
 
 
 def require_permission(
-    permission: Perm | tuple[Perm, ...] | None, *, allow_without_mfa: bool = False
+    permission: Perm | tuple[Perm, ...] | None,
+    *,
+    allow_without_mfa: bool = False,
+    allow_read_only: bool = False,
 ) -> Callable[..., Coroutine[Any, Any, TenantContext]]:
     """Dependency factory: the endpoint's tenant context, after checking MFA policy and ``permission``.
 
@@ -142,10 +165,13 @@ def require_permission(
     required = permission if isinstance(permission, tuple) else (permission,) if permission else ()
 
     async def dependency(
+        request: Request,
         ctx: Annotated[TenantContext, Depends(_tenant_context, scope="function")],
         resources: ResourcesDep,
     ) -> TenantContext:
         principal = ctx.principal
+        if principal.read_only and not allow_read_only and request.method not in _SAFE_METHODS:
+            raise SubscriptionInactiveError()
         if (
             not allow_without_mfa
             and principal.role in resources.settings.mfa_enforced_roles
@@ -157,4 +183,20 @@ def require_permission(
         return ctx
 
     dependency.required_permission = permission  # type: ignore[attr-defined]
+    return dependency
+
+
+def require_feature(feature: str) -> Callable[..., Coroutine[Any, Any, None]]:
+    """Router or route dependency: the tenant's plan must include ``feature`` (R2.5)."""
+
+    async def dependency(
+        ctx: Annotated[TenantContext, Depends(_tenant_context, scope="function")],
+    ) -> None:
+        features = ctx.principal.features
+        if "*" not in features and feature not in features:
+            raise FeatureNotInPlanError(
+                f"Your plan does not include {feature.replace('_', ' ')}. "
+                "See Settings → Plan & billing to upgrade."
+            )
+
     return dependency

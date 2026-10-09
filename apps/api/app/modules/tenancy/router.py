@@ -44,6 +44,9 @@ async def me(ctx: Annotated[TenantContext, Depends(_me)], resources: ResourcesDe
         mfa_enrolled=principal.mfa_enrolled,
         mfa_required=principal.role in resources.settings.mfa_enforced_roles
         and not principal.mfa_enrolled,
+        plan=principal.plan,
+        features=sorted(principal.features),
+        read_only=principal.read_only,
     )
 
 

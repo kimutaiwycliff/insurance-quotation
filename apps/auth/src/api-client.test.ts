@@ -31,4 +31,14 @@ describe("createApiNotifier", () => {
     await createApiNotifier(config, async () => "tok", fetchImpl).post("/x", {});
     expect(fetchImpl).toHaveBeenCalledOnce();
   });
+
+  it("asks and returns the status, or null when the API is unreachable", async () => {
+    const refused = vi.fn(async () => new Response(null, { status: 402 }));
+    expect(await createApiNotifier(config, async () => "tok", refused).ask("/internal/v1/seats/check", {})).toBe(402);
+    const down = vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(await createApiNotifier(config, async () => "tok", down).ask("/x", {})).toBeNull();
+  });
 });

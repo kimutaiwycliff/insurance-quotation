@@ -11,6 +11,8 @@ export type ServiceTokenSigner = () => Promise<string>;
 
 export interface ApiNotifier {
   post(path: string, body: unknown, method?: "POST" | "PUT"): Promise<void>;
+  /** One call whose answer matters (e.g. a seat check): the HTTP status, or null if the API is unreachable. */
+  ask(path: string, body: unknown): Promise<number | null>;
 }
 
 const RETRY_DELAYS_MS = [0, 250, 1000];
@@ -45,6 +47,20 @@ export function createApiNotifier(
       console.error(
         JSON.stringify({ level: "error", event: "api_hook_failed", path, error: String(lastError) }),
       );
+    },
+    async ask(path, body) {
+      try {
+        const response = await fetchImpl(`${config.apiInternalUrl}${path}`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${await signToken()}` },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(5000),
+        });
+        return response.status;
+      } catch (error) {
+        console.error(JSON.stringify({ level: "error", event: "api_ask_failed", path, error: String(error) }));
+        return null;
+      }
     },
   };
 }

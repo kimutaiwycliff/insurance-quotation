@@ -18,6 +18,7 @@ from app.modules.policies import models as policies_models
 from app.modules.public_links import models as public_links_models
 from app.modules.quotes import models as quotes_models
 from app.modules.rendering import models as rendering_models
+from app.modules.subscriptions import models as subscriptions_models
 from app.modules.tasks import models as tasks_models
 from app.modules.tenancy import models as tenancy_models
 from app.platform import models as platform_models
@@ -42,6 +43,7 @@ __all__ = [
     "public_links_models",
     "quotes_models",
     "rendering_models",
+    "subscriptions_models",
     "tasks_models",
     "tenancy_models",
 ]

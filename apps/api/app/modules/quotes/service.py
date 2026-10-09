@@ -62,6 +62,7 @@ __all__ = [
 ]
 from app.modules.rendering import service as rendering
 from app.modules.rendering.service import AmountLine, DocumentView, KeyValue, OptionView, Party
+from app.modules.subscriptions import service as subscriptions
 from app.modules.tenancy import service as tenancy
 from app.platform import audit
 from app.platform.deps import TenantContext, own_scope
@@ -130,6 +131,8 @@ async def _build_options(
 ) -> None:
     tenant = await tenancy.get_tenant(ctx.session, ctx.tenant_id)
     product_ids = list(dict.fromkeys(body.product_ids))
+    if len(product_ids) > 1:
+        subscriptions.check_feature(ctx, subscriptions.Feature.COMPARISON_QUOTES)
     if len(product_ids) > 1 and not tenant.multi_insurer_quotes:
         raise MultiInsurerDisabledError(
             "Choose one product, or allow comparison quotes in the agency profile"

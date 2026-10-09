@@ -43,6 +43,7 @@ __all__ = [
     "Payable",
     "PaymentAllocationIn",
     "PaymentCreate",
+    "documents_issued_since",
     "find_by_payment_reference",
     "payable",
     "record_payment",
@@ -93,6 +94,7 @@ from app.modules.rendering.service import (
     PaymentInstructions,
     Totals,
 )
+from app.modules.subscriptions import service as subscriptions
 from app.modules.tenancy import service as tenancy
 from app.platform import audit, events
 from app.platform.deps import TenantContext, own_scope
@@ -694,6 +696,15 @@ async def issue(ctx: TenantContext, document_id: uuid.UUID, body: Issue) -> Bill
         raise BillingInputError(
             "The quote's validity has passed: set how many days it is valid for"
         )
+    month_start = on.replace(day=1)
+    issued = await ctx.session.scalar(
+        select(func.count())
+        .select_from(BillingDocument)
+        .where(BillingDocument.issue_date >= month_start, BillingDocument.status != DRAFT)
+    )
+    await subscriptions.check_limit(
+        ctx.session, ctx.tenant_id, subscriptions.Limit.DOCUMENTS_PER_MONTH, int(issued or 0)
+    )
     doc.number = (
         await numbering.allocate_number(ctx.session, ctx.tenant_id, doc.kind, on=on)
     ).number
@@ -1558,6 +1569,8 @@ async def send_billing_reminder(
     tenant = await tenancy.get_tenant(session, tenant_id)
     if doc is None or doc.status != ISSUED or not tenant.billing_reminders:
         return False
+    if "client_reminders" not in (await subscriptions.entitlements(session, tenant_id)).features:
+        return False
     today = await tenancy.today(session, tenant_id)
     paid = (await _paid(session, [doc])).get(doc.id, ZERO) if doc.kind == INVOICE else ZERO
     state = _status(doc, paid, today)
@@ -1806,3 +1819,15 @@ async def record_etims(
     await ctx.session.flush()
     await ctx.session.refresh(doc)
     return doc
+
+
+async def documents_issued_since(session: AsyncSession, since: date) -> int:
+    """Invoices, credit notes and sales quotes issued since a date (plan limits, R2.5)."""
+    return int(
+        await session.scalar(
+            select(func.count())
+            .select_from(BillingDocument)
+            .where(BillingDocument.issue_date >= since, BillingDocument.status != DRAFT)
+        )
+        or 0
+    )

@@ -16,6 +16,9 @@ export const OWNER: Me = {
   permissions: ["org:read", "org:update", "numbering:read", "numbering:manage", "member:read", "branding:manage"] as Me["permissions"],
   mfa_enrolled: false,
   mfa_required: false,
+  plan: "agency",
+  features: ["insurance", "comparison_quotes", "commission", "book_import", "client_reminders", "branding", "etims", "team"],
+  read_only: false,
 };
 
 export function renderWithProviders(ui: ReactElement, { me = OWNER }: { me?: Me } = {}) {

@@ -9,11 +9,17 @@ import type { TenantSummary } from './tenantSummary';
 
 export interface MeOut {
   email: string;
+  /** What the plan includes; see GET /subscription */
+  features: string[];
   mfa_enrolled: boolean;
   /** True when the role requires 2FA but it is not enrolled */
   mfa_required: boolean;
   name: string;
   permissions: Perm[];
+  /** The effective plan (the trial plan during a trial) */
+  plan: string;
+  /** The subscription lapsed: changes are refused until it is renewed */
+  read_only: boolean;
   role: string;
   tenant: TenantSummary;
   user_id: string;

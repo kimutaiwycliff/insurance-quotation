@@ -32,6 +32,7 @@ from app.modules.clients.schemas import (
     HouseholdIn,
     TimelineItem,
 )
+from app.modules.subscriptions import service as subscriptions
 from app.modules.tenancy import service as tenancy
 from app.platform import audit
 from app.platform.deps import TenantContext, own_scope
@@ -163,6 +164,12 @@ async def _check_links(ctx: TenantContext, data: dict[str, Any]) -> None:
 
 
 async def create_client(ctx: TenantContext, body: ClientCreate, settings: Settings) -> Client:
+    active = await ctx.session.scalar(
+        select(func.count()).select_from(Client).where(Client.status == "active")
+    )
+    await subscriptions.check_limit(
+        ctx.session, ctx.tenant_id, subscriptions.Limit.CLIENTS, int(active or 0)
+    )
     data = body.model_dump(exclude_unset=True, exclude={"allow_duplicate"})
     data["kind"] = body.kind
     owner = data.pop("owner_user_id", None) or ctx.principal.user_id

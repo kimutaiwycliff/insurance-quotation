@@ -95,6 +95,17 @@ class Settings(BaseSettings):
     # Comma-separated client IPs allowed to call them; empty = any (the secret path still applies).
     mpesa_callback_allowed_ips: str = ""
 
+    # The platform's own M-Pesa shortcode, for subscription payments (R2.5). "simulator" works without
+    # Safaricom (local and tests) and is refused in production.
+    platform_mpesa_environment: str = "simulator"  # simulator | sandbox | production
+    platform_mpesa_shortcode: str = "174379"
+    platform_mpesa_shortcode_type: str = "paybill"  # paybill | till
+    platform_mpesa_till_number: str = ""
+    platform_mpesa_consumer_key: SecretStr = SecretStr("")
+    platform_mpesa_consumer_secret: SecretStr = SecretStr("")
+    platform_mpesa_passkey: SecretStr = SecretStr("")
+    platform_mpesa_callback_secret: SecretStr = SecretStr("dev-only-platform-callback-secret")
+
     # HTTP
     cors_allowed_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
     readiness_timeout_seconds: float = 2.0
@@ -152,6 +163,13 @@ class Settings(BaseSettings):
             or self.pii_lookup_key.get_secret_value().startswith("dev-only")
         ):
             raise ValueError("PII_ENCRYPTION_KEYS and PII_LOOKUP_KEY must be set in production")
+        if self.environment is Environment.PRODUCTION and (
+            self.platform_mpesa_environment == "simulator"
+            or self.platform_mpesa_callback_secret.get_secret_value().startswith("dev-only")
+        ):
+            raise ValueError(
+                "PLATFORM_MPESA_ENVIRONMENT and PLATFORM_MPESA_CALLBACK_SECRET must be set in production"
+            )
         if not set(self.auth_algorithms) <= _ALLOWED_JWT_ALGORITHMS:
             raise ValueError(
                 f"AUTH_ALGORITHMS must be a subset of {sorted(_ALLOWED_JWT_ALGORITHMS)}"
