@@ -2002,6 +2002,48 @@
         "title": "CheckStatus",
         "type": "string"
       },
+      "Checkout": {
+        "additionalProperties": false,
+        "properties": {
+          "cycle": {
+            "default": "monthly",
+            "enum": [
+              "monthly",
+              "yearly"
+            ],
+            "title": "Cycle",
+            "type": "string"
+          },
+          "extra_seats": {
+            "default": 0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Extra Seats",
+            "type": "integer"
+          },
+          "phone": {
+            "maxLength": 20,
+            "minLength": 9,
+            "title": "Phone",
+            "type": "string"
+          },
+          "plan": {
+            "enum": [
+              "agent",
+              "agency",
+              "business"
+            ],
+            "title": "Plan",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan",
+          "phone"
+        ],
+        "title": "Checkout",
+        "type": "object"
+      },
       "Choice": {
         "properties": {
           "amount": {
@@ -6817,6 +6859,14 @@
             "title": "Email",
             "type": "string"
           },
+          "features": {
+            "description": "What the plan includes; see GET /subscription",
+            "items": {
+              "type": "string"
+            },
+            "title": "Features",
+            "type": "array"
+          },
           "mfa_enrolled": {
             "title": "Mfa Enrolled",
             "type": "boolean"
@@ -6836,6 +6886,16 @@
             },
             "title": "Permissions",
             "type": "array"
+          },
+          "plan": {
+            "description": "The effective plan (the trial plan during a trial)",
+            "title": "Plan",
+            "type": "string"
+          },
+          "read_only": {
+            "description": "The subscription lapsed: changes are refused until it is renewed",
+            "title": "Read Only",
+            "type": "boolean"
           },
           "role": {
             "title": "Role",
@@ -6857,7 +6917,10 @@
           "role",
           "permissions",
           "mfa_enrolled",
-          "mfa_required"
+          "mfa_required",
+          "plan",
+          "features",
+          "read_only"
         ],
         "title": "MeOut",
         "type": "object"
@@ -8858,6 +8921,106 @@
           "follow_ups_due"
         ],
         "title": "Pipeline",
+        "type": "object"
+      },
+      "PlanOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "extra_seat_monthly": {
+            "anyOf": [
+              {
+                "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extra Seat Monthly"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "included_seats": {
+            "title": "Included Seats",
+            "type": "integer"
+          },
+          "limits": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Limits",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PlanPrice"
+            },
+            "title": "Prices",
+            "type": "array"
+          },
+          "tagline": {
+            "title": "Tagline",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "tagline",
+          "included_seats",
+          "extra_seat_monthly",
+          "features",
+          "limits",
+          "prices"
+        ],
+        "title": "PlanOut",
+        "type": "object"
+      },
+      "PlanPrice": {
+        "properties": {
+          "cycle": {
+            "enum": [
+              "monthly",
+              "yearly"
+            ],
+            "title": "Cycle",
+            "type": "string"
+          },
+          "discount_percent": {
+            "title": "Discount Percent",
+            "type": "integer"
+          },
+          "list_price": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "List Price",
+            "type": "string"
+          },
+          "price": {
+            "description": "What you would pay now (founding discount applied)",
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Price",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cycle",
+          "list_price",
+          "price",
+          "discount_percent"
+        ],
+        "title": "PlanPrice",
         "type": "object"
       },
       "PolicyCreate": {
@@ -12683,6 +12846,240 @@
         "title": "StatementRow",
         "type": "object"
       },
+      "SubscriptionOut": {
+        "properties": {
+          "billing_cycle": {
+            "title": "Billing Cycle",
+            "type": "string"
+          },
+          "discount_percent": {
+            "title": "Discount Percent",
+            "type": "integer"
+          },
+          "discount_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Until"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "founding_member": {
+            "title": "Founding Member",
+            "type": "boolean"
+          },
+          "founding_places_left": {
+            "title": "Founding Places Left",
+            "type": "integer"
+          },
+          "limits": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Limits",
+            "type": "object"
+          },
+          "paid_plan": {
+            "title": "Paid Plan",
+            "type": "string"
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period End"
+          },
+          "plan": {
+            "title": "Plan",
+            "type": "string"
+          },
+          "plan_name": {
+            "title": "Plan Name",
+            "type": "string"
+          },
+          "seats": {
+            "title": "Seats",
+            "type": "integer"
+          },
+          "status": {
+            "description": "trialing, active, past_due, read_only or free",
+            "title": "Status",
+            "type": "string"
+          },
+          "trial_ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trial Ends At"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "required": [
+          "plan",
+          "plan_name",
+          "paid_plan",
+          "status",
+          "billing_cycle",
+          "trial_ends_at",
+          "period_end",
+          "seats",
+          "founding_member",
+          "discount_percent",
+          "discount_until",
+          "features",
+          "limits",
+          "usage",
+          "founding_places_left"
+        ],
+        "title": "SubscriptionOut",
+        "type": "object"
+      },
+      "SubscriptionPaymentOut": {
+        "properties": {
+          "amount": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "billing_cycle": {
+            "title": "Billing Cycle",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "discount_percent": {
+            "title": "Discount Percent",
+            "type": "integer"
+          },
+          "extra_seats": {
+            "title": "Extra Seats",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "list_price": {
+            "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
+            "title": "List Price",
+            "type": "string"
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period End"
+          },
+          "period_start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Start"
+          },
+          "plan": {
+            "title": "Plan",
+            "type": "string"
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt"
+          },
+          "result_desc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Desc"
+          },
+          "status": {
+            "description": "pending, paid, cancelled, failed or expired",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "plan",
+          "billing_cycle",
+          "extra_seats",
+          "list_price",
+          "discount_percent",
+          "amount",
+          "status",
+          "receipt",
+          "result_desc",
+          "period_start",
+          "period_end",
+          "created_at",
+          "completed_at"
+        ],
+        "title": "SubscriptionPaymentOut",
+        "type": "object"
+      },
       "Summary": {
         "properties": {
           "currency": {
@@ -13550,6 +13947,29 @@
           "expires_at"
         ],
         "title": "UploadTicket",
+        "type": "object"
+      },
+      "Usage": {
+        "properties": {
+          "clients": {
+            "title": "Clients",
+            "type": "integer"
+          },
+          "documents_this_month": {
+            "title": "Documents This Month",
+            "type": "integer"
+          },
+          "seats_used": {
+            "title": "Seats Used",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "clients",
+          "documents_this_month",
+          "seats_used"
+        ],
+        "title": "Usage",
         "type": "object"
       },
       "ValidationError": {
@@ -21688,6 +22108,193 @@
         "summary": "Convert Sales Quote",
         "tags": [
           "billing"
+        ]
+      }
+    },
+    "/api/v1/subscription": {
+      "get": {
+        "operationId": "subscription_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Subscription",
+        "tags": [
+          "subscription"
+        ]
+      }
+    },
+    "/api/v1/subscription/checkout": {
+      "post": {
+        "description": "Pay for a plan by M-Pesa: a prompt goes to the phone; poll the payment until it is paid.",
+        "operationId": "subscription_checkout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Checkout"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionPaymentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Checkout",
+        "tags": [
+          "subscription"
+        ]
+      }
+    },
+    "/api/v1/subscription/payments": {
+      "get": {
+        "operationId": "subscription_payments_list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionPaymentOut"
+                  },
+                  "title": "Response Subscription Payments List",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Payments",
+        "tags": [
+          "subscription"
+        ]
+      }
+    },
+    "/api/v1/subscription/payments/{payment_id}": {
+      "get": {
+        "operationId": "subscription_payment_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionPaymentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Payment",
+        "tags": [
+          "subscription"
+        ]
+      }
+    },
+    "/api/v1/subscription/plans": {
+      "get": {
+        "description": "Plans with prices for this agency now (the founding discount applies to the first 100 to pay).",
+        "operationId": "subscription_plans",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlanOut"
+                  },
+                  "title": "Response Subscription Plans",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plans",
+        "tags": [
+          "subscription"
         ]
       }
     },

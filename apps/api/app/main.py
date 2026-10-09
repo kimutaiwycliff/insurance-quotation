@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import make_asgi_app
 
@@ -34,11 +34,14 @@ from app.modules.policies import router as policies_router
 from app.modules.public_links import router as public_links_router
 from app.modules.quotes import router as quotes_router
 from app.modules.rendering import router as rendering_router
+from app.modules.subscriptions import router as subscriptions_router
+from app.modules.subscriptions.service import Feature
 from app.modules.tasks import router as tasks_router
 from app.modules.tenancy import internal as tenancy_internal
 from app.modules.tenancy import router as tenancy_router
 from app.modules.tenancy.service import resolve_principal
 from app.platform import audit, health
+from app.platform.deps import require_feature
 from app.platform.resources import Resources
 
 API_V1_PREFIX = "/api/v1"
@@ -60,20 +63,40 @@ def api_v1_router() -> APIRouter:
     router.include_router(leads_router.router)
     router.include_router(tasks_router.router)
     router.include_router(dashboard_router.router)
-    router.include_router(insurers_router.router)
-    router.include_router(quotes_router.router)
-    router.include_router(policies_router.router)
-    router.include_router(commissions_router.router)
-    router.include_router(imports_router.router)
+    router.include_router(
+        insurers_router.router, dependencies=[Depends(require_feature(Feature.INSURANCE))]
+    )
+    router.include_router(
+        quotes_router.router, dependencies=[Depends(require_feature(Feature.INSURANCE))]
+    )
+    router.include_router(
+        policies_router.router, dependencies=[Depends(require_feature(Feature.INSURANCE))]
+    )
+    router.include_router(
+        commissions_router.router,
+        dependencies=[
+            Depends(require_feature(Feature.INSURANCE)),
+            Depends(require_feature(Feature.COMMISSION)),
+        ],
+    )
+    router.include_router(
+        imports_router.router,
+        dependencies=[
+            Depends(require_feature(Feature.INSURANCE)),
+            Depends(require_feature(Feature.BOOK_IMPORT)),
+        ],
+    )
     router.include_router(catalog_router.router)
     router.include_router(billing_router.router)
     router.include_router(mpesa_router.router)
+    router.include_router(subscriptions_router.router)
     router.include_router(notifications_router.router)
     router.include_router(messaging_router.public_router)
     # Anonymous routes (token-scoped, per-IP rate limited); no require_permission by design.
     router.include_router(public_links_router.public_router)
     # Safaricom callbacks: a secret path per connection, stored then processed by jobs (ADR-0015).
     router.include_router(mpesa_router.webhook_router)
+    router.include_router(subscriptions_router.webhook_router)
     router.include_router(audit.router)
     return router
 

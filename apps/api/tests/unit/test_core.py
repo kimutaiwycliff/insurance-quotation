@@ -24,8 +24,21 @@ class TestSettings:
             signing_secret=SecretStr("a-real-production-signing-secret"),
             pii_encryption_keys=SecretStr("k2026:" + "A" * 43 + "="),
             pii_lookup_key=SecretStr("x" * 40),
+            platform_mpesa_environment="production",
+            platform_mpesa_callback_secret=SecretStr("a-long-random-callback-path-secret"),
         )
         assert settings.is_production
+
+    def test_production_refuses_the_billing_simulator(self) -> None:
+        with pytest.raises(ValidationError, match="PLATFORM_MPESA"):
+            Settings(
+                environment=Environment.PRODUCTION,
+                s3_access_key_id=SecretStr("AKIAREALKEY"),
+                s3_secret_access_key=SecretStr("real-secret"),
+                signing_secret=SecretStr("a-real-production-signing-secret"),
+                pii_encryption_keys=SecretStr("k2026:" + "A" * 43 + "="),
+                pii_lookup_key=SecretStr("x" * 40),
+            )
 
     def test_production_rejects_development_signing_secret(self) -> None:
         with pytest.raises(ValidationError, match="SIGNING_SECRET"):

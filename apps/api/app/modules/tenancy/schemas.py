@@ -37,6 +37,11 @@ class MeOut(BaseModel):
     permissions: list[Perm]
     mfa_enrolled: bool
     mfa_required: bool = Field(description="True when the role requires 2FA but it is not enrolled")
+    plan: str = Field(description="The effective plan (the trial plan during a trial)")
+    features: list[str] = Field(description="What the plan includes; see GET /subscription")
+    read_only: bool = Field(
+        description="The subscription lapsed: changes are refused until it is renewed"
+    )
 
 
 class OrganizationOut(BaseModel):
@@ -221,6 +226,13 @@ class MembershipUpsert(_Strict):
     org_slug: Annotated[str, StringConstraints(max_length=255)] | None = None
     user: InternalUser
     role: Annotated[str, StringConstraints(min_length=1, max_length=64)]
+
+
+class SeatCheck(_Strict):
+    org_id: Annotated[str, StringConstraints(min_length=1, max_length=255)]
+    user_id: Annotated[str, StringConstraints(min_length=1, max_length=255)] | None = Field(
+        default=None, description="The person joining; omit when only inviting"
+    )
 
 
 class MembershipRemove(_Strict):

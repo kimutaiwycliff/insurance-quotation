@@ -69,6 +69,7 @@ from app.modules.policies.schemas import (
     VoidPayment,
 )
 from app.modules.quotes import service as quotes
+from app.modules.subscriptions import service as subscriptions
 from app.modules.tasks import service as tasks
 from app.modules.tenancy import service as tenancy
 from app.platform import audit, events
@@ -1053,7 +1054,8 @@ async def send_renewal_reminder(
         return False
     tenant = await tenancy.get_tenant(session, tenant_id)
     client = await _client(session, policy.client_id)
-    emailed = client.email if tenant.renewal_client_emails and client.email else None
+    entitled = "client_reminders" in (await subscriptions.entitlements(session, tenant_id)).features
+    emailed = client.email if entitled and tenant.renewal_client_emails and client.email else None
     inserted = await session.scalar(
         insert(RenewalReminder)
         .values(

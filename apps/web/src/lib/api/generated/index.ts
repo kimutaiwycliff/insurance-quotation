@@ -22,4 +22,5 @@ export * from './policies/policies';
 export * from './public/public';
 export * from './public-links/public-links';
 export * from './quotes/quotes';
+export * from './subscription/subscription';
 export * from './tasks/tasks';

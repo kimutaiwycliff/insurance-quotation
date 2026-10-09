@@ -16,6 +16,7 @@ from app.modules.tenancy.schemas import (
     MembershipRemove,
     MembershipUpsert,
     ProvisionResult,
+    SeatCheck,
     TenantProvision,
 )
 from app.platform.deps import ResourcesDep, service_claims
@@ -55,6 +56,7 @@ async def upsert_membership(body: MembershipUpsert, _: Service, resources: Resou
             slug=body.org_slug,
             via="hook",
         )
+        await service.check_seat(session, tenant_id, body.user.user_id)
         await service.upsert_membership(session, tenant_id, body.user, body.role)
 
 
@@ -64,3 +66,11 @@ async def remove_membership(body: MembershipRemove, _: Service, resources: Resou
     tenant_id = tenant_id_for_org(body.org_id)
     async with tenant_scope(resources.session_factory, tenant_id) as session:
         await service.remove_membership(session, tenant_id, body.user_id)
+
+
+@router.post("/seats/check", status_code=status.HTTP_204_NO_CONTENT)
+async def check_seat(body: SeatCheck, _: Service, resources: ResourcesDep) -> None:
+    """Before an invitation is created or accepted: 204 when the plan has a seat, else 402 (plan_limit)."""
+    tenant_id = tenant_id_for_org(body.org_id)
+    async with tenant_scope(resources.session_factory, tenant_id) as session:
+        await service.check_seat(session, tenant_id, body.user_id or "")

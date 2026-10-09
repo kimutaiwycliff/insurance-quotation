@@ -58,8 +58,9 @@ M-Pesa, VAT-inclusive.
   - Agents talk to each other: a free agent with 50 clients is a word-of-mouth channel and becomes a paying
     customer the day they outgrow the cap.
   - Running a free tenant costs little: Postgres rows and a few PDFs.
-  - Give new sign-ups 30 days of Agent free, then they drop to Free automatically. No card is needed, which
-    matches "cards coming soon".
+  - Give new sign-ups 30 days of **Agency** free (everything, including the team), then they drop to Free
+    automatically unless they choose a plan. No card is needed, which matches "cards coming soon". (Changed
+    on 2026-10-09 from an Agent trial so agencies can try the team features.)
 
 ## Launch offers (first 6 months)
 

@@ -15,8 +15,9 @@ from app.modules.rendering.schemas import (
     TemplateOut,
     TemplatePreviewRequest,
 )
+from app.modules.subscriptions.service import Feature
 from app.modules.tenancy import service as tenancy
-from app.platform.deps import ResourcesDep, TenantContext, require_permission
+from app.platform.deps import ResourcesDep, TenantContext, require_feature, require_permission
 
 router = APIRouter(tags=["branding"])
 ReadCtx = Annotated[TenantContext, Depends(require_permission(Perm.ORG_READ))]
@@ -59,7 +60,11 @@ async def get_branding(ctx: ReadCtx, response: Response) -> BrandingOut:
     return service.branding_out(row)
 
 
-@router.patch("/branding", operation_id="branding_update")
+@router.patch(
+    "/branding",
+    operation_id="branding_update",
+    dependencies=[Depends(require_feature(Feature.BRANDING))],
+)
 async def update_branding(
     ctx: Annotated[TenantContext, Depends(require_permission(Perm.BRANDING_MANAGE))],
     body: BrandingUpdate,

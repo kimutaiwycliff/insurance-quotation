@@ -9,7 +9,7 @@ from typing import Any, cast
 from zoneinfo import ZoneInfo
 
 import structlog
-from sqlalchemy import CursorResult, select, update
+from sqlalchemy import CursorResult, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,7 @@ from app.core.errors import ConflictError, MembershipInactiveError, NotFoundErro
 from app.core.permissions import normalise_role, permissions_for
 from app.core.security import AccessClaims
 from app.modules.numbering import service as numbering
+from app.modules.subscriptions import service as subscriptions
 from app.modules.tenancy.models import Branch, Membership, Tenant
 from app.modules.tenancy.schemas import (
     BranchCreate,
@@ -63,8 +64,20 @@ async def provision_tenant(
     if created.scalar_one_or_none() is None:
         return False
     await numbering.seed_default_schemes(session, tenant_id)
+    await subscriptions.start_trial(session, tenant_id)
     logger.info("tenant_provisioned", tenant_id=str(tenant_id), via=via)
     return True
+
+
+async def check_seat(session: AsyncSession, tenant_id: uuid.UUID, user_id: str) -> None:
+    """Adding someone (or bringing them back) must fit the plan's seats (R2.5)."""
+    existing = await session.scalar(select(Membership).where(Membership.auth_user_id == user_id))
+    if existing is not None and existing.status == ACTIVE:
+        return
+    active = await session.scalar(
+        select(func.count()).select_from(Membership).where(Membership.status == ACTIVE)
+    )
+    await subscriptions.check_limit(session, tenant_id, subscriptions.Limit.SEATS, int(active or 0))
 
 
 async def upsert_membership(
@@ -140,6 +153,7 @@ async def resolve_principal(
         membership = await upsert_membership(session, tenant_id, user, claims.org_role or "")
     if membership.status != ACTIVE:
         raise MembershipInactiveError()
+    granted = await subscriptions.entitlements(session, tenant_id)
     return Principal(
         user_id=membership.auth_user_id,
         email=membership.email,
@@ -150,6 +164,9 @@ async def resolve_principal(
         role=membership.role,
         permissions=permissions_for(membership.role),
         mfa_enrolled=claims.mfa_enrolled,
+        plan=granted.plan,
+        features=granted.features,
+        read_only=granted.read_only,
     )
 
 
@@ -181,6 +198,13 @@ async def update_organization(
     data = changes.model_dump(exclude_unset=True, mode="python")
     if "email" in data and data["email"] is not None:
         data["email"] = str(data["email"])
+    for flag, feature in (
+        ("renewal_client_emails", subscriptions.Feature.CLIENT_REMINDERS),
+        ("billing_reminders", subscriptions.Feature.CLIENT_REMINDERS),
+        ("etims_enabled", subscriptions.Feature.ETIMS),
+    ):
+        if data.get(flag):
+            subscriptions.check_feature(ctx, feature)
     before = _snapshot(tenant, set(data))
     for field, value in data.items():
         setattr(tenant, field, value)

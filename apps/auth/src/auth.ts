@@ -6,6 +6,7 @@
  * a mirror of memberships, updated by the organization hooks below. Role *keys* live here; what each role may
  * do is owned by the API (ADR-0007).
  */
+import { APIError } from "better-auth/api";
 import { betterAuth } from "better-auth";
 import { bearer, jwt, organization, twoFactor } from "better-auth/plugins";
 import { createAccessControl } from "better-auth/plugins/access";
@@ -68,6 +69,16 @@ interface HookOrg {
   id: string;
   name: string;
   slug?: string | null;
+}
+
+/** 402 from the API means the plan's seats are taken. Unreachable API: allow (never block on an outage). */
+async function requireSeat(api: ApiNotifier, orgId: string, userId?: string): Promise<void> {
+  const status = await api.ask("/internal/v1/seats/check", { org_id: orgId, user_id: userId ?? null });
+  if (status === 402) {
+    throw new APIError("FORBIDDEN", {
+      message: "All the seats on your plan are taken. Upgrade in Settings → Plan & billing, or remove someone first.",
+    });
+  }
 }
 
 function memberPayload(org: HookOrg, user: HookUser, role: string) {
@@ -152,6 +163,13 @@ export function createAuth(
           );
         },
         organizationHooks: {
+          // Plans limit seats (R2.5): refuse before anything is created, with a message the inviter can act on.
+          beforeCreateInvitation: async ({ organization: org }) => {
+            await requireSeat(api, org.id);
+          },
+          beforeAcceptInvitation: async ({ organization: org, user }) => {
+            await requireSeat(api, org.id, user.id);
+          },
           afterCreateOrganization: async ({ organization: org, user }) => {
             await api.post("/internal/v1/tenants", {
               org_id: org.id,
