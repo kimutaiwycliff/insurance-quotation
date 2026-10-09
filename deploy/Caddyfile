@@ -1,0 +1,55 @@
+# Caddy: automatic HTTPS for the three public hosts (ADR-0020). DOMAIN and ACME_EMAIL come from .env.
+# DOMAIN can be a free wildcard-DNS name while testing (e.g. 129-146-10-20.sslip.io) and the real domain later.
+{
+	email {$ACME_EMAIL}
+	# Empty in production. "local_certs" for rehearsals on a machine the internet cannot reach.
+	{$CADDY_TLS_MODE}
+}
+
+(security) {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+		-Via
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+
+# The web app (BFF): everything people use, including /api/auth and public document pages.
+app.{$DOMAIN} {
+	import security
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+# The API is reached directly only by Safaricom (M-Pesa callbacks) and by unsubscribe links in emails.
+# Everything else goes through the web app, so the rest of the API is not exposed.
+api.{$DOMAIN} {
+	import security
+	@public path /api/v1/webhooks/* /api/v1/public/unsubscribe/* /health/live
+	handle @public {
+		reverse_proxy api:8000
+	}
+	handle {
+		respond "Not found" 404
+	}
+}
+
+# Object storage, for presigned upload and download URLs only (the signature covers this host).
+files.{$DOMAIN} {
+	import security
+	request_body {
+		max_size 30MB
+	}
+	reverse_proxy storage:9000
+}
+
+# Anything else (e.g. the bare IP): nothing here.
+:80 {
+	respond "Not found" 404
+}
