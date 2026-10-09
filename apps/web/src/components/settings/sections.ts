@@ -1,8 +1,8 @@
-import { Building2, Hash, KeyRound, Landmark, Package, Palette, Smartphone, Users, type LucideIcon } from "lucide-react";
+import { Building2, Hash, KeyRound, Landmark, Package, Palette, Receipt, Smartphone, Users, type LucideIcon } from "lucide-react";
 
 export interface SettingsSection {
   href: string;
-  key: "organization" | "members" | "insurers" | "items" | "payments" | "numbering" | "branding" | "security";
+  key: "organization" | "members" | "insurers" | "items" | "payments" | "tax" | "numbering" | "branding" | "security";
   icon: LucideIcon;
   /** Shown only to members with this permission (security is personal, so always shown). */
   permission?: string;
@@ -14,6 +14,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   { href: "/settings/insurers", key: "insurers", icon: Landmark, permission: "insurer:read" },
   { href: "/settings/items", key: "items", icon: Package, permission: "invoice:write" },
   { href: "/settings/payments", key: "payments", icon: Smartphone, permission: "org:read" },
+  { href: "/settings/tax", key: "tax", icon: Receipt, permission: "org:read" },
   { href: "/settings/branding", key: "branding", icon: Palette, permission: "org:read" },
   { href: "/settings/numbering", key: "numbering", icon: Hash, permission: "numbering:read" },
   { href: "/settings/security", key: "security", icon: KeyRound },

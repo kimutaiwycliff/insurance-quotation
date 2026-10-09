@@ -87,6 +87,11 @@ export function BillingOverview() {
         <div className="rounded-lg border bg-card px-4 py-3"><dt className="text-sm text-muted-foreground">Collected this month</dt><dd className="tabular font-heading text-2xl">{money(s.collected_this_month)}</dd></div>
         <div className="rounded-lg border bg-card px-4 py-3"><dt className="text-sm text-muted-foreground">Quotes awaiting an answer ({s.quotes_awaiting})</dt><dd className="tabular font-heading text-2xl">{money(s.quotes_awaiting_total)}</dd></div>
       </dl>
+      {s.etims_pending > 0 && (
+        <p className="rounded-md border border-maize px-3 py-2 text-sm">
+          <strong>{s.etims_pending}</strong> issued {s.etims_pending === 1 ? "document has" : "documents have"} no eTIMS CU number yet.
+        </p>
+      )}
       {owed.length > 0 && (
         <ul className="flex flex-wrap gap-x-6 gap-y-1 text-sm" aria-label="How late unpaid invoices are">
           {owed.map((b) => <li key={b.label}><span className="text-muted-foreground">{b.label}:</span> <span className="tabular font-bold">{money(b.amount)}</span> ({b.count})</li>)}

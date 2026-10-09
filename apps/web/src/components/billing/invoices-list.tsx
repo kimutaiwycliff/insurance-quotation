@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { BillingStatus } from "@/components/billing/status";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOrganizationGet } from "@/lib/api/generated/organization/organization";
 import { useInvoicesList, useSalesQuotesList } from "@/lib/api/generated/billing/billing";
 import { formatDate, formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -39,6 +41,7 @@ export function InvoicesList({ clientId, kind = "invoice" }: { clientId?: string
   const invoices = useInvoicesList(params as Parameters<typeof useInvoicesList>[0], { query: { enabled: kind === "invoice" } });
   const quotes = useSalesQuotesList(params as Parameters<typeof useSalesQuotesList>[0], { query: { enabled: kind === "quote" } });
   const list = kind === "quote" ? quotes : invoices;
+  const etims = useOrganizationGet().data?.etims_enabled ?? false;
   return (
     <div className="grid gap-4">
       <div role="group" aria-label="Filter invoices" className="-mx-4 flex gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
@@ -70,7 +73,12 @@ export function InvoicesList({ clientId, kind = "invoice" }: { clientId?: string
                   {formatMoney(i.total, i.currency)}
                   {Number(i.balance) > 0 && Number(i.paid) > 0 && <span className="block text-muted-foreground">{formatMoney(i.balance, i.currency)} left</span>}
                 </span>
-                <BillingStatus status={i.status} />
+                <span className="flex flex-wrap gap-1">
+                  <BillingStatus status={i.status} />
+                  {etims && i.kind !== "quote" && !["draft", "void"].includes(i.status) && !i.etims_cu_invoice_number && (
+                    <Badge variant="outline" className="border-maize">eTIMS missing</Badge>
+                  )}
+                </span>
               </Link>
             </li>
           ))}

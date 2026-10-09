@@ -39,5 +39,12 @@ Invoices, credit notes and payments received (Plan A1.2 R2.1; ADR-0009 states, A
     unsubscribe.
 - **Summary:** `GET /billing/summary` returns outstanding, overdue, ageing buckets, this month's invoicing and
   collections, quotes awaiting an answer, and 12 months of invoiced and collected.
+- **eTIMS (optional, ADR-0017):**
+  - when the tenant turns `etims_enabled` on, `PUT /billing-documents/{id}/etims` records the CU invoice
+    number and the KRA verification link (https only, on a `kra.go.ke` host) for an issued invoice or credit
+    note;
+  - the details print in the document's tax block;
+  - a CU number belongs to one document (unique), and corrections are audited;
+  - the summary counts documents still missing one.
 - **Permissions:** `invoice:write` for drafts (assistants too), `invoice:issue` to issue, void, credit and
   send, `payment:write` for payments. Reading is scoped like clients (`client:read:own|all`).

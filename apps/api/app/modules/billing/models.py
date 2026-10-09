@@ -36,6 +36,7 @@ class BillingDocument(TenantScoped, Audited, Versioned, Base):
         ),
         Index("ix_billing_documents_client", "tenant_id", "client_id", "kind", "status"),
         Index("ix_billing_documents_due", "tenant_id", "status", "due_date"),
+        Index("uq_billing_documents_etims", "tenant_id", "etims_cu_invoice_number", unique=True),
         ForeignKeyConstraint(
             ["tenant_id", "converted_document_id"],
             ["billing_documents.tenant_id", "billing_documents.id"],
@@ -75,6 +76,11 @@ class BillingDocument(TenantScoped, Audited, Versioned, Base):
     responded_at: Mapped[datetime | None]
     response: Mapped[dict[str, Any]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
     converted_document_id: Mapped[uuid.UUID | None]
+    # eTIMS (optional, ADR-0017): the control-unit details from the tenant's own eTIMS tool, recorded after issue.
+    etims_cu_invoice_number: Mapped[str | None]
+    etims_verification_url: Mapped[str | None]
+    etims_recorded_at: Mapped[datetime | None]
+    etims_recorded_by: Mapped[str | None]
 
 
 class BillingLine(TenantScoped, Base):

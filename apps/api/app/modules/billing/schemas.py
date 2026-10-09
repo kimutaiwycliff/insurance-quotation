@@ -87,6 +87,21 @@ class CreditNoteCreate(_Strict):
     )
 
 
+class EtimsIn(_Strict):
+    """What the tenant's own eTIMS tool returned for this document (ADR-0017)."""
+
+    cu_invoice_number: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, to_upper=True, pattern=r"^[A-Za-z0-9/-]{6,50}$"),
+    ] = Field(description="The KRA control-unit (CU) invoice number")
+    verification_url: (
+        Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)] | None
+    ) = Field(
+        default=None,
+        description="The KRA verification link behind the QR code (https://…kra.go.ke/…)",
+    )
+
+
 class Issue(_Strict):
     issue_date: date | None = Field(default=None, description="Defaults to today")
 
@@ -191,6 +206,7 @@ class BillingDocumentSummary(BaseModel):
     total: AmountStr
     paid: AmountStr = Field(description="Allocated to an invoice, or applied from a credit note")
     balance: AmountStr
+    etims_cu_invoice_number: str | None
     created_at: datetime
 
 
@@ -219,6 +235,8 @@ class BillingDocumentOut(BillingDocumentSummary):
     responded_at: datetime | None
     response: dict[str, Any]
     converted_document_id: uuid.UUID | None
+    etims_verification_url: str | None
+    etims_recorded_at: datetime | None
     version: int
 
 
@@ -278,6 +296,9 @@ class BillingSummary(BaseModel):
     ageing: list[AgeingBucket]
     invoiced_this_month: AmountStr
     collected_this_month: AmountStr
+    etims_pending: int = Field(
+        description="Issued invoices and credit notes without an eTIMS CU number"
+    )
     quotes_awaiting: int
     quotes_awaiting_total: AmountStr
     months: list[MonthBilling]
