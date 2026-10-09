@@ -29,3 +29,23 @@ development and CI. The domain is not chosen yet (D7).
 - One machine is a single point of failure. That is acceptable for the pilot; the next step is a managed
   Postgres or a second VM.
 - Everything stays reproducible from the repo; no cloud-specific IaC is needed.
+
+## Amendment (2026-10-09): implementation (R2.6)
+- Test hosting: an **Oracle Cloud Always Free** Ampere A1 VM (ARM64), chosen by the product owner. The same
+  files later run on the paid VM. CI builds every image on ARM64, and all third-party images have native
+  ARM64 builds.
+- **Hosts:** `app.<DOMAIN>` (web), `api.<DOMAIN>` (only M-Pesa webhooks, unsubscribe links and
+  `/health/live`; everything else is 404), and `files.<DOMAIN>` (presigned storage URLs). Without a domain,
+  `DOMAIN` is `<ip-with-dashes>.sslip.io`.
+- **Deploys build on the VM** (`git checkout` + `docker compose build`). There is no image registry.
+  `deploy/bin/deploy.sh` takes a database backup first and prints the rollback command.
+- **Email:** Brevo SMTP relay (STARTTLS on 587).
+- **Backups:** restic (`restic/restic` image, run only on the VM, not an application dependency):
+  - the database dump is streamed in; the RustFS volume is backed up as files;
+  - both are encrypted, to an S3-compatible bucket (Oracle Object Storage while testing);
+  - kept as 30 daily, 12 weekly and 12 monthly snapshots;
+  - a weekly scratch-database restore check;
+  - `restore.sh` restores by date.
+- **Monitoring:** cron checks for the site, the API, disk space and backup age, pinging healthchecks.io.
+- Runbook: `docs/runbooks/deploy-vm.md`.
+

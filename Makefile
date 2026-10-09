@@ -50,6 +50,19 @@ audit: ## Dependency vulnerability audit
 
 check: lint typecheck importlint unit ## Fast local checks (no Docker)
 
+# ---------------------------------------------------------------- production VM (ADR-0020, deploy/)
+.PHONY: deploy-check
+deploy-check: ## Lint the deploy scripts and validate compose.prod.yaml with a sample production .env
+	shellcheck -x deploy/bin/*.sh
+	@tmp=$$(mktemp); trap 'rm -f $$tmp' EXIT; \
+	sed -e 's/@DOMAIN@/example.test/g' -e 's/@ACME_EMAIL@/ops@example.test/' -e 's/@secret@/x/g' \
+	    -e 's/@pii_key@/k1:x/' deploy/production.env.example > $$tmp; \
+	$(COMPOSE) --env-file $$tmp -f compose.yaml -f compose.prod.yaml config --quiet; \
+	ports=$$($(COMPOSE) --env-file $$tmp -f compose.yaml -f compose.prod.yaml config --format json \
+	    | jq -r '.services | to_entries[] | select(.value.ports) | .key' | tr '\n' ' '); \
+	[ "$$ports" = "caddy " ] || { echo "Only caddy may publish ports, got: $$ports"; exit 1; }; \
+	echo "compose.prod.yaml OK (only caddy publishes ports)"
+
 # ---------------------------------------------------------------- tests
 .PHONY: unit test e2e e2e-web web-check auth-check jobs-shell test-all openapi
 unit: ## Unit tests only (no Docker)
