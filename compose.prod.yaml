@@ -1,0 +1,144 @@
+# Production overlay (ADR-0020): one VM, Docker Compose, Caddy in front.
+# Usage (on the VM, from the repo root, with a root-only .env made from deploy/production.env.example):
+#   deploy/bin/deploy.sh            # or: docker compose -f compose.yaml -f compose.prod.yaml up -d --build --wait
+#
+# What changes from compose.yaml:
+#   - Caddy is the only service with host ports (80, 443); every other port is removed.
+#   - Mailpit is not started; email goes out through the SMTP relay in .env (Brevo).
+#   - Restart policies, memory limits and log rotation on every long-running service.
+#   - Production settings that compose.yaml leaves at their development defaults are passed through.
+# Hosts: app.$DOMAIN (web), api.$DOMAIN (M-Pesa callbacks and unsubscribe links only), files.$DOMAIN (storage).
+
+x-restart: &restart
+  restart: unless-stopped
+  logging:
+    driver: local
+    options: { max-size: "20m", max-file: "5" }
+
+x-one-shot: &one-shot
+  logging:
+    driver: local
+    options: { max-size: "5m", max-file: "2" }
+
+# Settings compose.yaml does not pass through (they have development defaults in app/core/config.py).
+# Merged key by key with compose.yaml's environment.
+x-prod-app-env: &prod-app-env
+  LOG_JSON: "true"
+  SMTP_USERNAME: ${SMTP_USERNAME:?set SMTP_USERNAME in .env}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_PASSWORD in .env}
+  SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+  PII_ENCRYPTION_KEYS: ${PII_ENCRYPTION_KEYS:?set PII_ENCRYPTION_KEYS in .env}
+  PII_LOOKUP_KEY: ${PII_LOOKUP_KEY:?set PII_LOOKUP_KEY in .env}
+  MPESA_CALLBACK_ALLOWED_IPS: ${MPESA_CALLBACK_ALLOWED_IPS:-}
+  PLATFORM_MPESA_ENVIRONMENT: ${PLATFORM_MPESA_ENVIRONMENT:?set PLATFORM_MPESA_ENVIRONMENT in .env}
+  PLATFORM_MPESA_SHORTCODE: ${PLATFORM_MPESA_SHORTCODE:-}
+  PLATFORM_MPESA_SHORTCODE_TYPE: ${PLATFORM_MPESA_SHORTCODE_TYPE:-paybill}
+  PLATFORM_MPESA_TILL_NUMBER: ${PLATFORM_MPESA_TILL_NUMBER:-}
+  PLATFORM_MPESA_CONSUMER_KEY: ${PLATFORM_MPESA_CONSUMER_KEY:-}
+  PLATFORM_MPESA_CONSUMER_SECRET: ${PLATFORM_MPESA_CONSUMER_SECRET:-}
+  PLATFORM_MPESA_PASSKEY: ${PLATFORM_MPESA_PASSKEY:-}
+  PLATFORM_MPESA_CALLBACK_SECRET: ${PLATFORM_MPESA_CALLBACK_SECRET:?set PLATFORM_MPESA_CALLBACK_SECRET in .env}
+  MFA_ENFORCED_ROLES: ${MFA_ENFORCED_ROLES:-}
+
+services:
+  caddy:
+    <<: *restart
+    image: caddy:2.10.2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+      CADDY_TLS_MODE: ${CADDY_TLS_MODE:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      web: { condition: service_healthy }
+    mem_limit: 256m
+
+  postgres:
+    <<: *restart
+    ports: !reset []
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS:-512MB}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-1536MB}
+      - -c
+      - max_connections=100
+      - -c
+      - log_min_duration_statement=1000
+    shm_size: 256m
+    mem_limit: ${PG_MEM_LIMIT:-2g}
+
+  valkey:
+    <<: *restart
+    mem_limit: 256m
+
+  storage:
+    <<: *restart
+    ports: !reset []
+    mem_limit: 768m
+
+  storage-init:
+    <<: *one-shot
+    environment: *prod-app-env
+
+  # Not started in production: email goes through the SMTP relay.
+  mailpit:
+    profiles: ["never"]
+
+  gotenberg:
+    <<: *restart
+    mem_limit: 1536m
+
+  migrate:
+    <<: *one-shot
+    environment: *prod-app-env
+
+  api:
+    <<: *restart
+    ports: !reset []
+    environment:
+      <<: *prod-app-env
+      # Only Caddy and the web container can reach the API (no host port), so trust their X-Forwarded-For.
+      FORWARDED_ALLOW_IPS: "*"
+    depends_on: !override
+      migrate: { condition: service_completed_successfully }
+      storage-init: { condition: service_completed_successfully }
+      valkey: { condition: service_healthy }
+      gotenberg: { condition: service_healthy }
+    mem_limit: 1g
+
+  auth-migrate:
+    <<: *one-shot
+
+  auth:
+    <<: *restart
+    ports: !reset []
+    environment:
+      SMTP_USER: ${SMTP_USERNAME:?set SMTP_USERNAME in .env}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_PASSWORD in .env}
+      SMTP_SECURE: ${SMTP_SECURE:-false} # false = STARTTLS on port 587 (Brevo)
+    depends_on: !override
+      auth-migrate: { condition: service_completed_successfully }
+    mem_limit: 512m
+
+  web:
+    <<: *restart
+    ports: !reset []
+    mem_limit: 768m
+
+  worker:
+    <<: *restart
+    environment: *prod-app-env
+    mem_limit: 768m
+
+volumes:
+  caddydata:
+  caddyconfig:

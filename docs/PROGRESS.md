@@ -3,12 +3,15 @@
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
 ## Current state (2026-10-09)
-- **Done: R2.5 plans and subscriptions** on `feat/r2-5-plans` (ADR-0025, migration 0013, module
-  `app/modules/subscriptions`, Settings → Plan & billing, banners, navigation by plan).
-- **Next:**
-  - R2.6 production. The owner is choosing a free test setup: an Oracle Always Free VM running the same
-    Compose stack, or Neon + Render, which needs an in-API worker and migrations on start.
-  - R2.5b: referrals, renewal reminders and receipts for our own billing.
+- **Done: R2.5 plans and subscriptions** (PR #8, merged).
+- **Done: R2.6 production setup** on `feat/r2-6-production`:
+  - files: `compose.prod.yaml`, `deploy/`, runbook `docs/runbooks/deploy-vm.md`, ADR-0020 amendment;
+  - rehearsed locally on ARM64.
+- **Waiting on the owner:**
+  - an Oracle Cloud account (needs a card) and an Ampere A1 VM;
+  - Brevo SMTP login and key, and a verified sender.
+  - Then follow the runbook (sections 1–4). The test domain is `<ip>.sslip.io`.
+- **Next:** R2.5b (referrals, renewal reminders, receipts for our own billing).
 
 ## Earlier state (2026-10-08)
 - **Done:**
@@ -59,6 +62,7 @@ Read this first when resuming work. Update it at the end of every session (newes
 ## Decisions made
 | Date | Decision | Where |
 |---|---|---|
+| 2026-10-09 | Test hosting on an Oracle Cloud Always Free ARM VM (same Compose stack as production); Brevo for email; restic backups to Oracle Object Storage | ADR-0020 amendment |
 | 2026-10-09 | Plans enforced by the API (402 `plan_feature` / `plan_limit` / `subscription_inactive`); 30-day Agency trial; 7-day grace then read-only; billing by M-Pesa prompt, no auto-renew | ADR-0025 |
 | 2026-10-08 | Payments by M-Pesa Daraja only (tenant's own shortcode); cards "coming soon"; Paystack on hold | ADR-0015 |
 | 2026-10-08 | eTIMS optional at launch (manual reference); KRA integration later | ADR-0017 |

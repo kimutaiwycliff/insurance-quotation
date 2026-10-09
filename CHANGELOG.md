@@ -5,6 +5,22 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: R2.6 production on one VM (2026-10-09)
+- `compose.prod.yaml`:
+  - Caddy with automatic HTTPS for `app.`, `api.` and `files.` hosts;
+  - no other host ports, and no Mailpit;
+  - restart policies, memory limits, log rotation, JSON logs.
+- The API host exposes only M-Pesa webhooks, unsubscribe links and `/health/live`.
+- `deploy/bin/` scripts:
+  - one-time VM bootstrap (Docker, Oracle firewall, swap, SSH hardening, automatic updates, cron);
+  - `.env` generation with random secrets;
+  - deploy with a pre-deploy backup and a printed rollback;
+  - encrypted off-site backups (restic), a weekly restore check, restore by date, health checks.
+- Runbook `docs/runbooks/deploy-vm.md` (Oracle Cloud Always Free, Brevo, Daraja sandbox, disaster recovery,
+  moving to a real domain).
+- CI checks the deploy files (`make deploy-check`) and builds every image on ARM64.
+- Rehearsed on ARM64: production-mode deploy, HTTPS, API lock-down, backup and full restore.
+
 ### Added: R2.5 plans and subscriptions (2026-10-09)
 - **Plans**: Free, Agent, Agency and Business, with the approved prices (docs/PRICING.md, ADR-0025).
   - Every new account gets a 30-day Agency trial; existing accounts get one from today.

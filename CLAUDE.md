@@ -9,7 +9,7 @@ to win more business, plus a standalone quotation & invoicing tier for SMEs. Ken
 3. `docs/SPEC_REVIEW.md`: verified Kenyan regulatory facts and the corrections to the original spec
 4. `docs/PROJECT_SPEC.md`: the original product spec
 
-Current milestone: **R0 and R1.1–R1.5 done: the R1 agent MVP is complete** (CRM, insurers & premium engine, quotes, policies & renewals, commission & import). R2 (invoicing tier) in progress: R2.1 invoicing core. Slices: plan Amendments A1.1 (R1) and A1.2 (R2). `main` is protected: work through pull requests.
+Current milestone: **R0 and R1.1–R1.5 done: the R1 agent MVP is complete** (CRM, insurers & premium engine, quotes, policies & renewals, commission & import). R2 (invoicing tier, M-Pesa, plans, production setup) done up to R2.6; next R2.5b. Slices: plan Amendments A1.1 (R1) and A1.2 (R2). `main` is protected: work through pull requests.
 **Start every session by reading `docs/PROGRESS.md`** (handoff log); update it and `CHANGELOG.md` before ending.
 
 ## Non-negotiable rules
@@ -45,6 +45,7 @@ Current milestone: **R0 and R1.1–R1.5 done: the R1 agent MVP is complete** (CR
 | Web checks / browser E2E | `make web-check` / `make e2e-web` |
 | Regenerate OpenAPI | `make openapi` (CI fails if `apps/api/openapi.json` is stale) |
 | Dependency audit | `make audit` |
+| Production deploy files | `make deploy-check`; runbook `docs/runbooks/deploy-vm.md` |
 
 ## Layout
 ```
