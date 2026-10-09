@@ -5,6 +5,13 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: R2.4 optional eTIMS (2026-10-09)
+- Settings → **Tax & eTIMS**: off by default.
+- When it is on, issued invoices and credit notes have a KRA eTIMS panel to record the CU invoice number and
+  the verification link from the business's own eTIMS tool. They are printed on the PDF and on the client's
+  page.
+- Documents still missing a number are flagged in the list and on the invoicing overview.
+
 ### Added: R2.3 M-Pesa Daraja (2026-10-08)
 - **Settings → Payments:**
   - connect the business's own Paybill or Till (Daraja keys checked with Safaricom and stored encrypted);

@@ -12,6 +12,8 @@ export interface BillingSummary {
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   collected_this_month: string;
   currency: string;
+  /** Issued invoices and credit notes without an eTIMS CU number */
+  etims_pending: number;
   /** @pattern ^-?\d{1,16}(\.\d{1,4})?$ */
   invoiced_this_month: string;
   months: MonthBilling[];

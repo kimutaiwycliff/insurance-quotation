@@ -51,6 +51,8 @@ class Tenant(Audited, Versioned, Base):
     renewal_client_emails: Mapped[bool] = mapped_column(server_default=text("false"))
     # Invoice and quote reminders emailed to clients (R2.2); off until the tenant turns them on.
     billing_reminders: Mapped[bool] = mapped_column(server_default=text("false"))
+    # eTIMS is optional at launch (ADR-0017): when on, issued invoices ask for the KRA CU invoice number.
+    etims_enabled: Mapped[bool] = mapped_column(server_default=text("false"))
     invoice_reminder_days_before: Mapped[list[int]] = mapped_column(
         ARRAY(SmallInteger), server_default=text("'{3}'")
     )

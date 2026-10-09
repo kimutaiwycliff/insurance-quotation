@@ -35,6 +35,7 @@ test("an owner invoices a client, records payments and the client sees the invoi
   await page.getByRole("button", { name: "Issue" }).click();
   await expect(page.getByRole("heading", { name: /Invoice INV-/ })).toBeVisible();
   await expect(page.getByText("Unpaid", { exact: true })).toBeVisible();
+  const invoiceUrl = page.url();
   await page.getByRole("button", { name: "Record payment" }).click();
   const pay = page.getByRole("dialog");
   await pay.getByLabel("Amount (KES)").fill("2000");
@@ -61,4 +62,14 @@ test("an owner invoices a client, records payments and the client sees the invoi
   await page.goto("/payments");
   await expect(page.getByRole("list", { name: "Payments" }).getByRole("listitem")).toHaveCount(2);
   await expectAccessible(page, "payments");
+
+  // eTIMS is optional: turn it on, then record the CU number from the business's own eTIMS tool.
+  await page.goto("/settings/tax");
+  await page.getByRole("switch", { name: "Record eTIMS on invoices" }).click();
+  await expect(page.getByText("eTIMS turned on")).toBeVisible();
+  await page.goto(invoiceUrl);
+  await page.getByLabel("CU invoice number").fill("KRAMW0012345678901");
+  await page.getByRole("button", { name: "Save eTIMS details" }).click();
+  await expect(page.getByText("KRAMW0012345678901")).toBeVisible();
+  await expectAccessible(page, "invoice with eTIMS");
 });

@@ -66,6 +66,7 @@ class OrganizationOut(BaseModel):
     renewal_reminder_days: list[int]
     renewal_client_emails: bool
     billing_reminders: bool
+    etims_enabled: bool
     invoice_reminder_days_before: list[int]
     invoice_reminder_days_after: list[int]
     version: int
@@ -104,6 +105,9 @@ class OrganizationUpdate(_Strict):
     billing_reminders: bool | None = Field(
         default=None,
         description="Email clients before and after invoices fall due, and before quotes expire",
+    )
+    etims_enabled: bool | None = Field(
+        default=None, description="Record the KRA eTIMS CU invoice number on issued invoices"
     )
     invoice_reminder_days_before: (
         Annotated[list[Annotated[int, Field(ge=1, le=60)]], Field(min_length=1, max_length=4)]

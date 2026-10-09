@@ -16,6 +16,8 @@ export interface OrganizationUpdate {
   billing_reminders?: boolean | null;
   default_currency?: string | null;
   email?: string | null;
+  /** Record the KRA eTIMS CU invoice number on issued invoices */
+  etims_enabled?: boolean | null;
   fiscal_year_start_month?: number | null;
   intermediary_type?: OrganizationUpdateIntermediaryType;
   invoice_reminder_days_after?: number[] | null;

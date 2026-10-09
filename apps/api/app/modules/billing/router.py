@@ -15,6 +15,7 @@ from app.modules.billing.schemas import (
     ClientAccount,
     CreditNoteCreate,
     DocumentSent,
+    EtimsIn,
     FileLink,
     InvoiceCreate,
     InvoiceUpdate,
@@ -184,6 +185,14 @@ async def void(
     ctx: IssueCtx, document_id: uuid.UUID, body: Void, response: Response
 ) -> BillingDocumentOut:
     return await _out(ctx, await service.void(ctx, document_id, body), response)
+
+
+@router.put("/billing-documents/{document_id}/etims", operation_id="billing_documents_etims")
+async def record_etims(
+    ctx: IssueCtx, document_id: uuid.UUID, body: EtimsIn, response: Response
+) -> BillingDocumentOut:
+    """Record the KRA eTIMS CU invoice number (and verification link) from your own eTIMS tool."""
+    return await _out(ctx, await service.record_etims(ctx, document_id, body), response)
 
 
 @router.post("/billing-documents/{document_id}/send", operation_id="billing_documents_send")

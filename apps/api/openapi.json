@@ -593,6 +593,40 @@
             ],
             "title": "Due Date"
           },
+          "etims_cu_invoice_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etims Cu Invoice Number"
+          },
+          "etims_recorded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etims Recorded At"
+          },
+          "etims_verification_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etims Verification Url"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -831,6 +865,7 @@
           "total",
           "paid",
           "balance",
+          "etims_cu_invoice_number",
           "created_at",
           "lines",
           "subtotal",
@@ -854,6 +889,8 @@
           "responded_at",
           "response",
           "converted_document_id",
+          "etims_verification_url",
+          "etims_recorded_at",
           "version"
         ],
         "title": "BillingDocumentOut",
@@ -889,6 +926,17 @@
               }
             ],
             "title": "Due Date"
+          },
+          "etims_cu_invoice_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etims Cu Invoice Number"
           },
           "id": {
             "format": "uuid",
@@ -983,6 +1031,7 @@
           "total",
           "paid",
           "balance",
+          "etims_cu_invoice_number",
           "created_at"
         ],
         "title": "BillingDocumentSummary",
@@ -1099,6 +1148,11 @@
             "title": "Currency",
             "type": "string"
           },
+          "etims_pending": {
+            "description": "Issued invoices and credit notes without an eTIMS CU number",
+            "title": "Etims Pending",
+            "type": "integer"
+          },
           "invoiced_this_month": {
             "pattern": "^-?\\d{1,16}(\\.\\d{1,4})?$",
             "title": "Invoiced This Month",
@@ -1143,6 +1197,7 @@
           "ageing",
           "invoiced_this_month",
           "collected_this_month",
+          "etims_pending",
           "quotes_awaiting",
           "quotes_awaiting_total",
           "months"
@@ -4444,6 +4499,36 @@
         "title": "EntityRef",
         "type": "object"
       },
+      "EtimsIn": {
+        "additionalProperties": false,
+        "description": "What the tenant's own eTIMS tool returned for this document (ADR-0017).",
+        "properties": {
+          "cu_invoice_number": {
+            "description": "The KRA control-unit (CU) invoice number",
+            "pattern": "^[A-Za-z0-9/-]{6,50}$",
+            "title": "Cu Invoice Number",
+            "type": "string"
+          },
+          "verification_url": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The KRA verification link behind the QR code (https://\u2026kra.go.ke/\u2026)",
+            "title": "Verification Url"
+          }
+        },
+        "required": [
+          "cu_invoice_number"
+        ],
+        "title": "EtimsIn",
+        "type": "object"
+      },
       "FeeIn": {
         "additionalProperties": false,
         "properties": {
@@ -7449,6 +7534,10 @@
             ],
             "title": "Email"
           },
+          "etims_enabled": {
+            "title": "Etims Enabled",
+            "type": "boolean"
+          },
           "fiscal_year_start_month": {
             "title": "Fiscal Year Start Month",
             "type": "integer"
@@ -7639,6 +7728,7 @@
           "renewal_reminder_days",
           "renewal_client_emails",
           "billing_reminders",
+          "etims_enabled",
           "invoice_reminder_days_before",
           "invoice_reminder_days_after",
           "version"
@@ -7698,6 +7788,18 @@
               }
             ],
             "title": "Email"
+          },
+          "etims_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Record the KRA eTIMS CU invoice number on issued invoices",
+            "title": "Etims Enabled"
           },
           "fiscal_year_start_month": {
             "anyOf": [
@@ -13855,6 +13957,60 @@
           }
         },
         "summary": "Update Document",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/v1/billing-documents/{document_id}/etims": {
+      "put": {
+        "description": "Record the KRA eTIMS CU invoice number (and verification link) from your own eTIMS tool.",
+        "operationId": "billing_documents_etims",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EtimsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingDocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Etims",
         "tags": [
           "billing"
         ]

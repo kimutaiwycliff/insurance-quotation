@@ -16,8 +16,9 @@ from decimal import Decimal
 from http import HTTPStatus
 from typing import Any, Literal
 from urllib.parse import quote as urlquote
+from urllib.parse import urlsplit
 
-from sqlalchemy import Select, delete, select, text
+from sqlalchemy import Select, delete, func, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,6 +55,7 @@ from app.modules.billing.schemas import (
     BillingSummary,
     ClientAccount,
     CreditNoteCreate,
+    EtimsIn,
     InvoiceCreate,
     InvoiceUpdate,
     Issue,
@@ -238,6 +240,7 @@ def _summary(doc: BillingDocument, client: ClientRef, paid: Decimal, today: date
         "valid_until": doc.valid_until,
         "total": _round(doc.total, c),
         "paid": _round(paid, c),
+        "etims_cu_invoice_number": doc.etims_cu_invoice_number,
         "balance": _round(
             max(doc.total - paid, ZERO) if doc.status == ISSUED and doc.kind != QUOTE else ZERO, c
         ),
@@ -343,6 +346,8 @@ async def to_out(ctx: TenantContext, doc: BillingDocument) -> BillingDocumentOut
         responded_at=doc.responded_at,
         response=doc.response,
         converted_document_id=doc.converted_document_id,
+        etims_verification_url=doc.etims_verification_url,
+        etims_recorded_at=doc.etims_recorded_at,
         issued_at=doc.issued_at,
         voided_at=doc.voided_at,
         void_reason=doc.void_reason,
@@ -1191,6 +1196,16 @@ async def document_view(
         ),
         notes=doc.notes,
         terms=doc.terms,
+        tax_control=[
+            KeyValue(label="KRA CU invoice no.", value=doc.etims_cu_invoice_number),
+            *(
+                [KeyValue(label="Verify on KRA eTIMS", value=doc.etims_verification_url)]
+                if doc.etims_verification_url
+                else []
+            ),
+        ]
+        if doc.etims_cu_invoice_number
+        else [],
         payment=PaymentInstructions(reference=doc.payment_reference)
         if doc.payment_reference
         else None,
@@ -1602,6 +1617,21 @@ async def send_billing_reminder(
 # ---------------------------------------------------------------- dashboard
 
 
+async def _etims_pending(ctx: TenantContext, enabled: bool) -> int:
+    if not enabled:
+        return 0
+    stmt = _scoped(
+        select(func.count()).select_from(BillingDocument),
+        ctx,
+        BillingDocument.owner_user_id,
+    ).where(
+        BillingDocument.status == ISSUED,
+        BillingDocument.kind.in_([INVOICE, CREDIT_NOTE]),
+        BillingDocument.etims_cu_invoice_number.is_(None),
+    )
+    return int(await ctx.session.scalar(stmt) or 0)
+
+
 async def billing_summary(ctx: TenantContext) -> BillingSummary:
     tenant = await tenancy.get_tenant(ctx.session, ctx.tenant_id)
     currency = tenant.default_currency
@@ -1672,6 +1702,7 @@ async def billing_summary(ctx: TenantContext) -> BillingSummary:
         ],
         invoiced_this_month=_round(months[this_month][0], currency),
         collected_this_month=_round(months[this_month][1], currency),
+        etims_pending=await _etims_pending(ctx, tenant.etims_enabled),
         quotes_awaiting=len(quotes),
         quotes_awaiting_total=_round(sum((q.total for q in quotes), ZERO), currency),
         months=[
@@ -1726,3 +1757,52 @@ async def find_by_payment_reference(session: AsyncSession, reference: str) -> uu
             BillingDocument.status == ISSUED,
         )
     )
+
+
+# ---------------------------------------------------------------- eTIMS (optional, ADR-0017)
+
+
+class EtimsDisabledError(ConflictError):
+    code = "etims_disabled"
+    title = "Turn on eTIMS in the agency settings first"
+
+
+async def record_etims(
+    ctx: TenantContext, document_id: uuid.UUID, body: EtimsIn
+) -> BillingDocument:
+    """Record the KRA control-unit details the tenant's own eTIMS tool issued for this document."""
+    tenant = await tenancy.get_tenant(ctx.session, ctx.tenant_id)
+    if not tenant.etims_enabled:
+        raise EtimsDisabledError()
+    doc = await get_document(ctx, document_id, lock=True)
+    if doc.kind == QUOTE or doc.status != ISSUED:
+        raise BillingStateError("Only issued invoices and credit notes go to eTIMS")
+    url = body.verification_url
+    if url:
+        parsed = urlsplit(url)
+        host = (parsed.hostname or "").lower()
+        if parsed.scheme != "https" or not (host == "kra.go.ke" or host.endswith(".kra.go.ke")):
+            raise BillingInputError(
+                "The verification link must be a KRA address (https://…kra.go.ke/…)"
+            )
+    taken = await ctx.session.scalar(
+        select(BillingDocument.id).where(
+            BillingDocument.etims_cu_invoice_number == body.cu_invoice_number,
+            BillingDocument.id != doc.id,
+        )
+    )
+    if taken is not None:
+        raise ConflictError("That CU invoice number is already recorded on another document")
+    before = doc.etims_cu_invoice_number
+    doc.etims_cu_invoice_number, doc.etims_verification_url = body.cu_invoice_number, url
+    doc.etims_recorded_at, doc.etims_recorded_by = datetime.now(UTC), ctx.principal.user_id
+    await audit.record(
+        ctx,
+        f"{doc.kind}.etims_recorded",
+        entity_type=doc.kind,
+        entity_id=doc.id,
+        changes={"before": before or "", "after": body.cu_invoice_number},
+    )
+    await ctx.session.flush()
+    await ctx.session.refresh(doc)
+    return doc

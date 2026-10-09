@@ -105,6 +105,7 @@ export * from './duplicateMatch';
 export * from './duplicateMatchMatchedOnItem';
 export * from './duplicateResult';
 export * from './entityRef';
+export * from './etimsIn';
 export * from './feeIn';
 export * from './fieldInfo';
 export * from './fileLink';

@@ -135,7 +135,8 @@
     "security": "Security",
     "insurers": "Insurers & products",
     "items": "Items & prices",
-    "payments": "Payments"
+    "payments": "Payments",
+    "tax": "Tax & eTIMS"
   },
   "organization": {
     "name": "Trading name",

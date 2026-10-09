@@ -31,6 +31,7 @@ import type {
   CreditNoteCreate,
   CreditNotesListParams,
   DocumentSent,
+  EtimsIn,
   FileLink,
   HTTPValidationError,
   InvoiceCreate,
@@ -256,6 +257,95 @@ export const useBillingDocumentsUpdate = <TError = HTTPValidationError,
         TContext
       > => {
       return useMutation(getBillingDocumentsUpdateMutationOptions(options), queryClient);
+    }
+    export const getBillingDocumentsEtimsUrl = (documentId: string,) => {
+
+
+
+
+  return `/api/v1/billing-documents/${documentId}/etims`
+}
+
+/**
+ * Record the KRA eTIMS CU invoice number (and verification link) from your own eTIMS tool.
+ * @summary Record Etims
+ */
+export const billingDocumentsEtims = async (documentId: string,
+    etimsIn: EtimsIn, options?: Parameters<typeof apiFetch>[1]): Promise<BillingDocumentOut> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<BillingDocumentOut>(getBillingDocumentsEtimsUrl(documentId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(etimsIn)
+  }
+);}
+
+
+
+
+
+export const getBillingDocumentsEtimsMutationKey = () => ['billingDocumentsEtims'] as const;
+
+export const getBillingDocumentsEtimsMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof billingDocumentsEtims>>, TError,BillingDocumentsEtimsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof billingDocumentsEtims>>, TError,BillingDocumentsEtimsMutationVariables, TContext> => {
+
+const mutationKey = getBillingDocumentsEtimsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof billingDocumentsEtims>>, BillingDocumentsEtimsMutationVariables> = (props) => {
+          const {documentId,data} = props ?? {};
+
+          return  billingDocumentsEtims(documentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BillingDocumentsEtimsMutationResult = NonNullable<Awaited<ReturnType<typeof billingDocumentsEtims>>>
+    export type BillingDocumentsEtimsMutationBody = EtimsIn
+    export type BillingDocumentsEtimsMutationError = HTTPValidationError
+    export type BillingDocumentsEtimsMutationVariables = {documentId: string;data: EtimsIn}
+
+    /**
+ * @summary Record Etims
+ */
+export const useBillingDocumentsEtims = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof billingDocumentsEtims>>, TError,BillingDocumentsEtimsMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof billingDocumentsEtims>>,
+        TError,
+        BillingDocumentsEtimsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getBillingDocumentsEtimsMutationOptions(options), queryClient);
     }
     export const getBillingDocumentsIssueUrl = (documentId: string,) => {
 

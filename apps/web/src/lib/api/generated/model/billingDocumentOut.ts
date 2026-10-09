@@ -25,6 +25,9 @@ export interface BillingDocumentOut {
   discount: string;
   document_id: string | null;
   due_date: string | null;
+  etims_cu_invoice_number: string | null;
+  etims_recorded_at: string | null;
+  etims_verification_url: string | null;
   id: string;
   issue_date: string | null;
   issued_at: string | null;

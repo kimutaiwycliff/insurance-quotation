@@ -13,6 +13,7 @@ export interface BillingDocumentSummary {
   created_at: string;
   currency: string;
   due_date: string | null;
+  etims_cu_invoice_number: string | null;
   id: string;
   issue_date: string | null;
   kind: string;

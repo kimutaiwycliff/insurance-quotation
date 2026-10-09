@@ -12,6 +12,7 @@ export interface OrganizationOut {
   country_code: string;
   default_currency: string;
   email: string | null;
+  etims_enabled: boolean;
   fiscal_year_start_month: number;
   id: string;
   intermediary_type: string;

@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { InvoiceEditor } from "@/components/billing/invoice-editor";
+import { EtimsPanel } from "@/components/billing/etims";
 import { MpesaPromptButton } from "@/components/billing/mpesa-prompt";
 import { BillingStatus, METHOD_LABELS } from "@/components/billing/status";
 import { Field, FormError } from "@/components/forms/field";
@@ -567,6 +568,7 @@ export function InvoiceDetail({ documentId }: { documentId: string }) {
           <strong className="tabular text-foreground">{d.payment_reference}</strong>
         </p>
       )}
+      <EtimsPanel doc={d} onSaved={refresh} />
       {d.notes && (
         <p className="text-muted-foreground max-w-prose whitespace-pre-line">{d.notes}</p>
       )}
