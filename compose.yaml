@@ -118,7 +118,7 @@ services:
     restart: "no"
 
   mailpit:
-    image: axllent/mailpit:v1.31.4
+    image: axllent/mailpit:v1.31.5
     ports:
       - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
     healthcheck:
