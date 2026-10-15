@@ -4,7 +4,7 @@
 
 ARG PYTHON_IMAGE=python:3.14-slim-bookworm
 
-FROM astral/uv:0.12.23 AS uv
+FROM astral/uv:0.13.0 AS uv
 
 # ---------------------------------------------------------------- base
 FROM ${PYTHON_IMAGE} AS base
