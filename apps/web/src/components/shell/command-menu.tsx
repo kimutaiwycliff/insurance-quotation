@@ -1,10 +1,11 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { LifeBuoy, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
+import { TOPICS, canSee } from "@/components/help/topics";
 import { visibleNav } from "@/components/shell/nav";
 import { visibleSections } from "@/components/settings/sections";
 import {
@@ -70,6 +71,13 @@ export function CommandMenu({ me }: { me: Me }) {
                 </CommandItem>
               ),
             )}
+          </CommandGroup>
+          <CommandGroup heading="Help & guide">
+            {TOPICS.filter((topic) => canSee(topic, me.permissions as string[], me.features)).map((topic) => (
+              <CommandItem key={topic.id} value={`${topic.title} ${(topic.keywords ?? []).join(" ")}`} onSelect={() => go(`/help#topic-${topic.id}`)}>
+                <LifeBuoy aria-hidden="true" /> {topic.title}
+              </CommandItem>
+            ))}
           </CommandGroup>
         </CommandList>
       </CommandDialog>

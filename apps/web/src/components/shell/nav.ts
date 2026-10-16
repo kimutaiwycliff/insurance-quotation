@@ -4,6 +4,7 @@ import {
   FileText,
   Funnel,
   Home,
+  LifeBuoy,
   ListChecks,
   ReceiptText,
   type LucideIcon,
@@ -26,7 +27,8 @@ export interface NavItem {
     | "renewals"
     | "commission"
     | "invoices"
-    | "settings";
+    | "settings"
+    | "help";
   icon: LucideIcon;
   /** Modules arriving in R1 are listed so agents see where the product is going, but disabled. */
   soon?: boolean;
@@ -48,6 +50,7 @@ export const NAV: NavItem[] = [
   { href: "/invoices", key: "invoices", icon: ReceiptText, anyOf: ["invoice:write", "invoice:issue", "client:read:all"] },
   { href: "/commission", key: "commission", icon: Wallet, anyOf: ["commission:read:own", "commission:read:all"], feature: "commission" },
   { href: "/settings", key: "settings", icon: Settings },
+  { href: "/help", key: "help", icon: LifeBuoy },
 ];
 
 export function hasFeature(features: readonly string[], feature: string | undefined): boolean {

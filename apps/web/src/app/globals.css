@@ -111,6 +111,68 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+  /* ---------------------------------------------------------------- help centre (/help) */
+  .help-hero::after {
+    /* A faint rubber-stamp ring behind the search, echoing the agency seal. */
+    content: "";
+    position: absolute;
+    right: -4rem;
+    top: -4rem;
+    width: 16rem;
+    height: 16rem;
+    border-radius: 9999px;
+    background: repeating-radial-gradient(circle, transparent 0 18px, color-mix(in oklab, var(--primary) 9%, transparent) 18px 20px);
+    pointer-events: none;
+  }
+  .help-rise {
+    animation: help-rise 0.35s ease-out both;
+  }
+  .help-placeholder {
+    animation: help-swap 0.45s ease-out both;
+  }
+  .help-stamp {
+    transform: rotate(-12deg);
+    animation: help-stamp 0.42s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  }
+  .help-progress {
+    transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .help-collapse {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease;
+  }
+  .help-collapse[data-open="true"] {
+    grid-template-rows: 1fr;
+  }
+  @keyframes help-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  @keyframes help-swap {
+    from {
+      opacity: 0;
+      transform: translateY(60%);
+    }
+  }
+  /* A rubber stamp coming down: big and faint, then pressed on, with a small bounce. */
+  @keyframes help-stamp {
+    0% {
+      opacity: 0;
+      transform: scale(1.9) rotate(-28deg);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(0.9) rotate(-10deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(-12deg);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
