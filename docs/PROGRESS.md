@@ -2,7 +2,10 @@
 
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
-## Current state (2026-10-09)
+## Current state (2026-10-16)
+- **In review: in-app Help & guide** on `feat/help-centre` (`/help`, `components/help/`).
+
+## Earlier state (2026-10-09)
 - **Done: R2.5 plans and subscriptions** (PR #8, merged).
 - **Done: R2.6 production setup** on `feat/r2-6-production`:
   - files: `compose.prod.yaml`, `deploy/`, runbook `docs/runbooks/deploy-vm.md`, ADR-0020 amendment;

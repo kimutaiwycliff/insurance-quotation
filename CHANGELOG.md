@@ -5,6 +5,17 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: in-app Help & guide (2026-10-16)
+- **Help & guide** page (`/help`, in the main menu):
+  - searchable guide to every feature, with numbered steps, tips and a "Take me there" link;
+  - search understands everyday words (bill → invoice, excel → import) and any spelling of M-Pesa, and
+    marks the matching words;
+  - topics are filtered by area and shown only when the member's plan and role include them.
+- **"Your first week" stamp card**: setup steps (KRA PIN, logo, first client, insurer, first quote, M-Pesa,
+  team, two-factor) are stamped from the agency's real data as they get done.
+- Guide topics are also in the ⌘K search. Topics can be shared as links (`/help#topic-send-quote`), and `/`
+  focuses the search.
+
 ### Added: R2.6 production on one VM (2026-10-09)
 - `compose.prod.yaml`:
   - Caddy with automatic HTTPS for `app.`, `api.` and `files.` hosts;

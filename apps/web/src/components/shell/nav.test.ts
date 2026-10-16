@@ -9,7 +9,7 @@ const ALL = ["commission:read:all", "invoice:write", "org:read", "insurer:read"]
 describe("plan features in navigation", () => {
   it("hides insurance and commission for the Business plan", () => {
     const keys = visibleNav(ALL, ["branding", "team"]).map((i) => i.key);
-    expect(keys).toEqual(["home", "clients", "leads", "tasks", "invoices", "settings"]);
+    expect(keys).toEqual(["home", "clients", "leads", "tasks", "invoices", "settings", "help"]);
     expect(visibleSections(ALL, ["branding"]).map((s) => s.key)).not.toContain("insurers");
   });
 
