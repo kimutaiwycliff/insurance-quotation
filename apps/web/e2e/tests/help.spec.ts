@@ -5,6 +5,11 @@ import { expectAccessible, newAgency } from "./helpers";
 test("an agent finds their way with the in-app guide", async ({ page }, testInfo) => {
   await newAgency(page, `help-${testInfo.project.name}`);
   const mobile = testInfo.project.name === "mobile";
+  // Finish onboarding with a KRA PIN, so the setup card has something to stamp.
+  await page.getByLabel("KRA PIN").fill("P051234567X");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Finish setup" }).click();
+  await expect(page.getByRole("heading", { name: /Welcome,/ })).toBeVisible();
 
   // The guide is in the main menu.
   if (mobile) {
