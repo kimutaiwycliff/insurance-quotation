@@ -43,12 +43,14 @@ android {
             buildConfigField("String", "API_URL", "\"${setting("apiUrl", "http://10.0.2.2:8000")}\"")
             // The auth service trusts the web app's origin; locally that is localhost, not 10.0.2.2.
             buildConfigField("String", "AUTH_ORIGIN", "\"${setting("authOrigin", "http://localhost:3000")}\"")
+            buildConfigField("String", "LOCALHOST_ALIAS", "\"${setting("localhostAlias", "10.0.2.2")}\"")
             applicationIdSuffix = ".debug"
         }
         release {
             buildConfigField("String", "SITE_URL", "\"${setting("siteUrl", "https://app.example.invalid")}\"")
             buildConfigField("String", "API_URL", "\"${setting("apiUrl", "https://api.example.invalid")}\"")
             buildConfigField("String", "AUTH_ORIGIN", "\"${setting("siteUrl", "https://app.example.invalid")}\"")
+            buildConfigField("String", "LOCALHOST_ALIAS", "\"\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

@@ -5,6 +5,38 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: Android app, money (A4) (2026-10-19)
+- **Invoices and sales quotes:**
+  - billing summary; editor with items, quantity, discount and tax code (sections and optional extras on
+    quotes);
+  - issue, send (link, WhatsApp, email), PDF, record payment, M-Pesa prompt followed live, use credit,
+    credit note, void, eTIMS details;
+  - convert an accepted sales quote to an invoice.
+- **Payments:** payments received, plus the M-Pesa matching queue (assign to a client and invoice, or set
+  aside).
+- Client pages gain a Billing tab with what the client owes and their credit.
+
+### Added: Android app, insurance (A3) (2026-10-19)
+- **More → Insurance:**
+  - premium calculator, cheapest first, with levies and commission;
+  - quotes: create, send by link, WhatsApp or email, see the acceptance, open the PDF, withdraw;
+  - policies: from an accepted quote or by hand; payments; activation; reminders; renewal stage; renewal
+    quotes;
+  - renewals board by stage;
+  - commission: summary, per insurer, WHT certificates, and recording what an insurer paid.
+- Client pages gain Quotes and Policies tabs; Home numbers link to renewals and policies.
+
+### Added: Android app, CRM (A2) (2026-10-19)
+- **Clients:** add and edit, with a duplicate warning while typing; client tabs for Overview, Timeline (log
+  calls and visits), Tasks and Documents (camera or file upload, photos shrunk to save data, open from the
+  app).
+- **Leads:** pipeline by stage, search, add and edit, Call and WhatsApp, move stage (with a lost reason),
+  and Won converts the lead to a client.
+- **Tasks:** overdue, today, upcoming and done; add, edit and complete; tasks can be linked to clients.
+- **Navigation:** bottom tabs Home, Clients, Leads, Tasks, More; Home numbers link to their lists.
+- **API client:** sends `If-Match` on edits and an `Idempotency-Key` on creates, and shows field-level
+  validation messages.
+
 ### Added: Android app, first slice (2026-10-19)
 - `apps/android`: a native Kotlin and Jetpack Compose app (ADR-0026).
   - **Sign-in:** email and password with two-factor codes, then choose an agency. The session is

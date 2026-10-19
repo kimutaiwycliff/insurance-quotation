@@ -55,16 +55,19 @@ class HomeViewModel(private val api: BrokerApi) : ViewModel() {
     }
 }
 
-/** "KES 70,355" from a decimal string (money is never a float, even for display: BigDecimal). */
-fun money(amount: String, currency: String): String {
+/** "KES 70,355" (or "KES 70,355.00" with [decimals]) from a decimal string: money is never a float, even here. */
+fun money(amount: String, currency: String, decimals: Boolean = false): String {
     val value = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO
-    val format = NumberFormat.getNumberInstance(Locale.US).apply { maximumFractionDigits = 0 }
+    val digits = if (decimals && currency != "UGX") 2 else 0
+    val format = NumberFormat.getNumberInstance(Locale.US).apply { minimumFractionDigits = digits; maximumFractionDigits = digits }
     return "$currency ${format.format(value)}"
 }
 
 @Composable
-private fun Tile(value: String, label: String, modifier: Modifier = Modifier, urgent: Boolean = false) {
+private fun Tile(value: String, label: String, modifier: Modifier = Modifier, urgent: Boolean = false, onClick: (() -> Unit)? = null) {
     Card(
+        onClick = onClick ?: {},
+        enabled = onClick != null,
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
@@ -81,7 +84,7 @@ private fun Tile(value: String, label: String, modifier: Modifier = Modifier, ur
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(me: Me, viewModel: HomeViewModel) {
+fun HomeScreen(me: Me, viewModel: HomeViewModel, onNavigate: (String) -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val board = state.board
     when {
@@ -101,12 +104,12 @@ fun HomeScreen(me: Me, viewModel: HomeViewModel) {
                     }
                 }
                 board.tasks?.let { tasks ->
-                    item { Tile("${tasks.overdue}", "Tasks overdue", urgent = tasks.overdue > 0) }
-                    item { Tile("${tasks.today}", "Tasks due today") }
+                    item { Tile("${tasks.overdue}", "Tasks overdue", urgent = tasks.overdue > 0) { onNavigate("tasks") } }
+                    item { Tile("${tasks.today}", "Tasks due today") { onNavigate("tasks") } }
                 }
-                item { Tile("${board.renewalsDue30d}", "Renewals due in 30 days", urgent = board.renewalsDue30d > 0) }
-                item { Tile("${board.clients}", "Clients (+${board.newClients30d} in 30 days)") }
-                item { Tile("${board.policiesActive}", "Active policies") }
+                item { Tile("${board.renewalsDue30d}", "Renewals due in 30 days", urgent = board.renewalsDue30d > 0) { onNavigate("renewals") } }
+                item { Tile("${board.clients}", "Clients (+${board.newClients30d} in 30 days)") { onNavigate("clients") } }
+                item { Tile("${board.policiesActive}", "Active policies") { onNavigate("policies") } }
                 item { Tile("${board.premiumsToRemit}", "Premiums to pass on to insurers") }
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Tile(

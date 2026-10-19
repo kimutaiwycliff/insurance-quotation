@@ -10,8 +10,14 @@ data class Endpoints(
     val apiUrl: String,
     /** Sent as Origin on sign-in requests: the auth service trusts the web app's origin (ADR-0026). */
     val authOrigin: String,
+    /** Debug only: the emulator's name for the computer, replacing "localhost" in storage links. */
+    val localhostAlias: String = "",
 ) {
+    /** Presigned storage links name the server as the computer sees it; the emulator needs [localhostAlias]. */
+    fun reachable(url: String): String =
+        if (localhostAlias.isBlank()) url else url.replace("://localhost:", "://$localhostAlias:").replace("://127.0.0.1:", "://$localhostAlias:")
+
     companion object {
-        val fromBuild = Endpoints(BuildConfig.SITE_URL, BuildConfig.API_URL, BuildConfig.AUTH_ORIGIN)
+        val fromBuild = Endpoints(BuildConfig.SITE_URL, BuildConfig.API_URL, BuildConfig.AUTH_ORIGIN, BuildConfig.LOCALHOST_ALIAS)
     }
 }
