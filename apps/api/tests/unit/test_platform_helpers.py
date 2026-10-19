@@ -3,15 +3,18 @@
 import uuid
 
 import pytest
+from fastapi import Response
 from fastapi.routing import APIRoute
 
 from app.core.concurrency import check_version, etag, parse_if_match
+from app.core.config import Settings
 from app.core.errors import PreconditionFailedError, PreconditionRequiredError
 from app.core.pagination import InvalidCursorError, build_page, decode_cursor, encode_cursor
 from app.core.permissions import ROLE_PERMISSIONS, Perm, Role, normalise_role, permissions_for
 from app.core.tenancy import tenant_id_for_org
 from app.main import API_V1_PREFIX, create_app
 from app.modules.numbering.references import generate_payment_reference
+from app.platform.app_config import app_config
 
 
 class TestConcurrency:
@@ -107,3 +110,19 @@ def test_every_api_route_declares_a_permission(unit_settings: object) -> None:
         if not any(hasattr(c, "required_permission") for c in calls):
             undeclared.append(f"{sorted(route.methods or ())} {route.path}")
     assert undeclared == []
+
+
+async def test_app_config_reports_update_rules() -> None:
+    settings = Settings(
+        android_min_version_code=5,
+        android_latest_version_code=3,  # never below the minimum
+        android_store_url="https://play.google.com/store/apps/details?id=app.example",
+        app_notice="",
+        app_features="offline_notes, new_dashboard",  # type: ignore[arg-type]
+    )
+    response = Response()
+    out = await app_config(response, settings)
+    assert (out.android.min_version_code, out.android.latest_version_code) == (5, 5)
+    assert out.notice is None
+    assert out.features == ["offline_notes", "new_dashboard"]
+    assert response.headers["Cache-Control"] == "public, max-age=300"

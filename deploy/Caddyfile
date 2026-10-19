@@ -27,11 +27,11 @@ app.{$DOMAIN} {
 	reverse_proxy web:3000
 }
 
-# The API is reached directly only by Safaricom (M-Pesa callbacks) and by unsubscribe links in emails.
-# Everything else goes through the web app, so the rest of the API is not exposed.
+# The API is reached directly by the Android app (every /api/v1 route needs its short-lived token, ADR-0026),
+# Safaricom (M-Pesa callbacks) and unsubscribe links in emails. Docs, metrics and /internal stay closed.
 api.{$DOMAIN} {
 	import security
-	@public path /api/v1/webhooks/* /api/v1/public/unsubscribe/* /health/live
+	@public path /api/v1/* /health/live
 	handle @public {
 		reverse_proxy api:8000
 	}

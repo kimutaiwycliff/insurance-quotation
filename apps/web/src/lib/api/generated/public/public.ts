@@ -25,6 +25,7 @@ import type {
 
 import type {
   ActionResult,
+  AppConfigOut,
   Beacon,
   HTTPValidationError,
   PayBody,
@@ -55,6 +56,106 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getAppConfigGetUrl = () => {
+
+
+
+
+  return `/api/v1/public/app-config`
+}
+
+/**
+ * @summary App Config
+ */
+export const appConfigGet = async ( options?: Parameters<typeof apiFetch>[1]): Promise<AppConfigOut> => {
+
+  return apiFetch<AppConfigOut>(getAppConfigGetUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAppConfigGetQueryKey = () => {
+    return [
+    `/api/v1/public/app-config`
+    ] as const;
+    }
+
+
+export const getAppConfigGetQueryOptions = <TData = Awaited<ReturnType<typeof appConfigGet>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appConfigGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAppConfigGetQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof appConfigGet>>> = ({ signal }) => appConfigGet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof appConfigGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AppConfigGetQueryResult = NonNullable<Awaited<ReturnType<typeof appConfigGet>>>
+export type AppConfigGetQueryError = unknown
+
+
+export function useAppConfigGet<TData = Awaited<ReturnType<typeof appConfigGet>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof appConfigGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appConfigGet>>,
+          TError,
+          Awaited<ReturnType<typeof appConfigGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppConfigGet<TData = Awaited<ReturnType<typeof appConfigGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appConfigGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof appConfigGet>>,
+          TError,
+          Awaited<ReturnType<typeof appConfigGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAppConfigGet<TData = Awaited<ReturnType<typeof appConfigGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appConfigGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary App Config
+ */
+
+export function useAppConfigGet<TData = Awaited<ReturnType<typeof appConfigGet>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof appConfigGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAppConfigGetQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
 
 export const getPublicLinkGetUrl = (token: string,) => {
 

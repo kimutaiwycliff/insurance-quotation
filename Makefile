@@ -63,6 +63,11 @@ deploy-check: ## Lint the deploy scripts and validate compose.prod.yaml with a s
 	[ "$$ports" = "caddy " ] || { echo "Only caddy may publish ports, got: $$ports"; exit 1; }; \
 	echo "compose.prod.yaml OK (only caddy publishes ports)"
 
+# ---------------------------------------------------------------- Android app (ADR-0026, apps/android)
+.PHONY: android-check
+android-check: ## Android: lint, unit tests and debug build (needs JDK 17+ and the Android SDK)
+	cd apps/android && ./gradlew lint testDebugUnitTest assembleDebug --console=plain
+
 # ---------------------------------------------------------------- tests
 .PHONY: unit test e2e e2e-web web-check auth-check jobs-shell test-all openapi
 unit: ## Unit tests only (no Docker)

@@ -19,6 +19,8 @@ export * from './ageingBucket';
 export * from './allocationIn';
 export * from './allocationOut';
 export * from './amounts';
+export * from './androidConfig';
+export * from './appConfigOut';
 export * from './auditEventOut';
 export * from './auditEventOutChanges';
 export * from './auditEventsListParams';

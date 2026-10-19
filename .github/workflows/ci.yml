@@ -145,6 +145,22 @@ jobs:
       - name: make e2e
         run: make e2e
 
+  android:
+    name: Android app (lint, unit tests, debug and release builds)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/android
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The runner image ships JDK 17 and the Android SDK; Gradle fetches the platform it needs.
+      - name: Lint, unit tests and builds
+        run: ./gradlew lint testDebugUnitTest assembleDebug assembleRelease --console=plain
+
   deploy:
     name: Production deploy files (compose.prod, scripts)
     runs-on: ubuntu-24.04
