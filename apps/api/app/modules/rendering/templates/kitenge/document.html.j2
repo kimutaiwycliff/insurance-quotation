@@ -1,0 +1,35 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+/* Two-colour diamond weave, drawn with gradients (no images). */
+.weave { height: 16px; border-radius: 3px;
+  background:
+    linear-gradient(135deg, var(--primary) 25%, transparent 25%) -8px 0 / 16px 16px,
+    linear-gradient(225deg, var(--primary) 25%, transparent 25%) -8px 0 / 16px 16px,
+    linear-gradient(315deg, var(--primary) 25%, transparent 25%) 0 0 / 16px 16px,
+    linear-gradient(45deg, var(--primary) 25%, transparent 25%) 0 0 / 16px 16px,
+    var(--accent); }
+.weave.thin { height: 8px; background-size: 8px 8px; opacity: .9; margin-top: 3px; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 0 12px; }
+.top h1 { font-size: 24pt; color: var(--primary); font-weight: 800; }
+.title-slot { text-align: right; }
+.parties { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 6px 0 4px; }
+.parties section { border-top: 3px solid var(--accent); padding-top: 6px; }
+.lines thead th { background: var(--primary); color: var(--on-primary); }
+.lines thead th:first-child { border-left: 6px solid var(--accent); }
+.lines td { border-bottom: 1px solid var(--rule); }
+.totals .grand td { border-top: 0; background: var(--primary); color: var(--on-primary); }
+.h3 { font-size: 10pt; color: var(--primary); margin-bottom: 4px; }
+.closing-weave { margin-top: 22px; }
+{% endblock %}
+{% block body %}
+<div class="weave" aria-hidden="true"></div>
+<div class="weave thin" aria-hidden="true"></div>
+<header class="top hdr">
+  <div class="brand-slot">{{ b.brandmark(doc, brand) }}</div>
+  <div class="title-slot"><h1>{{ title }}</h1>{{ b.meta(doc) }}</div>
+</header>
+<div class="parties">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "To") }}</div>
+{{ b.main(doc, brand, opts) }}
+<div class="weave thin closing-weave" aria-hidden="true"></div>
+{% endblock %}

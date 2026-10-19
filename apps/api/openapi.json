@@ -1584,6 +1584,9 @@
             ],
             "title": "Logo Document Id"
           },
+          "options": {
+            "$ref": "#/components/schemas/DesignOptions"
+          },
           "payment_instructions": {
             "$ref": "#/components/schemas/PaymentDefaults"
           },
@@ -1619,6 +1622,7 @@
           "logo_document_id",
           "footer_text",
           "payment_instructions",
+          "options",
           "version"
         ],
         "title": "BrandingOut",
@@ -1644,7 +1648,11 @@
               {
                 "enum": [
                   "sans",
-                  "serif"
+                  "serif",
+                  "geometric",
+                  "editorial",
+                  "classic",
+                  "ledger"
                 ],
                 "type": "string"
               },
@@ -1676,7 +1684,18 @@
                 "type": "null"
               }
             ],
+            "description": "null removes the logo",
             "title": "Logo Document Id"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DesignOptionsUpdate"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "payment_instructions": {
             "anyOf": [
@@ -4014,6 +4033,163 @@
           "commission_received"
         ],
         "title": "Dashboard",
+        "type": "object"
+      },
+      "DesignOptions": {
+        "additionalProperties": false,
+        "description": "Mix-and-match choices that apply to every design.",
+        "properties": {
+          "logo_align": {
+            "anyOf": [
+              {
+                "enum": [
+                  "start",
+                  "center",
+                  "end"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the logo and agency name sit; null: the design's own",
+            "title": "Logo Align"
+          },
+          "logo_size": {
+            "default": "medium",
+            "enum": [
+              "small",
+              "medium",
+              "large"
+            ],
+            "title": "Logo Size",
+            "type": "string"
+          },
+          "paper": {
+            "anyOf": [
+              {
+                "enum": [
+                  "A4",
+                  "Letter"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null: the design's own paper size",
+            "title": "Paper"
+          },
+          "seal_watermark": {
+            "default": false,
+            "description": "A faint agency seal behind the page",
+            "title": "Seal Watermark",
+            "type": "boolean"
+          },
+          "show_payment": {
+            "default": true,
+            "description": "The How to pay box on invoices",
+            "title": "Show Payment",
+            "type": "boolean"
+          },
+          "show_signature": {
+            "default": false,
+            "description": "Signature and stamp lines",
+            "title": "Show Signature",
+            "type": "boolean"
+          }
+        },
+        "title": "DesignOptions",
+        "type": "object"
+      },
+      "DesignOptionsUpdate": {
+        "additionalProperties": false,
+        "description": "Only the options sent change; the rest keep their saved values.",
+        "properties": {
+          "logo_align": {
+            "anyOf": [
+              {
+                "enum": [
+                  "start",
+                  "center",
+                  "end"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Align"
+          },
+          "logo_size": {
+            "anyOf": [
+              {
+                "enum": [
+                  "small",
+                  "medium",
+                  "large"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Size"
+          },
+          "paper": {
+            "anyOf": [
+              {
+                "enum": [
+                  "A4",
+                  "Letter"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paper"
+          },
+          "seal_watermark": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seal Watermark"
+          },
+          "show_payment": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Payment"
+          },
+          "show_signature": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show Signature"
+          }
+        },
+        "title": "DesignOptionsUpdate",
         "type": "object"
       },
       "Detail": {

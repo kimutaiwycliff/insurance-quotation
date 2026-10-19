@@ -5,7 +5,7 @@ import hashlib
 import json
 import uuid
 from http import HTTPStatus
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -23,8 +23,10 @@ from app.modules.rendering.schemas import BrandingOut, BrandingUpdate, PaymentDe
 from app.modules.rendering.view import (
     AmountLine,
     BrandingView,
+    DesignOptions,
     DocType,
     DocumentView,
+    FontPair,
     KeyValue,
     LineItem,
     OptionView,
@@ -84,6 +86,7 @@ def branding_out(row: BrandingSettings) -> BrandingOut:
         logo_document_id=row.logo_document_id,
         footer_text=row.footer_text,
         payment_instructions=PaymentDefaults.model_validate(row.payment_instructions),
+        options=DesignOptions.model_validate(row.options),
         version=row.version,
     )
 
@@ -99,6 +102,17 @@ async def _check_logo(session: AsyncSession, storage: S3Storage, document_id: uu
         raise InvalidBrandingError(f"Logo: {exc.detail}") from None
     if media_type not in _LOGO_TYPES:
         raise InvalidBrandingError("Logo must be a PNG, JPEG or WebP image")
+
+
+def _merge_options(saved: dict[str, Any], changes: dict[str, Any] | None) -> dict[str, Any]:
+    """Apply option changes; an explicit null puts that option back to its default."""
+    merged = dict(saved)
+    for key, value in (changes or {}).items():
+        if value is None:
+            merged.pop(key, None)
+        else:
+            merged[key] = value
+    return merged
 
 
 def _check_templates(templates: dict[str, str]) -> None:
@@ -122,6 +136,8 @@ async def update_branding(
         data["templates"] = {**row.templates, **data["templates"]}
     if data.get("logo_document_id"):
         await _check_logo(ctx.session, storage, uuid.UUID(data["logo_document_id"]))
+    if "options" in data:
+        data["options"] = _merge_options(row.options, data["options"])
     if "payment_instructions" in data:
         data["payment_instructions"] = {
             k: v for k, v in (data["payment_instructions"] or {}).items() if v is not None
@@ -162,11 +178,10 @@ async def branding_view(
     return BrandingView(
         primary_color=o.get("primary_color") or row.primary_color or meta.default_primary,
         accent_color=o.get("accent_color") or row.accent_color or meta.default_accent,
-        font_pair=cast(
-            Literal["sans", "serif"], o.get("font_pair") or row.font_pair or meta.font_pair
-        ),
+        font_pair=cast(FontPair, o.get("font_pair") or row.font_pair or meta.font_pair),
         logo_data_uri=logo_uri,
         footer_text=o.get("footer_text", row.footer_text),
+        options=DesignOptions.model_validate(_merge_options(row.options, o.get("options"))),
     )
 
 

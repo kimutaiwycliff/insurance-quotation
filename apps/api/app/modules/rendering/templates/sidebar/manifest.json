@@ -1,0 +1,1 @@
+{"key": "sidebar", "name": "Sidebar", "description": "Your details in a coloured column beside the document. A strong brand presence.", "tier": "premium", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "geometric", "default_primary": "#1F3A5F", "default_accent": "#F2B705"}

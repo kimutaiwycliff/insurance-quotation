@@ -11,4 +11,8 @@ export type BrandingUpdateFontPair = typeof BrandingUpdateFontPair[keyof typeof 
 export const BrandingUpdateFontPair = {
   sans: 'sans',
   serif: 'serif',
+  geometric: 'geometric',
+  editorial: 'editorial',
+  classic: 'classic',
+  ledger: 'ledger',
 } as const;

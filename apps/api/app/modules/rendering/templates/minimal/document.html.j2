@@ -1,0 +1,27 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+body { font-size: 9.5pt; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding-bottom: 22px; }
+.top h1 { font-weight: 400; font-size: 26pt; letter-spacing: .5px; color: var(--primary); }
+.title-slot { text-align: right; }
+.title-slot .number { color: var(--muted); margin-top: 2px; }
+.agency-name { font-size: 12pt; font-weight: 600; }
+.rule { border: 0; border-top: .75pt solid var(--ink); margin: 0 0 18px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.lines thead th { font-weight: 600; border-bottom: .75pt solid var(--ink); padding-bottom: 8px; }
+.lines td { padding-top: 9px; padding-bottom: 9px; border-bottom: .5pt solid var(--rule); }
+.totals { margin-top: 18px; }
+.totals .grand td { border-top: .75pt solid var(--ink); font-size: 12pt; }
+.h3 { font-size: 9.5pt; font-weight: 600; margin-bottom: 6px; color: var(--primary); }
+.kv dt { color: var(--muted); }
+{% endblock %}
+{% block body %}
+<header class="top hdr">
+  <div class="brand-slot">{{ b.brandmark(doc, brand) }}</div>
+  <div class="title-slot"><h1>{{ title }}</h1>{% if doc.number %}<div class="number">{{ doc.number }}</div>{% endif %}</div>
+</header>
+<hr class="rule">
+<div class="cols">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "To") }}<div>{{ b.meta(doc) }}</div></div>
+{{ b.main(doc, brand, opts) }}
+{% endblock %}

@@ -5,13 +5,16 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { BrandingUpdateFontPair } from './brandingUpdateFontPair';
+import type { DesignOptionsUpdate } from './designOptionsUpdate';
 import type { PaymentDefaults } from './paymentDefaults';
 
 export interface BrandingUpdate {
   accent_color?: string | null;
   font_pair?: BrandingUpdateFontPair;
   footer_text?: string | null;
+  /** null removes the logo */
   logo_document_id?: string | null;
+  options?: DesignOptionsUpdate | null;
   payment_instructions?: PaymentDefaults | null;
   primary_color?: string | null;
   templates?: Partial<Record<'quote' | 'invoice' | 'receipt' | 'credit_note', string>> | null;

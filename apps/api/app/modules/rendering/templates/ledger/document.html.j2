@@ -1,0 +1,40 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+body { font-size: 9pt; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 10px;
+  border-bottom: 3px double var(--primary); }
+.top h1 { font-size: 18pt; color: var(--primary); letter-spacing: 2px; }
+.title-slot { text-align: right; }
+.boxes { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--primary); margin: 14px 0; }
+.boxes > div { padding: 6px 8px; border-right: 1px solid var(--primary); }
+.boxes > div:last-child { border-right: 0; }
+.boxes .label { font-size: 7.5pt; color: var(--muted); }
+.boxes .value { font-family: var(--font-num); font-weight: 600; }
+.parties { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--primary); }
+.parties section { padding: 8px 10px; }
+.parties section + section { border-left: 1px solid var(--primary); }
+.lines { border: 1px solid var(--primary); }
+.lines thead th { background: var(--primary); color: var(--on-primary); border-right: 1px solid var(--on-primary); }
+.lines td { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.lines td:last-child, .lines thead th:last-child { border-right: 0; }
+.lines tbody tr:nth-child(odd) td { background: color-mix(in srgb, var(--accent) 7%, white); }
+.totals { border: 1px solid var(--primary); }
+.totals td { border-bottom: 1px solid var(--rule); }
+.totals .grand td { border-top: 3px double var(--primary); background: color-mix(in srgb, var(--accent) 14%, white); }
+.h3 { font-size: 9pt; letter-spacing: 1px; color: var(--primary); margin-bottom: 4px; }
+{% endblock %}
+{% block body %}
+<header class="top hdr">
+  <div class="brand-slot">{{ b.brandmark(doc, brand) }}</div>
+  <div class="title-slot"><h1>{{ title | upper }}</h1></div>
+</header>
+<div class="boxes" aria-label="Document details">
+  <div><div class="label">Number</div><div class="value">{{ doc.number or "Draft" }}</div></div>
+  <div><div class="label">Date</div><div class="value">{{ doc.issue_date | date }}</div></div>
+  <div><div class="label">{% if doc.valid_until %}Valid until{% else %}Due{% endif %}</div><div class="value">{{ (doc.valid_until or doc.due_date) | date }}</div></div>
+  <div><div class="label">Reference</div><div class="value">{{ doc.reference or "" }}</div></div>
+</div>
+<div class="parties">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "To") }}</div>
+{{ b.main(doc, brand, opts) }}
+{% endblock %}

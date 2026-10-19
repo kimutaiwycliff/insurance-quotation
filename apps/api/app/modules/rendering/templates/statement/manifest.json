@@ -1,0 +1,1 @@
+{"key": "statement", "name": "Statement", "description": "A large editorial title and the amount due up top. Made to impress on a big quote.", "tier": "premium", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "editorial", "default_primary": "#14213D", "default_accent": "#FCA311"}

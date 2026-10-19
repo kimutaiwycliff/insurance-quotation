@@ -1,0 +1,42 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+body { font-size: 9.8pt; }
+.crest { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.crest .emblem { width: 104px; color: var(--primary); }
+.crest .emblem svg { width: 100%; height: auto; display: block; }
+.crest .logo { margin: 0 auto; }
+.crest .agency-name { font-size: 16pt; color: var(--primary); }
+body.logo-start .crest { align-items: flex-start; text-align: left; }
+body.logo-start .crest .logo { margin: 0; }
+body.logo-end .crest { align-items: flex-end; text-align: right; }
+body.logo-end .crest .logo { margin: 0 0 0 auto; }
+.title { display: flex; align-items: center; gap: 14px; margin: 16px 0 10px; color: var(--accent); }
+.title::before, .title::after { content: ""; flex: 1; border-top: 1px solid var(--accent); }
+.title h1 { font-size: 17pt; letter-spacing: 3px; color: var(--primary); font-weight: 600; }
+.metaline { text-align: center; color: var(--muted); margin-bottom: 18px; }
+.metaline span + span::before { content: "  ·  "; }
+.parties { display: grid; grid-template-columns: 1fr 1fr; }
+.parties section { padding: 0 16px; }
+.parties section + section { border-left: 1px solid var(--accent); }
+.lines thead th { border-top: 1.5px solid var(--primary); border-bottom: 1px solid var(--primary); color: var(--primary); }
+.lines td { border-bottom: .5pt solid var(--rule); }
+.totals .grand td { border-top: 3px double var(--primary); color: var(--primary); }
+.h3 { font-size: 10.5pt; color: var(--primary); margin-bottom: 4px; }
+{% endblock %}
+{% block body %}
+<header class="crest">
+  {% if brand.logo_data_uri %}<img class="logo" src="{{ brand.logo_data_uri }}" alt="{{ doc.seller.name }} logo">
+  {% else %}<div class="emblem">{{ b.seal(doc.seller.name, initials, "crest") }}</div>{% endif %}
+  <h2 class="agency-name" dir="auto">{{ doc.seller.name }}</h2>
+</header>
+<div class="title"><h1>{{ title | upper }}</h1></div>
+<p class="metaline">
+  {% if doc.number %}<span>{{ doc.number }}</span>{% endif %}<span>{{ doc.issue_date | date }}</span>
+  {% if doc.due_date %}<span>Due {{ doc.due_date | date }}</span>{% endif %}
+  {% if doc.valid_until %}<span>Valid until {{ doc.valid_until | date }}</span>{% endif %}
+  {% if doc.reference %}<span>Ref. {{ doc.reference }}</span>{% endif %}
+</p>
+<div class="parties">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "Prepared for") }}</div>
+{{ b.main(doc, brand, opts) }}
+{% endblock %}

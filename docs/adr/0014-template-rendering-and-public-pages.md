@@ -49,3 +49,24 @@ creates XSS and SSRF risks (SPEC_REVIEW §4.5).
   fixture-set tests (standard, long names, 150 lines, zero-decimal currency, RTL).
 - The Latin font subsets don't cover Arabic, so RTL text falls back to Gotenberg's Noto fonts.
 - Visual-diff snapshot testing is deferred: it needs PDF rasterisation tooling, which is an ADR-0001 addition.
+
+## Amendment (2026-10-19): a design gallery and design options
+- **12 designs** (free: Classic, Minimal, Compact; the rest premium):
+  - Executive, Savanna, Ledger, Sidebar, Seal, Kitenge, Card, Statement, Corporate.
+  - Every design builds on the shared `_blocks.html.j2`. `main()` renders everything below the header, so a
+    new design only defines its header and style, and every design handles insurance comparison quotes,
+    invoices, receipts and credit notes.
+- **Six font pairings** (`engine.FONT_PAIRS`): Modern sans, Refined serif, Geometric (Manrope), Editorial
+  (Fraunces), Classic book (Lora) and Ledger (IBM Plex). They are self-hosted SIL OFL fonts, inlined as
+  `data:` URIs as before, with licences in `fonts/`.
+- **Design options** (`branding_settings.options`, `view.DesignOptions`), which apply to every design:
+  - logo size and position (the design's own, left, centre or right);
+  - the How to pay box;
+  - signature and stamp lines;
+  - a faint agency-seal watermark (inline SVG);
+  - paper (A4 or Letter).
+- **Saving and removing:** options are merged on save, and an explicit `null` resets one option.
+  `logo_document_id: null` removes the logo; designs then show the agency name, or the seal in the Seal design.
+- Thumbnails in the settings gallery are the same HTML preview, scaled down: there is no separate image
+  pipeline.
+

@@ -9,6 +9,11 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 DocType = Literal["quote", "invoice", "receipt", "credit_note"]
 HexColor = Annotated[str, StringConstraints(pattern=r"^#[0-9a-fA-F]{6}$")]
+# Typeface pairings bundled with the app (engine.FONT_PAIRS); documents never load fonts from the network.
+FontPair = Literal["sans", "serif", "geometric", "editorial", "classic", "ledger"]
+LogoSize = Literal["small", "medium", "large"]
+LogoAlign = Literal["start", "center", "end"]
+Paper = Literal["A4", "Letter"]
 
 DOC_TITLES: dict[str, str] = {
     "quote": "Quotation",
@@ -114,10 +119,23 @@ class DocumentView(_Model):
     locale: str = "en-KE"
 
 
+class DesignOptions(_Model):
+    """Mix-and-match choices that apply to every design."""
+
+    logo_size: LogoSize = "medium"
+    logo_align: LogoAlign | None = Field(
+        default=None, description="Where the logo and agency name sit; null: the design's own"
+    )
+    show_payment: bool = Field(default=True, description="The How to pay box on invoices")
+    show_signature: bool = Field(default=False, description="Signature and stamp lines")
+    seal_watermark: bool = Field(default=False, description="A faint agency seal behind the page")
+    paper: Paper | None = Field(default=None, description="null: the design's own paper size")
+
+
 class BrandingView(_Model):
     primary_color: HexColor = "#1F4E79"
     accent_color: HexColor = "#E8A33D"
-    font_pair: Literal["sans", "serif"] = "sans"
+    font_pair: FontPair = "sans"
     logo_data_uri: (
         Annotated[
             str, StringConstraints(pattern=r"^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$")
@@ -125,3 +143,4 @@ class BrandingView(_Model):
         | None
     ) = None
     footer_text: str | None = None
+    options: DesignOptions = Field(default_factory=DesignOptions)

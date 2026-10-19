@@ -1,0 +1,1 @@
+{"key": "seal", "name": "Seal", "description": "Centred and formal, crowned by your logo or, without one, your agency's own seal.", "tier": "premium", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "classic", "default_primary": "#6B1D2A", "default_accent": "#B8892B"}

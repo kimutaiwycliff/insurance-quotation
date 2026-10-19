@@ -1,0 +1,1 @@
+{"key": "kitenge", "name": "Kitenge", "description": "A slim patterned band inspired by East African textiles, woven in your two colours.", "tier": "premium", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "geometric", "default_primary": "#233D7A", "default_accent": "#E0A526"}

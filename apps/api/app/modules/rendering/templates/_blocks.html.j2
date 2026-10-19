@@ -101,7 +101,7 @@
 {% endfor %}
 {% endmacro %}
 
-{% macro totals(doc) %}
+{% macro totals_table(doc) %}
 {% if doc.totals %}
 <table class="totals" aria-label="Totals">
   <tr><td>Subtotal</td><td class="num">{{ doc.totals.subtotal | money(doc.currency) }}</td></tr>
@@ -147,3 +147,48 @@
 {% endif %}
 {% if brand.footer_text %}<p class="block small muted pre">{{ brand.footer_text }}</p>{% endif %}
 {% endmacro %}
+
+{# ------------------------------------------------------------------ shared by every design #}
+
+{% macro brandmark(doc, brand, name_class="agency-name") %}
+{% if brand.logo_data_uri %}<img class="logo" src="{{ brand.logo_data_uri }}" alt="{{ doc.seller.name }} logo">
+{% else %}<h2 class="{{ name_class }}" dir="auto">{{ doc.seller.name }}</h2>{% endif %}
+{% endmacro %}
+
+{# The agency's round stamp seal (the same mark the app uses), drawn in currentColor. #}
+{% macro seal(name, initials, uid) %}
+<svg viewBox="0 0 200 200" role="img" aria-label="{{ name }} seal">
+  <defs><path id="seal-arc-{{ uid }}" d="M100,100 m-73,0 a73,73 0 1,1 146,0 a73,73 0 1,1 -146,0"/></defs>
+  <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" stroke-width="5"/>
+  <circle cx="100" cy="100" r="57" fill="none" stroke="currentColor" stroke-width="2.5"/>
+  <text fill="currentColor" font-size="17" font-weight="700" letter-spacing="2"
+    style="font-family: var(--font-display)"><textPath href="#seal-arc-{{ uid }}" textLength="452" lengthAdjust="spacing">{{ name | upper | truncate(34, true, "") }} ★</textPath></text>
+  <text x="100" y="101" text-anchor="middle" dominant-baseline="central" fill="currentColor" font-size="50"
+    font-weight="800" style="font-family: var(--font-display)">{{ initials }}</text>
+</svg>
+{% endmacro %}
+
+{% macro signature() %}
+<section class="block signoff" aria-label="Signature">
+  <div><div class="sig-line"></div><div class="muted small">Authorised signature</div></div>
+  <div><div class="sig-line"></div><div class="muted small">Name and date</div></div>
+  <div class="stampbox muted small">Official stamp</div>
+</section>
+{% endmacro %}
+
+{# Everything below the header: details, options or lines and totals, how to pay, signature, notes. #}
+{% macro main(doc, brand, opts, totals=true) %}
+{{ details(doc) }}
+{% if doc.options %}
+<div class="block">{{ options(doc) }}</div>
+{% else %}
+<div class="block">{{ lines(doc) }}</div>
+{% if totals %}{{ totals_table(doc) }}{% endif %}
+{% endif %}
+{% if opts.show_payment %}{{ payment(doc) }}{% endif %}
+{% if opts.show_signature %}{{ signature() }}{% endif %}
+{{ closing(doc, brand) }}
+{% endmacro %}
+
+{% macro amount_due(doc) %}{{ (doc.totals.balance if doc.totals.balance is not none else doc.totals.total) | money(doc.currency) }}{% endmacro %}
+{% macro amount_due_label(doc) %}{% if doc.totals.balance is not none %}Balance due{% else %}Total{% endif %}{% endmacro %}

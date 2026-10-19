@@ -1,0 +1,1 @@
+{"key": "corporate", "name": "Corporate", "description": "A formal letterhead with reference line, ruled table and signature and stamp areas. For tenders and corporate clients.", "tier": "premium", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "serif", "default_primary": "#0B3D2E", "default_accent": "#8C6D1F"}

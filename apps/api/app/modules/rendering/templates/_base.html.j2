@@ -1,3 +1,4 @@
+{% import "_blocks.html.j2" as base_blocks %}
 <!doctype html>
 <html lang="{{ doc.locale[:2] }}">
 <head>
@@ -12,16 +13,21 @@
   --primary: {{ brand.primary_color }};
   --accent: {{ brand.accent_color }};
   --on-primary: {{ on_primary }};
+  --on-accent: {{ on_accent }};
   --ink: #1b1f24; --muted: #5b6470; --rule: #d9dde3; --wash: #f5f7fa;
+  --font-body: {{ fonts.body | safe }};
+  --font-display: {{ fonts.display | safe }};
+  --font-num: {{ fonts.numbers | safe }};
+  --logo-h: {{ logo_height }}px; --logo-w: {{ logo_width }}px;
 }
 * { box-sizing: border-box; }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; color: var(--ink); font: 9.5pt/1.45 'Inter', 'Noto Sans', Arial, sans-serif; }
-h1, h2, h3 { margin: 0; font-weight: 700; }
+body { margin: 0; color: var(--ink); font: 9.5pt/1.45 var(--font-body); }
+h1, h2, h3, .display { margin: 0; font-family: var(--font-display); font-weight: 700; }
 table { width: 100%; border-collapse: collapse; }
 th { text-align: left; font-weight: 600; }
 td, th { padding: 6px 8px; vertical-align: top; }
-.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.num { text-align: right; white-space: nowrap; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
 .small { font-size: 8pt; }
 .lines tbody tr { break-inside: avoid; }
@@ -33,16 +39,39 @@ td, th { padding: 6px 8px; vertical-align: top; }
 .kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; }
-.logo { max-height: 56px; max-width: 200px; }
+.logo { display: block; max-height: var(--logo-h); max-width: var(--logo-w); }
+.agency-name { font-size: 15pt; }
 .stamp { position: fixed; top: 38%; left: 18%; transform: rotate(-18deg); font-size: 72pt; font-weight: 700;
-  letter-spacing: 6px; opacity: .12; color: var(--ink); }
+  letter-spacing: 6px; opacity: .12; color: var(--ink); z-index: 2; }
+.seal-wm { position: fixed; top: 30%; left: 50%; width: 330px; margin-left: -165px; opacity: .06;
+  color: var(--primary); z-index: 0; pointer-events: none; }
+.seal-wm svg { width: 100%; height: auto; display: block; }
 .pre { white-space: pre-line; }
 [dir=auto] { unicode-bidi: plaintext; }
+/* Signature and stamp lines (option). */
+.signoff { display: grid; grid-template-columns: 1fr 1fr 120px; gap: 24px; align-items: end; margin-top: 28px; }
+.sig-line { border-bottom: 1px solid var(--ink); height: 34px; margin-bottom: 4px; }
+.stampbox { height: 90px; border: 1px dashed var(--rule); border-radius: 50%; display: grid; place-items: center;
+  text-align: center; }
+/* Header: where the logo and agency name sit (option). Templates mark their header .hdr, with .brand-slot and
+   .title-slot inside; these rules win over each template's own layout. */
+body.logo-end .hdr { flex-direction: row-reverse; }
+body.logo-end .hdr .brand-slot { text-align: right; }
+body.logo-end .hdr .brand-slot .logo { margin-left: auto; }
+body.logo-end .hdr .title-slot { text-align: left; }
+body.logo-center .hdr { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+body.logo-center .hdr .brand-slot, body.logo-center .hdr .title-slot { text-align: center; }
+body.logo-center .hdr .brand-slot .logo { margin: 0 auto; }
+body.logo-center .hdr .kv { justify-content: center; text-align: left; }
+main, .page { position: relative; z-index: 1; }
 {% block style %}{% endblock %}
 </style>
 </head>
-<body>
+<body class="logo-{{ opts.logo_align or 'auto' }}">
+{% if opts.seal_watermark %}<div class="seal-wm" aria-hidden="true">{{ base_blocks.seal(doc.seller.name, initials, "wm") }}</div>{% endif %}
 {% if doc.stamp %}<div class="stamp" aria-hidden="true">{{ doc.stamp }}</div>{% endif %}
+<div class="page">
 {% block body %}{% endblock %}
+</div>
 </body>
 </html>

@@ -2,7 +2,11 @@
 
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
-## Current state (2026-10-16)
+## Current state (2026-10-19)
+- **Done (in review): document design gallery** on `feat/document-designs` (12 designs, options, logo removal; ADR-0014 amendment, migration 0014).
+- **Next:** the Android app, native Kotlin and Jetpack Compose. Updates come through Play in-app updates, remote config and staged rollouts; Play policy forbids code push.
+
+## Earlier (2026-10-16)
 - **In review: in-app Help & guide** on `feat/help-centre` (`/help`, `components/help/`).
 
 ## Earlier state (2026-10-09)

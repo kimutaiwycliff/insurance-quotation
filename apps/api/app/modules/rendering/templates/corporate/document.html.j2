@@ -1,0 +1,53 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+.letterhead { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+.letterhead .logo { margin: 0 auto 4px; }
+.letterhead .agency-name { font-size: 17pt; color: var(--primary); }
+.letterhead .contact { color: var(--muted); font-size: 8pt; }
+.letterhead .contact span + span::before { content: "  |  "; }
+body.logo-start .letterhead { align-items: flex-start; text-align: left; }
+body.logo-start .letterhead .logo { margin: 0 0 4px; }
+body.logo-end .letterhead { align-items: flex-end; text-align: right; }
+body.logo-end .letterhead .logo { margin: 0 0 4px auto; }
+.rules { margin: 10px 0 16px; }
+.rules .thick { height: 3px; background: var(--primary); }
+.rules .thin { height: 1px; background: var(--accent); margin-top: 2px; }
+.refline { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 14px; }
+.doc-title { text-align: center; font-size: 13pt; letter-spacing: 2px; text-decoration: underline;
+  text-underline-offset: 4px; margin: 6px 0 14px; }
+.lines { border: 1px solid var(--rule); }
+.lines thead th { background: var(--wash); border: 1px solid var(--rule); }
+.lines td { border: 1px solid var(--rule); }
+.totals { border: 1px solid var(--rule); }
+.totals .grand td { border-top: 2px solid var(--primary); }
+.h3 { font-size: 10pt; color: var(--primary); margin-bottom: 4px; }
+{% endblock %}
+{% block body %}
+<header class="letterhead">
+  {% if brand.logo_data_uri %}<img class="logo" src="{{ brand.logo_data_uri }}" alt="{{ doc.seller.name }} logo">{% endif %}
+  <h2 class="agency-name" dir="auto">{{ doc.seller.name }}</h2>
+  <div class="contact">
+    {% for line in doc.seller.address_lines %}<span dir="auto">{{ line }}</span>{% endfor %}
+    {% if doc.seller.phone %}<span>{{ doc.seller.phone }}</span>{% endif %}
+    {% if doc.seller.email %}<span>{{ doc.seller.email }}</span>{% endif %}
+    {% if doc.seller.tax_pin %}<span>PIN {{ doc.seller.tax_pin }}</span>{% endif %}
+  </div>
+</header>
+<div class="rules" aria-hidden="true"><div class="thick"></div><div class="thin"></div></div>
+<div class="refline">
+  {{ b.party(doc.buyer, "To") }}
+  <div>{{ b.meta(doc) }}</div>
+</div>
+<h1 class="doc-title">{{ title | upper }}</h1>
+{{ b.details(doc) }}
+{% if doc.options %}
+<div class="block">{{ b.options(doc) }}</div>
+{% else %}
+<div class="block">{{ b.lines(doc) }}</div>
+{{ b.totals_table(doc) }}
+{% endif %}
+{% if opts.show_payment %}{{ b.payment(doc) }}{% endif %}
+{{ b.signature() }}
+{{ b.closing(doc, brand) }}
+{% endblock %}

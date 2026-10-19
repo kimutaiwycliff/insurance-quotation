@@ -1,0 +1,1 @@
+{"key": "minimal", "name": "Minimal", "description": "Black ink, fine rules and lots of white space. Prints sharply on any printer.", "tier": "free", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "sans", "default_primary": "#111827", "default_accent": "#9CA3AF"}
