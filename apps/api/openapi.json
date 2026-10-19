@@ -408,6 +408,66 @@
         "title": "Amounts",
         "type": "object"
       },
+      "AndroidConfig": {
+        "properties": {
+          "latest_version_code": {
+            "description": "Newer than the installed one: offer an update",
+            "title": "Latest Version Code",
+            "type": "integer"
+          },
+          "min_version_code": {
+            "description": "Older versions must update before use",
+            "title": "Min Version Code",
+            "type": "integer"
+          },
+          "store_url": {
+            "description": "Google Play listing; empty until the app is published",
+            "title": "Store Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "min_version_code",
+          "latest_version_code",
+          "store_url"
+        ],
+        "title": "AndroidConfig",
+        "type": "object"
+      },
+      "AppConfigOut": {
+        "properties": {
+          "android": {
+            "$ref": "#/components/schemas/AndroidConfig"
+          },
+          "features": {
+            "description": "Remote switches that are on",
+            "items": {
+              "type": "string"
+            },
+            "title": "Features",
+            "type": "array"
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A short message for everyone, or null",
+            "title": "Notice"
+          }
+        },
+        "required": [
+          "android",
+          "notice",
+          "features"
+        ],
+        "title": "AppConfigOut",
+        "type": "object"
+      },
       "AuditEventOut": {
         "properties": {
           "action": {
@@ -21121,6 +21181,27 @@
         "summary": "Revoke",
         "tags": [
           "public links"
+        ]
+      }
+    },
+    "/api/v1/public/app-config": {
+      "get": {
+        "operationId": "app_config_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppConfigOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "App Config",
+        "tags": [
+          "public"
         ]
       }
     },

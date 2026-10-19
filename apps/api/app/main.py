@@ -40,7 +40,7 @@ from app.modules.tasks import router as tasks_router
 from app.modules.tenancy import internal as tenancy_internal
 from app.modules.tenancy import router as tenancy_router
 from app.modules.tenancy.service import resolve_principal
-from app.platform import audit, health
+from app.platform import app_config, audit, health
 from app.platform.deps import require_feature
 from app.platform.resources import Resources
 
@@ -92,6 +92,7 @@ def api_v1_router() -> APIRouter:
     router.include_router(subscriptions_router.router)
     router.include_router(notifications_router.router)
     router.include_router(messaging_router.public_router)
+    router.include_router(app_config.router)
     # Anonymous routes (token-scoped, per-IP rate limited); no require_permission by design.
     router.include_router(public_links_router.public_router)
     # Safaricom callbacks: a secret path per connection, stored then processed by jobs (ADR-0015).

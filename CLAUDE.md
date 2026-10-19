@@ -46,11 +46,13 @@ Current milestone: **R0 and R1.1–R1.5 done: the R1 agent MVP is complete** (CR
 | Regenerate OpenAPI | `make openapi` (CI fails if `apps/api/openapi.json` is stale) |
 | Dependency audit | `make audit` |
 | Production deploy files | `make deploy-check`; runbook `docs/runbooks/deploy-vm.md` |
+| Android app | `make android-check` (JDK 17+, Android SDK); `apps/android/README.md` |
 
 ## Layout
 ```
 apps/web/            Next.js 16.3 BFF + UI (pnpm 11): auth screens, onboarding, shell, settings
 apps/auth/           Better Auth on Hono (Node 24, pnpm 11): users, orgs, 2FA, JWKS
+apps/android/        Native Android app (Kotlin, Jetpack Compose; ADR-0026)
 apps/api/            FastAPI + Procrastinate (Python 3.14, uv)
   app/core/          config, logging, errors, middleware, db (no feature imports)
   app/platform/      health, resources, request deps (auth/tenant/permissions), audit, idempotency, events

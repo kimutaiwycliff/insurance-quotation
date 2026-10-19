@@ -4,7 +4,16 @@ Read this first when resuming work. Update it at the end of every session (newes
 
 ## Current state (2026-10-19)
 - **Done (in review): document design gallery** on `feat/document-designs` (12 designs, options, logo removal; ADR-0014 amendment, migration 0014).
-- **Next:** the Android app, native Kotlin and Jetpack Compose. Updates come through Play in-app updates, remote config and staged rollouts; Play policy forbids code push.
+- **In review: Android app, first slice** on `feat/android-app` (ADR-0026, `apps/android`, app-config endpoint).
+- **Android next:**
+  - renewals list and actions;
+  - quotes, and M-Pesa prompts on invoices;
+  - offline notes and photo capture of documents;
+  - push notifications (FCM: device tokens and send jobs).
+- **Waiting on the owner:**
+  - the application ID and product name (D7);
+  - a Play Console account;
+  - a privacy policy (D5).
 
 ## Earlier (2026-10-16)
 - **In review: in-app Help & guide** on `feat/help-centre` (`/help`, `components/help/`).

@@ -5,6 +5,21 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: Android app, first slice (2026-10-19)
+- `apps/android`: a native Kotlin and Jetpack Compose app (ADR-0026).
+  - **Sign-in:** email and password with two-factor codes, then choose an agency. The session is
+    encrypted with an Android Keystore key, and API tokens are refreshed automatically.
+  - **Home:** tasks, renewals due, clients, policies, premiums to pass on, premium written.
+  - **Clients:** search, details, Call, WhatsApp, email, and a link to the full page on the web.
+  - **Account:** switch agency, check for updates, sign out.
+- **Updates without code push:**
+  - Google Play in-app updates: immediate below the minimum version, otherwise offered in the background;
+  - remote notice and feature switches from `GET /api/v1/public/app-config` (new; `ANDROID_*` and
+    `APP_*` settings).
+- Caddy now routes `/api/v1/*` on the API host for the app; every route still requires the 15-minute token.
+- CI builds the app (lint, unit tests, debug and minified release). `make android-check`.
+- Runbook `docs/runbooks/android-release.md` (Play Console, upload key, staged rollouts, forcing updates).
+
 ### Added: document design gallery (2026-10-19)
 - **12 document designs**, up from 3:
   - existing: Classic, Executive, Savanna;

@@ -138,7 +138,23 @@ class Settings(BaseSettings):
     # Idempotency keys are kept this long, then purged by a periodic job (ADR-0011).
     idempotency_ttl_hours: int = 24
 
-    @field_validator("cors_allowed_origins", "auth_algorithms", "mfa_enforced_roles", mode="before")
+    # Android app (ADR-0026), served by GET /api/v1/public/app-config. Raising the minimum version code makes
+    # older installs update through Google Play before they can be used.
+    android_min_version_code: int = 1
+    android_latest_version_code: int = 1
+    android_store_url: str = ""
+    app_notice: str | None = None  # a short message shown at the top of the app; empty = none
+    app_features: Annotated[list[str], NoDecode] = Field(
+        default_factory=list
+    )  # remote switches turned on
+
+    @field_validator(
+        "cors_allowed_origins",
+        "auth_algorithms",
+        "mfa_enforced_roles",
+        "app_features",
+        mode="before",
+    )
     @classmethod
     def _split_csv(cls, value: object) -> object:
         """Accept list settings (e.g. ``CORS_ALLOWED_ORIGINS``) as comma-separated strings."""
