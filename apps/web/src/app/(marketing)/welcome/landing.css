@@ -1,0 +1,202 @@
+/*
+ * Landing page (docs/LANDING_PAGE.md). Motion budget: one hero sequence on load, one scroll-linked line, and
+ * motion the visitor triggers. Reduced motion shows every final state at once (globals.css shortens animations,
+ * and the fill mode keeps the end frame).
+ */
+
+.lp-display {
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+}
+
+/* ------------------------------------------------------------------ hero sequence */
+
+.lp-demo {
+  --stamp: #c99400;
+  --t: 0s; /* start offset; replay remounts the figure */
+}
+.dark .lp-demo {
+  --stamp: var(--maize);
+}
+
+.lp-in {
+  animation: lp-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--t) + var(--d, 0s));
+}
+.lp-mark {
+  animation: lp-mark 0.45s ease-out both;
+  animation-delay: calc(var(--t) + var(--d, 0s));
+}
+/* The recommended option arrives like the others, then gets its maize marker. */
+.lp-in.lp-mark {
+  animation:
+    lp-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both,
+    lp-mark 0.45s ease-out both;
+  animation-delay: calc(var(--t) + var(--d, 0s)), calc(var(--t) + var(--d2, 0s));
+}
+.lp-bubble {
+  transform-origin: 100% 100%;
+  animation: lp-bubble 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: calc(var(--t) + var(--d, 0s));
+}
+.lp-ticks {
+  animation: lp-ticks 0.3s ease-out both;
+  animation-delay: calc(var(--t) + var(--d, 0s));
+}
+.lp-press {
+  animation: lp-press 0.35s ease-in-out both;
+  animation-delay: calc(var(--t) + var(--d, 0s));
+}
+/* The rubber stamp coming down on the accepted quote: big and faint, then pressed on with a small bounce. */
+.lp-stamp {
+  color: var(--stamp);
+  mix-blend-mode: multiply;
+  animation: lp-stamp 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation-delay: calc(var(--t) + var(--d, 0s));
+}
+.dark .lp-stamp {
+  mix-blend-mode: normal;
+}
+
+@keyframes lp-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes lp-mark {
+  from {
+    background-color: transparent;
+    box-shadow: inset 4px 0 0 transparent;
+  }
+}
+@keyframes lp-bubble {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes lp-ticks {
+  from {
+    color: var(--muted-foreground);
+  }
+}
+@keyframes lp-press {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.94);
+  }
+}
+@keyframes lp-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(2.2) rotate(-30deg);
+  }
+  70% {
+    opacity: 0.95;
+    transform: scale(0.9) rotate(-10deg);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1) rotate(-12deg);
+  }
+}
+
+/* ------------------------------------------------------------------ the sales sequence */
+
+.lp-flow {
+  position: relative;
+}
+.lp-flow::before,
+.lp-flow::after {
+  content: "";
+  position: absolute;
+  left: 1.125rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--line);
+}
+.dark .lp-flow::before {
+  background: var(--border);
+}
+.lp-flow::after {
+  background: var(--maize);
+  transform-origin: top;
+  transform: scaleY(1);
+}
+
+/* Progressive enhancement: the maize line fills as the visitor reads down the steps. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lp-flow::after {
+      animation: lp-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 65%;
+    }
+  }
+}
+@keyframes lp-fill {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* ------------------------------------------------------------------ receipts and questions */
+
+.lp-slip {
+  /* A torn-off remittance slip: notched edges top and bottom. */
+  background: var(--card);
+  mask:
+    radial-gradient(circle 7px at 50% 0, transparent 98%, #000) 0 0 / 18px 51% repeat-x,
+    radial-gradient(circle 7px at 50% 100%, transparent 98%, #000) 0 100% / 18px 51% repeat-x;
+}
+
+.lp-faq summary {
+  list-style: none;
+  cursor: pointer;
+}
+.lp-faq summary::-webkit-details-marker {
+  display: none;
+}
+.lp-faq summary .lp-plus {
+  transition: transform 0.25s ease;
+}
+.lp-faq details[open] summary .lp-plus {
+  transform: rotate(45deg);
+}
+/* Opening a question eases its answer in where the browser can animate to auto height. */
+@supports (interpolate-size: allow-keywords) {
+  .lp-faq {
+    interpolate-size: allow-keywords;
+  }
+  .lp-faq details::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 0.3s ease,
+      content-visibility 0.3s allow-discrete;
+  }
+  .lp-faq details[open]::details-content {
+    block-size: auto;
+  }
+}
+
+.lp-price {
+  animation: lp-in 0.3s ease-out both;
+}
+
+/* Reduced motion: no waiting either; every step of the hero shows at once. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-demo,
+  .lp-demo * {
+    animation-delay: 0s !important;
+  }
+}

@@ -9,7 +9,13 @@ import { Providers } from "@/components/providers/providers";
 import "./globals.css";
 
 // Self-hosted at build time by next/font (no runtime requests to Google).
-const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-display", display: "swap" });
+// The optical-size axis lets large headlines take the tighter display cut automatically.
+const display = Bricolage_Grotesque({
+  subsets: ["latin"],
+  axes: ["opsz"],
+  variable: "--font-display",
+  display: "swap",
+});
 const body = Atkinson_Hyperlegible({
   subsets: ["latin"],
   weight: ["400", "700"],

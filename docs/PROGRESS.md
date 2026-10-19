@@ -3,23 +3,19 @@
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
 ## Current state (2026-10-19)
-- **Done (in review): document design gallery** on `feat/document-designs` (12 designs, options, logo removal; ADR-0014 amendment, migration 0014).
-- **Done: Android app, first slice** (PR #16).
-- **Done: Android A2–A5** (PR #17).
-- **In review: Android direct downloads** (PR #18), and **offline, notifications, security and M-Pesa setup** on `feat/android-offline`.
-- Earlier: Android A2–A5: CRM, insurance, money, agency and help. The app covers the web except big-screen setup (branding, catalogues, numbering, M-Pesa keys, import, 2FA), which opens on the web.
-- **Android plan to parity with the web:**
-  - next: push notifications through FCM, when a Firebase project exists.
-- **Waiting on the owner:** a card for the Oracle VM, then deployment. The Android app is downloaded from `https://app.<domain>/download` (no Play Console yet).
-- **Android next:**
-  - renewals list and actions;
-  - quotes, and M-Pesa prompts on invoices;
-  - offline notes and photo capture of documents;
-  - push notifications (FCM: device tokens and send jobs).
+- **In review: public landing page** on `feat/landing-page`: `/` shows it to signed-out visitors (proxy
+  rewrite to `/welcome`), signed-in users still get the dashboard. Research, plan and motion budget in
+  `docs/LANDING_PAGE.md`; E2E in `e2e/tests/landing.spec.ts`.
+- **Merged:** document design gallery, the Android app (A1–A5, direct downloads, offline use, notifications,
+  two-factor and M-Pesa setup). `main` was at 9f9a64e before this branch.
+- **Landing follow-ups:** real testimonials and agent count once founding members exist; the root layout's
+  client providers (React Query, toasts) ship about 240 KB of gzipped JS to the landing page too; moving them
+  into the app layouts would make the public pages lighter.
+- **Android next:** push notifications through FCM, when a Firebase project exists.
 - **Waiting on the owner:**
-  - the application ID and product name (D7);
-  - a Play Console account;
-  - a privacy policy (D5).
+  - a card for the Oracle VM, then deployment; the Android app is downloaded from `https://app.<domain>/download`;
+  - the application ID and product name (D7), a privacy policy (D5), tax adviser sign-off (D4);
+  - a Play Console account (later).
 
 ## Earlier (2026-10-16)
 - **In review: in-app Help & guide** on `feat/help-centre` (`/help`, `components/help/`).
@@ -150,6 +146,9 @@ Read this first when resuming work. Update it at the end of every session (newes
   `return` inside `async for` silently rolled the transaction back.
 
 ## Session log
+### 2026-10-19: landing page
+Researched 2026 landing trends (product-in-the-hero, restrained motion, CSS scroll-driven animation) and built `/` for visitors: hero demo of a WhatsApp quote being accepted and stamped, the sales sequence, renewals board, commission slip, documents, Android, Business plan, pricing with yearly switch and founding offer, questions. Lighthouse mobile: accessibility 100, best practices 100.
+
 ### 2026-10-08: public repo and CI
 - Repo: https://github.com/kimutaiwycliff/insurance-quotation (public, `main` = M0..R1.5, fast-forwarded).
 - First CI run failed on the image scan (base-image CVEs); fixed by hardening the runtime images.
