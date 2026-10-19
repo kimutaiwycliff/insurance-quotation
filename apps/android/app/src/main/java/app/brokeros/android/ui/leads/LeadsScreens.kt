@@ -62,6 +62,7 @@ import app.brokeros.android.data.createLead
 import app.brokeros.android.data.lead
 import app.brokeros.android.data.leads
 import app.brokeros.android.data.newIdempotencyKey
+import app.brokeros.android.data.sendOrQueue
 import app.brokeros.android.data.pipeline
 import app.brokeros.android.data.updateLead
 import app.brokeros.android.ui.components.Choices
@@ -284,6 +285,7 @@ fun LeadScreen(viewModel: LeadViewModel, agentName: String, onEdit: () -> Unit, 
 /** Add a lead, or edit one. */
 @Composable
 fun LeadFormScreen(api: BrokerApi, existing: Lead?, onSaved: (String) -> Unit) {
+    val outbox = app.brokeros.android.ui.components.LocalOutbox.current
     var name by rememberSaveable { mutableStateOf(existing?.name ?: "") }
     var phone by rememberSaveable { mutableStateOf(existing?.phone ?: "") }
     var email by rememberSaveable { mutableStateOf(existing?.email ?: "") }
@@ -321,9 +323,15 @@ fun LeadFormScreen(api: BrokerApi, existing: Lead?, onSaved: (String) -> Unit) {
                         nextFollowUpAt = followUp?.let(Dates::morningOf),
                         notes = notes.trim().ifBlank { null },
                     )
-                    val saved = if (existing == null) api.createLead(input, key) else api.updateLead(existing, input)
-                    toast(if (existing == null) "Lead added" else "Lead saved")
-                    onSaved(saved.id)
+                    if (existing == null && outbox != null) {
+                        val sent = api.sendOrQueue(outbox, "POST", "/leads", input, "Lead: ${input.name}", idempotencyKey = key)
+                        toast(if (sent) "Lead added" else "Saved. It will be sent when you're back online.")
+                        onSaved("") // the list; the new lead has no page yet if it is waiting to be sent
+                    } else {
+                        val saved = if (existing == null) api.createLead(input, key) else api.updateLead(existing, input)
+                        toast(if (existing == null) "Lead added" else "Lead saved")
+                        onSaved(saved.id)
+                    }
                 } catch (e: AppException) {
                     error = e.message
                 } finally {

@@ -48,6 +48,7 @@ import app.brokeros.android.data.Task
 import app.brokeros.android.data.TaskInput
 import app.brokeros.android.data.createTask
 import app.brokeros.android.data.newIdempotencyKey
+import app.brokeros.android.data.sendOrQueue
 import app.brokeros.android.data.tasks
 import app.brokeros.android.data.updateTask
 import app.brokeros.android.ui.components.Choices
@@ -65,7 +66,11 @@ import kotlinx.coroutines.launch
 
 private val TABS = listOf("overdue" to "Overdue", "today" to "Today", "upcoming" to "Upcoming", "done" to "Done")
 
-class TasksViewModel(private val api: BrokerApi, private val entity: EntityRef? = null) : ViewModel() {
+class TasksViewModel(
+    private val api: BrokerApi,
+    private val entity: EntityRef? = null,
+    private val outbox: app.brokeros.android.core.Outbox? = null,
+) : ViewModel() {
     private val _state = MutableStateFlow<Load<List<Task>>>(Load.Loading)
     val state = _state.asStateFlow()
     var tab = if (entity == null) "today" else "all"
@@ -91,9 +96,16 @@ class TasksViewModel(private val api: BrokerApi, private val entity: EntityRef? 
         }
     }
 
-    suspend fun toggle(task: Task) {
-        api.updateTask(task, TaskInput(done = task.status != "done"))
-        load()
+    /** True when sent now; false when saved to send later (offline). */
+    suspend fun toggle(task: Task): Boolean {
+        val input = TaskInput(done = task.status != "done")
+        if (outbox == null) { api.updateTask(task, input); load(); return true }
+        val sent = api.sendOrQueue(outbox, "PATCH", "/tasks/${task.id}", input, "Task: ${task.title}", ifMatch = "\"${task.version}\"")
+        if (sent) load() else (_state.value as? Load.Ready)?.let { ready ->
+            // Show the tick straight away; the server catches up when the phone is online.
+            _state.value = Load.Ready(ready.value.filterNot { it.id == task.id })
+        }
+        return sent
     }
 }
 
@@ -151,8 +163,8 @@ fun TasksScreen(viewModel: TasksViewModel, api: BrokerApi) {
                                     onToggle = {
                                         scope.launch {
                                             try {
-                                                viewModel.toggle(task)
-                                                toast(if (task.status == "done") "Reopened: ${task.title}" else "Done: ${task.title}")
+                                                val sent = viewModel.toggle(task)
+                                                toast(if (!sent) "Saved. It will be sent when you're back online." else if (task.status == "done") "Reopened: ${task.title}" else "Done: ${task.title}")
                                             } catch (e: AppException) {
                                                 toast(e.message ?: "Try again.")
                                             }
@@ -191,6 +203,7 @@ fun TaskSheet(api: BrokerApi, task: Task?, entity: EntityRef?, onDismiss: () -> 
     val key = remember { newIdempotencyKey() }
     val scope = rememberCoroutineScope()
     val toast = LocalToast.current
+    val outbox = app.brokeros.android.ui.components.LocalOutbox.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -215,8 +228,15 @@ fun TaskSheet(api: BrokerApi, task: Task?, entity: EntityRef?, onDismiss: () -> 
                             entityType = if (task == null) entity?.entityType else null,
                             entityId = if (task == null) entity?.entityId else null,
                         )
-                        if (task == null) api.createTask(input, key) else api.updateTask(task, input)
-                        toast(if (task == null) "Task added" else "Task saved")
+                        val sent = if (outbox == null) {
+                            if (task == null) api.createTask(input, key) else api.updateTask(task, input)
+                            true
+                        } else if (task == null) {
+                            api.sendOrQueue(outbox, "POST", "/tasks", input, "Task: ${input.title}", idempotencyKey = key)
+                        } else {
+                            api.sendOrQueue(outbox, "PATCH", "/tasks/${task.id}", input, "Task: ${input.title}", ifMatch = "\"${task.version}\"")
+                        }
+                        toast(if (!sent) "Saved. It will be sent when you're back online." else if (task == null) "Task added" else "Task saved")
                         onSaved()
                     } catch (e: AppException) {
                         error = e.message

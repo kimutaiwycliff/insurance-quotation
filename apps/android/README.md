@@ -61,8 +61,16 @@ the full product.
     app's own screens where there is one.
 - **Notifications:** a bell with an unread count on every screen. Tapping a notification opens the quote,
   invoice or client it is about.
+- **More → Agency** also has **M-Pesa setup** (connect your Paybill or Till, register Paybill payments) and
+  **Security** (turn two-factor sign-in on or off, with backup codes).
+- **Offline:**
+  - lists and pages you have opened stay readable with no signal, with a banner saying how old they are;
+  - logging a call, tasks and new leads are saved and sent when you are back online ("N changes waiting");
+  - signing out clears all of it.
+- **Phone notifications:** every 30 minutes the app checks for news (a quote accepted, an invoice opened)
+  and shows it as a notification. Android 13+ asks permission once.
 - **More → On the web:** settings that need a big screen open in the browser: designs, insurers and
-  products, items, numbering, M-Pesa setup, eTIMS settings, Excel import, two-factor.
+  products, items, numbering, eTIMS settings, Excel import.
 - **More → Account:** switch agency, check for updates, sign out.
 
 The help topics are generated from the web's (`apps/web/src/components/help/topics.ts`). After changing

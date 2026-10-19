@@ -68,6 +68,7 @@ import app.brokeros.android.data.client
 import app.brokeros.android.data.documents
 import app.brokeros.android.data.downloadUrl
 import app.brokeros.android.data.logActivity
+import app.brokeros.android.data.sendOrQueue
 import app.brokeros.android.data.timeline
 import app.brokeros.android.data.uploadDocument
 import app.brokeros.android.ui.components.Choices
@@ -98,14 +99,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ClientViewModel(private val api: BrokerApi, val id: String) : ViewModel() {
+class ClientViewModel(private val api: BrokerApi, val id: String, private val outbox: app.brokeros.android.core.Outbox? = null) : ViewModel() {
     private val _client = MutableStateFlow<Load<Versioned<Client>>>(Load.Loading)
     val client = _client.asStateFlow()
     private val _timeline = MutableStateFlow<Load<List<TimelineItem>>>(Load.Loading)
     val timeline = _timeline.asStateFlow()
     private val _documents = MutableStateFlow<Load<List<Document>>>(Load.Loading)
     val documents = _documents.asStateFlow()
-    val tasks = TasksViewModelHolder(api, EntityRef("client", id))
+    val tasks = TasksViewModelHolder(api, EntityRef("client", id), outbox)
 
     init { load() }
 
@@ -122,9 +123,13 @@ class ClientViewModel(private val api: BrokerApi, val id: String) : ViewModel() 
         _documents.value = try { Load.Ready(api.documents("client", id).items) } catch (e: AppException) { Load.Failed(e.message ?: "Try again.") }
     }
 
-    suspend fun log(kind: String, body: String) {
-        api.logActivity(id, ActivityInput(kind, body.trim()))
-        loadTimeline()
+    /** True when sent now; false when saved to send later (offline). */
+    suspend fun log(kind: String, body: String): Boolean {
+        val input = ActivityInput(kind, body.trim())
+        if (outbox == null) { api.logActivity(id, input); loadTimeline(); return true }
+        val sent = api.sendOrQueue(outbox, "POST", "/clients/$id/activities", input, "Note: ${body.trim().take(40)}")
+        if (sent) loadTimeline()
+        return sent
     }
 
     suspend fun upload(picked: Picked, category: String, title: String, expires: java.time.LocalDate?) {
@@ -147,8 +152,8 @@ class ClientViewModel(private val api: BrokerApi, val id: String) : ViewModel() 
 }
 
 /** The client's tasks, inside the client's view model (so they share its lifetime). */
-class TasksViewModelHolder(api: BrokerApi, entity: EntityRef) {
-    val viewModel = TasksViewModel(api, entity)
+class TasksViewModelHolder(api: BrokerApi, entity: EntityRef, outbox: app.brokeros.android.core.Outbox?) {
+    val viewModel = TasksViewModel(api, entity, outbox)
 }
 
 /** Hooks into other areas (insurance, invoicing) shown as client tabs when the plan includes them. */
@@ -341,10 +346,10 @@ private fun TimelineTab(viewModel: ClientViewModel) {
                     busy = true
                     scope.launch {
                         try {
-                            viewModel.log(kind, body)
+                            val sent = viewModel.log(kind, body)
                             body = ""
                             error = null
-                            toast("Logged")
+                            toast(if (sent) "Logged" else "Saved. It will be sent when you're back online.")
                         } catch (e: AppException) {
                             error = e.message
                         } finally {
@@ -392,7 +397,7 @@ private fun ClientTasks(viewModel: ClientViewModel, api: BrokerApi) {
                 items(list, key = { it.id }) { task ->
                     TaskRow(task, onToggle = {
                         scope.launch {
-                            try { tasksVm.toggle(task); toast("Done: ${task.title}") } catch (e: AppException) { toast(e.message ?: "Try again.") }
+                            try { toast(if (tasksVm.toggle(task)) "Done: ${task.title}" else "Saved. It will be sent when you're back online.") } catch (e: AppException) { toast(e.message ?: "Try again.") }
                         }
                     }, onOpen = { editing = task })
                     HorizontalDivider()

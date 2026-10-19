@@ -5,6 +5,16 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: Android app offline use, notifications, security and M-Pesa setup (2026-10-19)
+- **Offline reads:** every page you open is saved on the phone and shown with an "offline" banner when there
+  is no signal.
+- **Offline writes:** logging calls, adding, editing or completing tasks, and adding leads are queued and sent
+  automatically when back online, with a "changes waiting" banner and any refusals shown. Everything is
+  cleared on sign-out.
+- **Phone notifications:** the app checks every 30 minutes in the background (no Google services needed).
+- **In the app:** two-factor sign-in setup (with backup codes) and the M-Pesa connection (connect, register
+  Paybill payments, turn off).
+
 ### Added: Android app downloads from our own site (2026-10-19)
 - **Public `/download` page,** linked from sign-in: download button, install steps and the file fingerprint.
 - **The app updates itself:** it downloads the APK named by the server, checks its SHA-256, and hands it to

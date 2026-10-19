@@ -52,6 +52,8 @@ fun menu(me: Me): List<Pair<String, List<MenuItem>>> {
         if (me.can("org:read")) add(MenuItem("plan", "Plan & billing", "Your plan, usage and paying by M-Pesa"))
         if (me.can("org:read")) add(MenuItem("profile", "Agency profile", "KRA PIN, licence, reminders"))
         if (me.can("member:read") && has("team")) add(MenuItem("team", "Team", "Invite colleagues and set roles"))
+        if (me.can("org:read")) add(MenuItem("mpesa-setup", "M-Pesa setup", "Connect your Paybill or Till"))
+        add(MenuItem("security", "Security", if (me.mfaEnrolled) "Two-factor sign-in is on" else "Turn on two-factor sign-in"))
         add(MenuItem("help", "Help & guide", "How to do anything in the app"))
     }
     return listOf("Insurance" to insurance, "Money" to money, "Agency" to agency).filter { it.second.isNotEmpty() }
@@ -64,10 +66,9 @@ fun webSettings(me: Me): List<MenuItem> = buildList {
     if (me.can("insurer:read") && has("insurance")) add(MenuItem("/settings/insurers", "Insurers & products", "Rates, minimums and commission"))
     if (me.can("invoice:write")) add(MenuItem("/settings/items", "Items & prices", "What you sell, ready for invoices"))
     if (me.can("numbering:read")) add(MenuItem("/settings/numbering", "Document numbers", "Prefixes and sequences"))
-    if (me.can("org:read")) add(MenuItem("/settings/payments", "M-Pesa setup", "Connect your Paybill or Till"))
     if (me.can("org:read") && has("etims")) add(MenuItem("/settings/tax", "Tax & eTIMS", "eTIMS on invoices"))
     if (has("book_import")) add(MenuItem("/policies/import", "Import your book", "From Excel or CSV"))
-    add(MenuItem("/settings/security", "Security", "Two-factor sign-in"))
+
 }
 
 @Composable

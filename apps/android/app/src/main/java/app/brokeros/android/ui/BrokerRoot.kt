@@ -15,7 +15,9 @@ import app.brokeros.android.core.appRoute
 import app.brokeros.android.data.unreadCount
 import app.brokeros.android.ui.account.NotificationsScreen
 import app.brokeros.android.ui.account.NotificationsViewModel
+import app.brokeros.android.ui.account.MpesaSetupScreen
 import app.brokeros.android.ui.account.PlanScreen
+import app.brokeros.android.ui.account.SecurityScreen
 import app.brokeros.android.ui.account.PlanViewModel
 import app.brokeros.android.ui.account.ProfileScreen
 import app.brokeros.android.ui.account.ProfileViewModel
@@ -118,7 +120,7 @@ import kotlinx.coroutines.launch
 
 /** What the app shows, from the session state and the server's update rules. */
 @Composable
-fun BrokerRoot(container: AppContainer, updates: Updater, versionCode: Int, versionName: String) {
+fun BrokerRoot(container: AppContainer, updates: Updater, versionCode: Int, versionName: String, openRoute: kotlinx.coroutines.flow.MutableStateFlow<String?>) {
     val session = container.session
     val state by session.state.collectAsStateWithLifecycle()
     val readyToInstall by updates.readyToInstall.collectAsStateWithLifecycle()
@@ -157,6 +159,7 @@ fun BrokerRoot(container: AppContainer, updates: Updater, versionCode: Int, vers
                 need == UpdateNeed.Available -> "A new version is available." to ("Update" to { startUpdate(false) })
                 else -> null
             },
+            openRoute = openRoute,
             onCheckUpdates = {
                 scope.launch {
                     val fresh = container.appConfig.fetch()
@@ -210,6 +213,8 @@ private val TITLES = mapOf(
     "team" to "Team",
     "help" to "Help & guide",
     "notifications" to "Notifications",
+    "security" to "Security",
+    "mpesa-setup" to "M-Pesa setup",
 )
 
 private fun newDocumentRoute(kind: String, client: ClientRef? = null) =
@@ -232,7 +237,7 @@ private fun tabOf(route: String?): String? = when {
     route.startsWith("client") -> "clients"
     route.startsWith("lead") -> "leads"
     route.startsWith("quote") || route.startsWith("polic") || route.startsWith("document") ||
-        route in listOf("calculator", "renewals", "commission", "invoices", "sales-quotes", "payments", "plan", "profile", "team", "help", "notifications") -> "more"
+        route in listOf("calculator", "renewals", "commission", "invoices", "sales-quotes", "payments", "plan", "profile", "team", "help", "notifications", "security", "mpesa-setup") -> "more"
     else -> TABS.firstOrNull { it.route == route }?.route
 }
 
@@ -244,6 +249,7 @@ private fun SignedIn(
     versionName: String,
     notice: String?,
     update: Pair<String, Pair<String, () -> Unit>>?,
+    openRoute: kotlinx.coroutines.flow.MutableStateFlow<String?>,
     onCheckUpdates: () -> Unit,
 ) {
     val nav = rememberNavController()
@@ -266,8 +272,27 @@ private fun SignedIn(
     }
     val openLink: (String) -> Unit = { link -> appRoute(link)?.let { nav.navigate(it) } ?: context.open(container.endpoints.siteUrl + link) }
     val isTab = TABS.any { it.route == route }
+    val offlineSince by api.offlineSince.collectAsStateWithLifecycle()
+    val pending by container.outbox.pending.collectAsStateWithLifecycle()
+    val failed by container.outbox.failed.collectAsStateWithLifecycle()
+    val wanted by openRoute.collectAsStateWithLifecycle()
+    // Opened from a phone notification: go straight there.
+    LaunchedEffect(wanted) { wanted?.let { nav.navigate(it) { launchSingleTop = true }; openRoute.value = null } }
+    // Background checks and offline sending, once signed in; ask once to show notifications (Android 13+).
+    val askNotifications = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) {}
+    LaunchedEffect(me.userId) {
+        container.flush()
+        app.brokeros.android.work.Background.start(context)
+        val prefs = context.getSharedPreferences("background", android.content.Context.MODE_PRIVATE)
+        if (android.os.Build.VERSION.SDK_INT >= 33 && !app.brokeros.android.work.Background.canNotify(context) && !prefs.getBoolean("asked", false)) {
+            prefs.edit().putBoolean("asked", true).apply()
+            askNotifications.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
-    CompositionLocalProvider(LocalToast provides toast) {
+    CompositionLocalProvider(LocalToast provides toast, app.brokeros.android.ui.components.LocalOutbox provides container.outbox) {
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -304,6 +329,11 @@ private fun SignedIn(
                 notice?.let { Banner(it) }
                 update?.let { (text, action) -> Banner(text, action.first.ifBlank { null }, action.second) }
                 if (me.readOnly) Banner("Your plan has lapsed: you can look, but not change anything. Pay on the web to unlock.")
+                offlineSince?.let { Banner("You're offline. Showing what was saved ${app.brokeros.android.core.Dates.relative(java.time.Instant.ofEpochMilli(it).toString())}.") }
+                if (pending.isNotEmpty()) {
+                    Banner("${pending.size} ${if (pending.size == 1) "change is" else "changes are"} waiting to send.", "Send now") { container.flush() }
+                }
+                failed.firstOrNull()?.let { Banner("Not saved: $it", "Dismiss") { container.outbox.dismissFailures() } }
                 NavHost(nav, startDestination = "home", modifier = Modifier.fillMaxSize()) {
                     composable("home") {
                         HomeScreen(me, viewModel(factory = viewModelFactory { initializer { HomeViewModel(api) } }), onNavigate = { nav.goTo(it) })
@@ -324,7 +354,7 @@ private fun SignedIn(
                     composable("client/{id}") { back ->
                         val id = back.arguments?.getString("id").orEmpty()
                         ClientScreen(
-                            viewModel(key = "client-$id", factory = viewModelFactory { initializer { ClientViewModel(api, id) } }),
+                            viewModel(key = "client-$id", factory = viewModelFactory { initializer { ClientViewModel(api, id, container.outbox) } }),
                             api = api,
                             siteUrl = container.endpoints.siteUrl,
                             agentName = me.firstName,
@@ -345,7 +375,7 @@ private fun SignedIn(
                     }
                     composable("client/{id}/edit") { back ->
                         val id = back.arguments?.getString("id").orEmpty()
-                        val vm: ClientViewModel = viewModel(key = "client-edit-$id", factory = viewModelFactory { initializer { ClientViewModel(api, id) } })
+                        val vm: ClientViewModel = viewModel(key = "client-edit-$id", factory = viewModelFactory { initializer { ClientViewModel(api, id, container.outbox) } })
                         val state by vm.client.collectAsStateWithLifecycle()
                         Loaded(state, onRetry = { vm.load() }) { versioned ->
                             ClientFormScreen(api, versioned, onSaved = {
@@ -361,7 +391,7 @@ private fun SignedIn(
                         )
                     }
                     composable("lead/new") {
-                        LeadFormScreen(api, existing = null) { id -> nav.navigate("lead/$id") { popUpTo("leads") } }
+                        LeadFormScreen(api, existing = null) { id -> if (id.isBlank()) nav.popBackStack() else nav.navigate("lead/$id") { popUpTo("leads") } }
                     }
                     composable("lead/{id}") { back ->
                         val id = back.arguments?.getString("id").orEmpty()
@@ -381,7 +411,7 @@ private fun SignedIn(
                         }
                     }
                     composable("tasks") {
-                        TasksScreen(viewModel(factory = viewModelFactory { initializer { TasksViewModel(api) } }), api)
+                        TasksScreen(viewModel(factory = viewModelFactory { initializer { TasksViewModel(api, null, container.outbox) } }), api)
                     }
                     composable("calculator") {
                         CalculatorScreen(api, showCommission = me.can("commission:read:all") || me.can("commission:read:own"))
@@ -492,6 +522,8 @@ private fun SignedIn(
                             canManage = me.role in listOf("owner", "admin"),
                         )
                     }
+                    composable("security") { SecurityScreen(me, container.auth, container.session) }
+                    composable("mpesa-setup") { MpesaSetupScreen(api, canEdit = me.can("org:update")) }
                     composable("help") {
                         HelpScreen(me, onGo = { nav.navigate(it) }, onOpenWeb = { context.open(container.endpoints.siteUrl + it) })
                     }
