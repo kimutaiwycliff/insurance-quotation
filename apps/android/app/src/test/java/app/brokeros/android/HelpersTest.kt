@@ -42,3 +42,21 @@ class HelpersTest {
         assertEquals("UGX 1,850,000", money("1850000", "UGX"))
     }
 }
+
+class UpdateTest {
+    @Test fun `a direct download installs only with the published checksum`() {
+        val sha = "a".repeat(64)
+        assertEquals(true, app.brokeros.android.update.Checksum.matches(" ${sha.uppercase()} ", sha))
+        assertEquals(false, app.brokeros.android.update.Checksum.matches("", sha)) // nothing published: refuse
+        assertEquals(false, app.brokeros.android.update.Checksum.matches("b".repeat(64), sha))
+    }
+
+    @Test fun `the app reads the APK link and checksum from the server`() {
+        val config = app.brokeros.android.data.ApiJson.decodeFromString(
+            AppConfig.serializer(),
+            """{"android":{"min_version_code":2,"latest_version_code":5,"store_url":"","apk_url":"/downloads/brokeros-0.5.0.apk","apk_sha256":"ab"},"notice":null,"features":[]}""",
+        )
+        assertEquals("/downloads/brokeros-0.5.0.apk", config.android.apkUrl)
+        assertEquals(UpdateNeed.Available, UpdateNeed.of(3, config))
+    }
+}

@@ -4,7 +4,7 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = [/^\/sign-(in|up)/, /^\/two-factor/, /^\/forgot-password/, /^\/reset-password/, /^\/verify-email/, /^\/accept-invitation/, /^\/d\//];
+const PUBLIC = [/^\/sign-(in|up)/, /^\/two-factor/, /^\/forgot-password/, /^\/reset-password/, /^\/verify-email/, /^\/accept-invitation/, /^\/d\//, /^\/download$/];
 const SESSION_COOKIES = ["better-auth.session_token", "__Secure-better-auth.session_token"];
 
 export function proxy(request: NextRequest): NextResponse {

@@ -17,6 +17,12 @@ class AndroidConfig(BaseModel):
     min_version_code: int = Field(description="Older versions must update before use")
     latest_version_code: int = Field(description="Newer than the installed one: offer an update")
     store_url: str = Field(description="Google Play listing; empty until the app is published")
+    apk_url: str = Field(
+        description="The latest signed APK for direct installs; empty when not offered"
+    )
+    apk_sha256: str = Field(
+        description="SHA-256 of that APK (hex); the app refuses a download that differs"
+    )
 
 
 class AppConfigOut(BaseModel):
@@ -37,6 +43,8 @@ async def app_config(
                 settings.android_latest_version_code, settings.android_min_version_code
             ),
             store_url=settings.android_store_url,
+            apk_url=settings.android_apk_url,
+            apk_sha256=settings.android_apk_sha256.strip().lower(),
         ),
         notice=settings.app_notice or None,
         features=settings.app_features,

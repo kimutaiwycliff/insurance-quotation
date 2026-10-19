@@ -159,7 +159,7 @@ jobs:
           persist-credentials: false
       # The runner image ships JDK 17 and the Android SDK; Gradle fetches the platform it needs.
       - name: Lint, unit tests and builds
-        run: ./gradlew lint testDebugUnitTest assembleDebug assembleRelease --console=plain
+        run: ./gradlew lintDirectRelease testDirectDebugUnitTest assembleDirectDebug assembleDirectRelease assemblePlayRelease --console=plain
 
   deploy:
     name: Production deploy files (compose.prod, scripts)

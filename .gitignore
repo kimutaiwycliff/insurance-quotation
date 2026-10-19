@@ -31,3 +31,4 @@ dist/
 
 # Production VM (deploy/bin)
 deploy/releases.log
+deploy/downloads/*.apk

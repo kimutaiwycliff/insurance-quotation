@@ -58,6 +58,19 @@ android {
         }
     }
 
+    // direct: downloaded from our own site, updates itself (checked by SHA-256). play: Google Play, in-app updates.
+    flavorDimensions += "store"
+    productFlavors {
+        create("direct") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION", "\"direct\"")
+        }
+        create("play") {
+            dimension = "store"
+            buildConfigField("String", "DISTRIBUTION", "\"play\"")
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -91,8 +104,8 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.core)
-    implementation(libs.play.app.update)
-    implementation(libs.androidx.fragment.ktx)
+    "playImplementation"(libs.play.app.update)
+    "playImplementation"(libs.androidx.fragment.ktx)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)

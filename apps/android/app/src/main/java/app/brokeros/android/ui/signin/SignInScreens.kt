@@ -195,11 +195,16 @@ fun NoAgencyScreen(siteUrl: String, onSignOut: () -> Unit) {
 }
 
 @Composable
-fun ForceUpdateScreen(onUpdate: () -> Unit) {
+fun ForceUpdateScreen(progress: Float? = null, onUpdate: () -> Unit) {
     AuthFrame("Update to continue", "This version of the app is no longer supported. The update takes a minute and keeps everything as it was.") {
-        Button(onClick = onUpdate, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Update now") }
+        if (progress != null) {
+            androidx.compose.material3.LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
+            Text("Downloading… ${(progress * 100).toInt()}%")
+        } else {
+            Button(onClick = onUpdate, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Update now") }
+        }
         Text(
-            "Updates come from Google Play.",
+            if (app.brokeros.android.BuildConfig.DISTRIBUTION == "play") "Updates come from Google Play." else "The update downloads from our website and Android asks you to confirm.",
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),

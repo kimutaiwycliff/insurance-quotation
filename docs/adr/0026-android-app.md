@@ -56,3 +56,30 @@ over the air". The web app stays the full product; the app covers what agents do
   possible later, because the data layer has no Android types in it).
 - CI builds, lints and unit-tests the app on every PR; Play uploads are a manual, documented step until the
   Play Console account exists.
+
+## Amendment (2026-10-19): distribution without Google Play, for now
+The product owner has no Play Console account yet, so the app is downloaded from our own site until there is.
+
+- **Two flavors of the same app:**
+  - **direct:** downloaded from `https://app.<DOMAIN>/download`; updates itself.
+  - **play:** for the Play Store later; Play in-app updates.
+
+  The only differences are the updater and the `REQUEST_INSTALL_PACKAGES` permission, which the play build
+  does not have.
+- **Self-update (direct):**
+  - `GET /api/v1/public/app-config` now also returns `apk_url` and `apk_sha256` (`ANDROID_APK_URL`,
+    `ANDROID_APK_SHA256`).
+  - The app streams the APK and hashes it; it refuses to install unless the SHA-256 matches. With nothing
+    published, it does not install.
+  - It hands the file to Android's package installer; the person allows installs from the app once.
+  - Android itself refuses an update not signed with the installed app's key.
+  - `ANDROID_MIN_VERSION_CODE` still forces updates.
+- **Signing:**
+  - One release key, made once with `apps/android/scripts/new-signing-key.sh` and kept out of the repo, in a
+    password manager plus a second safe place. Losing it means every user must uninstall and reinstall.
+  - For Play later, enrol this same key in Play App Signing, so direct installs can move to Play updates.
+- **Hosting:** Caddy serves `deploy/downloads/` on the VM at `/downloads/`, with APK content type and attachment
+  disposition. `apps/android/scripts/release-apk.sh` builds, hashes and prints the publish steps.
+- **The download page** (`/download`, public) shows the button, install steps and the fingerprint. The sign-in
+  page links to it.
+

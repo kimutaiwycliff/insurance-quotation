@@ -143,6 +143,10 @@ class Settings(BaseSettings):
     android_min_version_code: int = 1
     android_latest_version_code: int = 1
     android_store_url: str = ""
+    # Outside Google Play (ADR-0026 amendment): the signed APK on our own server and its SHA-256, which the app
+    # checks before installing an update.
+    android_apk_url: str = ""
+    android_apk_sha256: str = ""
     app_notice: str | None = None  # a short message shown at the top of the app; empty = none
     app_features: Annotated[list[str], NoDecode] = Field(
         default_factory=list

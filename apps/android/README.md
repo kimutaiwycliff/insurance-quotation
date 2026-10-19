@@ -75,19 +75,25 @@ those, run `python3 scripts/generate_help.py` (needs Node 22.6+).
 ## Run it against your local stack
 1. `make up` in the repository root. Create an account and agency on http://localhost:3000.
 2. Start an Android emulator (Android Studio → Device Manager).
-3. In `apps/android`, run `./gradlew installDebug`, or open the folder in Android Studio and press Run.
+3. In `apps/android`, run `./gradlew installDirectDebug`, or open the folder in Android Studio and press Run.
    - Debug builds talk to `http://10.0.2.2:3000` (site and sign-in) and `:8000` (API): the emulator's
      address for your computer.
    - On a real phone on the same Wi-Fi, use your computer's IP:
-     `./gradlew installDebug -PsiteUrl=http://192.168.1.20:3000 -PapiUrl=http://192.168.1.20:8000`.
+     `./gradlew installDirectDebug -PsiteUrl=http://192.168.1.20:3000 -PapiUrl=http://192.168.1.20:8000`.
      Also add that IP to `src/debug/res/xml/network_security_config.xml`.
 4. Sign in with the account from step 1.
 
 Requirements: JDK 17 or newer (`JAVA_HOME`) and the Android SDK (`ANDROID_HOME`, or `local.properties` with
 `sdk.dir`). The Gradle wrapper downloads Gradle itself, checksum-pinned.
 
+## Two builds
+- **direct** (`assembleDirectDebug`, `assembleDirectRelease`): downloaded from our site; updates itself from
+  `ANDROID_APK_URL` after checking its SHA-256. This is the one to install for now.
+- **play** (`bundlePlayRelease`): for Google Play later; updates through Play.
+
 ## Checks
-`make android-check` (lint, unit tests, debug build). CI also builds a minified release on every PR.
+`make android-check` (lint, unit tests, debug build). CI also builds minified direct and play releases on every
+PR.
 
 ## Layout
 ```

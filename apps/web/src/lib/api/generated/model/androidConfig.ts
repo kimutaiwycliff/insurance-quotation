@@ -6,6 +6,10 @@
  */
 
 export interface AndroidConfig {
+  /** SHA-256 of that APK (hex); the app refuses a download that differs */
+  apk_sha256: string;
+  /** The latest signed APK for direct installs; empty when not offered */
+  apk_url: string;
   /** Newer than the installed one: offer an update */
   latest_version_code: number;
   /** Older versions must update before use */

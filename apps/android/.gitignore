@@ -7,3 +7,6 @@ local.properties
 captures/
 *.jks
 *.keystore
+
+# Android release builds (scripts/release-apk.sh)
+dist/
