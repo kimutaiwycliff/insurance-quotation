@@ -11,11 +11,20 @@ import io.ktor.client.request.put
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import app.brokeros.android.core.Outbox
+import app.brokeros.android.core.PendingWrite
+import app.brokeros.android.core.ResponseCache
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.encodeToJsonElement
 import java.util.UUID
 
 /** A response with its version tag (ETag), needed to update the record safely later (If-Match). */
@@ -32,18 +41,65 @@ fun newIdempotencyKey(): String = UUID.randomUUID().toString()
 class BrokerApi(
     @PublishedApi internal val http: HttpClient,
     @PublishedApi internal val endpoints: Endpoints,
+    @PublishedApi internal val cache: ResponseCache? = null,
     private val token: suspend (forceRefresh: Boolean) -> String,
 ) {
+    @PublishedApi internal val _offlineSince = MutableStateFlow<Long?>(null)
+
+    /** When the data on screen was saved, while the server can't be reached; null when online. */
+    val offlineSince: StateFlow<Long?> = _offlineSince.asStateFlow()
+
     suspend fun me(): Me = get("/me")
 
     suspend fun dashboard(): Dashboard = get("/dashboard")
 
-    suspend inline fun <reified T> get(path: String, params: Map<String, Any?> = emptyMap()): T =
-        send(HttpMethod.Get, path) { params.forEach { (k, v) -> if (v != null) parameter(k, v) } }.body()
+    /** A read. Saved for offline use; with no connection, the saved answer is returned instead. */
+    suspend inline fun <reified T> get(path: String, params: Map<String, Any?> = emptyMap()): T {
+        val key = cache?.key(path, params)
+        return try {
+            val text = send(HttpMethod.Get, path) { params.forEach { (k, v) -> if (v != null) parameter(k, v) } }.bodyAsText()
+            _offlineSince.value = null
+            key?.let { cache?.put(it, text) }
+            ApiJson.decodeFromString(text)
+        } catch (e: AppException) {
+            val saved = if (e.status == null && key != null) cache?.get(key) else null
+            if (saved == null) throw e
+            _offlineSince.value = saved.second
+            ApiJson.decodeFromString(saved.first)
+        }
+    }
 
+    /** A read with its version tag. Offline, the saved answer has no tag (it can be viewed, not edited). */
     suspend inline fun <reified T> getVersioned(path: String): Versioned<T> {
-        val response = send(HttpMethod.Get, path) {}
-        return Versioned(response.body(), response.headers[HttpHeaders.ETag])
+        val key = cache?.key(path, mapOf("versioned" to true))
+        return try {
+            val response = send(HttpMethod.Get, path) {}
+            val text = response.bodyAsText()
+            _offlineSince.value = null
+            key?.let { cache?.put(it, text) }
+            Versioned(ApiJson.decodeFromString(text), response.headers[HttpHeaders.ETag])
+        } catch (e: AppException) {
+            val saved = if (e.status == null && key != null) cache?.get(key) else null
+            if (saved == null) throw e
+            _offlineSince.value = saved.second
+            Versioned(ApiJson.decodeFromString(saved.first), null)
+        }
+    }
+
+    /** Send a queued offline write as it was recorded. */
+    suspend fun replay(write: PendingWrite) {
+        try {
+            send(HttpMethod.parse(write.method), write.path) {
+                contentType(ContentType.Application.Json)
+                write.idempotencyKey?.let { header("Idempotency-Key", it) }
+                write.ifMatch?.let { header(HttpHeaders.IfMatch, it) }
+                setBody(write.body)
+            }
+            _offlineSince.value = null
+        } catch (e: AppException) {
+            if (e.status == null) throw Outbox.Offline()
+            throw e
+        }
     }
 
     suspend inline fun <reified B : Any, reified T> post(path: String, body: B, idempotencyKey: String? = null): T =
@@ -132,5 +188,31 @@ class BrokerApi(
                 else -> "Something went wrong. Try again."
             }
         }
+    }
+}
+
+/** True when an error means "no connection" (rather than the server saying no). */
+val AppException.isOffline: Boolean get() = status == null
+
+/**
+ * A create or update that also works offline: sent now when possible, otherwise queued and sent when the
+ * connection is back. Returns true when it was sent now.
+ */
+suspend inline fun <reified B : Any> BrokerApi.sendOrQueue(
+    outbox: Outbox,
+    method: String,
+    path: String,
+    body: B,
+    label: String,
+    idempotencyKey: String? = null,
+    ifMatch: String? = null,
+): Boolean {
+    val write = PendingWrite(newIdempotencyKey(), method, path, ApiJson.encodeToJsonElement(body), label, idempotencyKey, ifMatch)
+    return try {
+        replay(write)
+        true
+    } catch (e: Outbox.Offline) {
+        outbox.add(write)
+        false
     }
 }

@@ -30,6 +30,7 @@ class SessionRepository(
     private val store: TokenStore,
     private val loadMe: suspend () -> Me,
     private val now: () -> Long = { System.currentTimeMillis() / 1000 },
+    private val onSignedOut: suspend () -> Unit = {},
 ) {
     private val _state = MutableStateFlow<SessionState>(SessionState.Starting)
     val state: StateFlow<SessionState> = _state.asStateFlow()
@@ -129,6 +130,7 @@ class SessionRepository(
     private suspend fun forgetApiToken() = lock.withLock { apiToken = null }
 
     private suspend fun signedOut() {
+        onSignedOut()
         store.write(null)
         forgetApiToken()
         _state.value = SessionState.SignedOut

@@ -249,7 +249,27 @@ suspend fun BrokerApi.billingSummary(): BillingSummary = get("/billing/summary")
 // ---------------------------------------------------------------- M-Pesa
 
 @Serializable
-data class MpesaConnection(val status: String = "", val environment: String = "", @SerialName("business_shortcode") val shortcode: String = "")
+data class MpesaConnection(
+    val status: String = "",
+    val environment: String = "",
+    @SerialName("business_shortcode") val shortcode: String = "",
+    @SerialName("shortcode_type") val shortcodeType: String = "paybill",
+    @SerialName("party_b") val partyB: String = "",
+    @SerialName("consumer_key_hint") val consumerKeyHint: String = "",
+    @SerialName("c2b_registered_at") val c2bRegisteredAt: String? = null,
+    @SerialName("last_error") val lastError: String? = null,
+)
+
+@Serializable
+data class ConnectionIn(
+    val environment: String,
+    @SerialName("shortcode_type") val shortcodeType: String,
+    @SerialName("business_shortcode") val businessShortcode: String,
+    @SerialName("till_number") val tillNumber: String? = null,
+    @SerialName("consumer_key") val consumerKey: String,
+    @SerialName("consumer_secret") val consumerSecret: String,
+    val passkey: String,
+)
 
 @Serializable
 data class PromptIn(val phone: String? = null)
@@ -283,6 +303,12 @@ data class MatchIn(@SerialName("client_id") val clientId: String, @SerialName("i
 data class IgnoreIn(val reason: String)
 
 suspend fun BrokerApi.mpesaConnection(): MpesaConnection? = get("/mpesa/connection")
+
+suspend fun BrokerApi.saveMpesa(input: ConnectionIn): MpesaConnection = put("/mpesa/connection", input)
+
+suspend fun BrokerApi.registerC2b(): MpesaConnection = action("/mpesa/connection/register-c2b")
+
+suspend fun BrokerApi.disableMpesa(): MpesaConnection = action("/mpesa/connection/disable")
 
 suspend fun BrokerApi.mpesaPrompt(invoiceId: String, phone: String?): Prompt = post("/invoices/$invoiceId/mpesa-prompt", PromptIn(phone))
 

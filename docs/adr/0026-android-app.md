@@ -83,3 +83,27 @@ The product owner has no Play Console account yet, so the app is downloaded from
 - **The download page** (`/download`, public) shows the button, install steps and the fingerprint. The sign-in
   page links to it.
 
+## Amendment (2026-10-19): offline use and background notifications
+- **Reads work offline:**
+  - Every successful GET is saved in app-private storage (`filesDir/api-cache`, at most 400 answers,
+    oldest dropped first).
+  - With no connection, the saved answer is shown with an "offline, saved … ago" banner.
+  - Saved answers carry no ETag, so offline copies can be viewed, not edited.
+- **Some writes queue offline:** logging an activity, adding or editing or completing a task, and adding a lead.
+  - They go to an outbox (`filesDir/outbox.json`) with their `Idempotency-Key` or `If-Match`, and are sent in
+    order when the connection returns (network callback, app resume, and the background worker).
+  - A change the server refuses later (for example the record changed meanwhile) is shown, never dropped
+    silently.
+  - Money, issuing and anything final stay online-only.
+- **Client data on the phone:** the cache and outbox hold client data. They are app-private, excluded from
+  backups and device transfer (data extraction rules), and **wiped on sign-out**, together with the
+  background job and any notifications shown.
+- **Background notifications without Google services:**
+  - WorkManager runs every 30 minutes on any network: it sends queued changes and turns new unread in-app
+    notifications into phone notifications. Tapping one opens the notification list.
+  - Android 13+ asks permission once.
+  - Push through FCM can replace the polling later; it needs a Firebase project, plus a device-token table and
+    send jobs on the server.
+- **Two-factor setup and M-Pesa connection** are now in the app: Better Auth's `two-factor/enable`,
+  `verify-totp` and `disable` with the bearer session, and the API's `/mpesa/connection`.
+

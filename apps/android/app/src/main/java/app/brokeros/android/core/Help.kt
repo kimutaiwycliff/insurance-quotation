@@ -72,6 +72,8 @@ fun appRoute(href: String?): String? {
         parts == listOf("settings", "plan") -> "plan"
         parts == listOf("settings", "organization") -> "profile"
         parts == listOf("settings", "members") -> "team"
+        parts == listOf("settings", "security") -> "security"
+        parts == listOf("settings", "payments") -> "mpesa-setup"
         parts.size == 2 && parts[1] == "new" -> when (parts[0]) {
             "clients" -> "client/new"
             "leads" -> "lead/new"

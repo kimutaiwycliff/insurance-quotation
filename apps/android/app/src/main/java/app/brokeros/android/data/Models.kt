@@ -22,6 +22,7 @@ data class Me(
     val plan: String = "",
     val features: List<String> = emptyList(),
     @SerialName("read_only") val readOnly: Boolean = false,
+    @SerialName("mfa_enrolled") val mfaEnrolled: Boolean = false,
 ) {
     val firstName: String get() = name.trim().split(" ").firstOrNull()?.takeIf { it.isNotBlank() } ?: email
     fun can(permission: String): Boolean = permission in permissions

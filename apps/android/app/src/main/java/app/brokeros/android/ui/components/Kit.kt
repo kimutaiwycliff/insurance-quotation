@@ -45,6 +45,9 @@ import app.brokeros.android.core.Dates
 import app.brokeros.android.core.Labels
 import java.time.LocalDate
 
+/** Offline writes waiting to be sent (provided by the signed-in shell). */
+val LocalOutbox = compositionLocalOf<app.brokeros.android.core.Outbox?> { null }
+
 /** Show a short message at the bottom of the screen (success or failure). */
 val LocalToast = compositionLocalOf<(String) -> Unit> { {} }
 

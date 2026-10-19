@@ -11,6 +11,7 @@ datastore = "1.2.1"
 appUpdate = "2.1.0"
 # Play in-app updates registers an activity result; Fragment 1.3+ is needed for that to work (lint).
 fragment = "1.9.1"
+work = "2.12.0"
 ktor = "3.6.0"
 serialization = "1.11.0"
 coroutines = "1.11.0"
@@ -30,6 +31,7 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 play-app-update = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdate" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }

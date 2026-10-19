@@ -41,6 +41,12 @@ private data class ActiveAgency(val organizationId: String)
 private data class ApiToken(val token: String)
 
 @Serializable
+data class TwoFactorSetup(val totpURI: String, val backupCodes: List<String> = emptyList())
+
+@Serializable
+private data class PasswordBody(val password: String)
+
+@Serializable
 data class Team(val members: List<TeamMember> = emptyList(), val invitations: List<Invitation> = emptyList())
 
 @Serializable
@@ -162,6 +168,24 @@ class AuthApi(private val http: HttpClient, private val endpoints: Endpoints) {
             }
         }
     }
+
+    // ---------------------------------------------------------------- two-factor setup
+
+    /** Start two-factor: returns the otpauth:// link for an authenticator app and one-time backup codes. */
+    suspend fun enableTwoFactor(token: String, password: String): TwoFactorSetup = call {
+        http.post(url("/two-factor/enable")) {
+            origin()
+            bearerAuth(token)
+            contentType(ContentType.Application.Json)
+            setBody(PasswordBody(password))
+        }
+    }.body()
+
+    /** Finish turning it on with the first code from the authenticator. */
+    suspend fun confirmTwoFactor(token: String, code: String) =
+        teamAction(token, "/two-factor/verify-totp", Code(code.filter(Char::isDigit)))
+
+    suspend fun disableTwoFactor(token: String, password: String) = teamAction(token, "/two-factor/disable", PasswordBody(password))
 
     suspend fun signOut(token: String) {
         runCatching {
