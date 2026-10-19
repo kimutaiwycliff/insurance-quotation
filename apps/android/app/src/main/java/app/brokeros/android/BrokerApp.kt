@@ -14,7 +14,7 @@ import app.brokeros.android.update.AppConfigApi
 class AppContainer(context: Context) {
     val endpoints = Endpoints.fromBuild
     private val http = httpClient()
-    private val auth = AuthApi(http, endpoints)
+    val auth = AuthApi(http, endpoints)
     val appConfig = AppConfigApi(http, endpoints)
     val session: SessionRepository by lazy {
         SessionRepository(auth, KeystoreTokenStore(context), loadMe = { api.me() })

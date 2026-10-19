@@ -41,6 +41,30 @@ private data class ActiveAgency(val organizationId: String)
 private data class ApiToken(val token: String)
 
 @Serializable
+data class Team(val members: List<TeamMember> = emptyList(), val invitations: List<Invitation> = emptyList())
+
+@Serializable
+data class TeamMember(val id: String, val role: String, val user: TeamUser)
+
+@Serializable
+data class TeamUser(val id: String = "", val name: String = "", val email: String = "")
+
+@Serializable
+data class Invitation(val id: String, val email: String, val role: String = "", val status: String = "pending")
+
+@Serializable
+private data class Invite(val email: String, val role: String)
+
+@Serializable
+private data class RoleChange(val memberId: String, val role: String)
+
+@Serializable
+private data class Removal(val memberIdOrEmail: String)
+
+@Serializable
+private data class Cancel(val invitationId: String)
+
+@Serializable
 data class SessionInfo(val session: SessionPart) {
     @Serializable
     data class SessionPart(val activeOrganizationId: String? = null)
@@ -115,6 +139,29 @@ class AuthApi(private val http: HttpClient, private val endpoints: Endpoints) {
     /** A 15-minute API token for the active agency. */
     suspend fun apiToken(token: String): String =
         call { http.get(url("/token")) { bearerAuth(token) } }.body<ApiToken>().token
+
+    // ---------------------------------------------------------------- team (Better Auth organization)
+
+    suspend fun team(token: String): Team = call { http.get(url("/organization/get-full-organization")) { bearerAuth(token) } }.body()
+
+    suspend fun invite(token: String, email: String, role: String) = teamAction(token, "/organization/invite-member", Invite(email.trim(), role))
+
+    suspend fun changeRole(token: String, memberId: String, role: String) = teamAction(token, "/organization/update-member-role", RoleChange(memberId, role))
+
+    suspend fun removeMember(token: String, memberId: String) = teamAction(token, "/organization/remove-member", Removal(memberId))
+
+    suspend fun cancelInvitation(token: String, invitationId: String) = teamAction(token, "/organization/cancel-invitation", Cancel(invitationId))
+
+    private suspend inline fun <reified B : Any> teamAction(token: String, path: String, body: B) {
+        call {
+            http.post(url(path)) {
+                origin()
+                bearerAuth(token)
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+        }
+    }
 
     suspend fun signOut(token: String) {
         runCatching {

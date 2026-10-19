@@ -5,9 +5,9 @@ Read this first when resuming work. Update it at the end of every session (newes
 ## Current state (2026-10-19)
 - **Done (in review): document design gallery** on `feat/document-designs` (12 designs, options, logo removal; ADR-0014 amendment, migration 0014).
 - **Done: Android app, first slice** (PR #16).
-- **In review: Android A2 (CRM), A3 (insurance) and A4 (money)** on `feat/android-crm`.
+- **In review: Android A2–A5** on `feat/android-crm` (PR #17): CRM, insurance, money, agency and help. The app covers the web except big-screen setup (branding, catalogues, numbering, M-Pesa keys, import, 2FA), which opens on the web.
 - **Android plan to parity with the web:**
-  - A5: plan and billing, notifications, help, team and settings.
+  - next: offline notes and caching; push notifications (FCM); M-Pesa setup and two-factor in the app.
 - **Android next:**
   - renewals list and actions;
   - quotes, and M-Pesa prompts on invoices;
