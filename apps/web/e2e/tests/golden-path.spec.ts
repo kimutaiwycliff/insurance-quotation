@@ -44,7 +44,7 @@ test("an agent sets up their agency from scratch", async ({ page }, testInfo) =>
 
   // Step 3: brand, with a live preview of a real quotation.
   await expect(page.getByRole("heading", { name: "Your brand" })).toBeVisible();
-  await page.getByRole("radio", { name: /Savanna/ }).click();
+  await page.getByRole("radiogroup", { name: "Design" }).getByRole("radio", { name: /Savanna/ }).click();
   await page.getByLabel("Main colour", { exact: true }).fill("#7A1F3D");
   const preview = page.frameLocator("iframe[title^='Preview of a']");
   await expect(preview.getByText(agency).first()).toBeVisible();
@@ -70,7 +70,7 @@ test("an agent sets up their agency from scratch", async ({ page }, testInfo) =>
   await page.screenshot({ path: testInfo.outputPath("05-settings-organization.png"), fullPage: true });
 
   await page.goto("/settings/branding");
-  await expect(page.getByRole("radio", { name: /Savanna/ })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("radiogroup", { name: "Design" }).getByRole("radio", { name: /Savanna/ })).toHaveAttribute("aria-checked", "true");
   await expect(page.getByLabel("Main colour", { exact: true })).toHaveValue("#7A1F3D");
 
   await page.goto("/settings/numbering");
