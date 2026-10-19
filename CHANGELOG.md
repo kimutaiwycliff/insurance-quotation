@@ -5,6 +5,17 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: public landing page (2026-10-19)
+- **`/` for visitors:** signed-out visitors see the landing page at `/`; signed-in users still get their dashboard.
+  App pages still send visitors to sign-in.
+- **The hero shows the product working:** a comparison quote shared on WhatsApp, accepted by the client and
+  stamped, turning into a policy with a renewal reminder. It plays once with a "Play again" button.
+- **Sections:** how a sale moves (with a scroll-linked progress line), the renewals board, commission and
+  M-Pesa (money goes to the agent's own Paybill), document designs, the Android app, the Business plan,
+  pricing with a monthly/yearly switch and the founding offer, and common questions.
+- **Fast and accessible:** CSS-only motion with reduced-motion support, no new dependencies, structured data
+  for search. Research and design plan in `docs/LANDING_PAGE.md`.
+
 ### Added: Android app offline use, notifications, security and M-Pesa setup (2026-10-19)
 - **Offline reads:** every page you open is saved on the phone and shown with an "offline" banner when there
   is no signal.

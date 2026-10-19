@@ -10,8 +10,7 @@ test("an agent sets up their agency from scratch", async ({ page }, testInfo) =>
   const email = uniqueEmail(testInfo.project.name);
   const agency = `Wanjiku ${testInfo.project.name === "mobile" ? "Mobile" : "Desktop"} Insurance Agency`;
 
-  await page.goto("/");
-  await expect(page).toHaveURL(/\/sign-in/);
+  await page.goto("/sign-in");
   await expectAccessible(page, "sign-in");
 
   await page.getByRole("link", { name: "Create an account" }).click();

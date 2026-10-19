@@ -11,7 +11,8 @@ export async function expectAccessible(page: Page, context: string): Promise<voi
     Promise.all(
       document
         .getAnimations()
-        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        // Scroll-linked animations (landing page) never "finish" on their own; only time-based ones are waited for.
+        .filter((a) => a.timeline instanceof DocumentTimeline && a.effect?.getComputedTiming().iterations !== Infinity)
         .map((a) => a.finished.catch(() => undefined)),
     ),
   );
