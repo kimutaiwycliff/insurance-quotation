@@ -20,6 +20,8 @@ data class AppConfig(
         @SerialName("min_version_code") val minVersionCode: Int = 1,
         @SerialName("latest_version_code") val latestVersionCode: Int = 1,
         @SerialName("store_url") val storeUrl: String = "",
+        @SerialName("apk_url") val apkUrl: String = "",
+        @SerialName("apk_sha256") val apkSha256: String = "",
     )
 }
 

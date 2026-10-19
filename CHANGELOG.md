@@ -5,6 +5,15 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: Android app downloads from our own site (2026-10-19)
+- **Public `/download` page,** linked from sign-in: download button, install steps and the file fingerprint.
+- **The app updates itself:** it downloads the APK named by the server, checks its SHA-256, and hands it to
+  Android's installer. `ANDROID_APK_URL` and `ANDROID_APK_SHA256` are new app-config fields.
+- **Two builds of the app:** direct (our site) and play (Google Play later).
+- **Releases:** `scripts/new-signing-key.sh` and `scripts/release-apk.sh`; Caddy serves
+  `deploy/downloads/` at `/downloads/`. The runbook `docs/runbooks/android-release.md` is rewritten for
+  direct releases.
+
 ### Added: Android app, agency and help (A5) (2026-10-19)
 - **Agency screens:**
   - Plan & billing with M-Pesa checkout;

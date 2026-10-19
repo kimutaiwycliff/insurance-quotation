@@ -112,28 +112,30 @@ import app.brokeros.android.ui.signin.ForceUpdateScreen
 import app.brokeros.android.ui.signin.NoAgencyScreen
 import app.brokeros.android.ui.signin.SignInScreen
 import app.brokeros.android.update.AppConfig
-import app.brokeros.android.update.PlayUpdates
+import app.brokeros.android.update.Updater
 import app.brokeros.android.update.UpdateNeed
 import kotlinx.coroutines.launch
 
 /** What the app shows, from the session state and the server's update rules. */
 @Composable
-fun BrokerRoot(container: AppContainer, updates: PlayUpdates, versionCode: Int, versionName: String) {
+fun BrokerRoot(container: AppContainer, updates: Updater, versionCode: Int, versionName: String) {
     val session = container.session
     val state by session.state.collectAsStateWithLifecycle()
     val readyToInstall by updates.readyToInstall.collectAsStateWithLifecycle()
+    val downloading by updates.progress.collectAsStateWithLifecycle()
+    val rootContext = LocalContext.current
     var config by remember { mutableStateOf<AppConfig?>(null) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         config = container.appConfig.fetch()
-        updates.resumeRequired()
+        updates.resume()
         session.restore()
     }
     val need = config?.let { UpdateNeed.of(versionCode, it) } ?: UpdateNeed.None
-    val storeUrl = config?.android?.storeUrl.orEmpty()
+    val startUpdate: (Boolean) -> Unit = { required -> config?.let { c -> scope.launch { updates.start(required, c) } } }
     if (need == UpdateNeed.Required) {
-        ForceUpdateScreen { scope.launch { updates.start(required = true, storeUrl = storeUrl) } }
+        ForceUpdateScreen(progress = downloading) { startUpdate(true) }
         return
     }
 
@@ -150,11 +152,22 @@ fun BrokerRoot(container: AppContainer, updates: PlayUpdates, versionCode: Int, 
             versionName = versionName,
             notice = config?.notice,
             update = when {
-                readyToInstall -> "The update is ready." to ("Restart" to { updates.install() })
-                need == UpdateNeed.Available -> "A new version is available." to ("Update" to { scope.launch { updates.start(false, storeUrl) }; Unit })
+                downloading != null -> "Downloading the update… ${((downloading ?: 0f) * 100).toInt()}%" to ("" to {})
+                readyToInstall -> "The update is ready." to ("Install" to { updates.install() })
+                need == UpdateNeed.Available -> "A new version is available." to ("Update" to { startUpdate(false) })
                 else -> null
             },
-            onCheckUpdates = { scope.launch { updates.start(false, storeUrl) } },
+            onCheckUpdates = {
+                scope.launch {
+                    val fresh = container.appConfig.fetch()
+                    if (fresh != null) config = fresh
+                    when {
+                        fresh == null -> Unit
+                        UpdateNeed.of(versionCode, fresh) == UpdateNeed.None -> android.widget.Toast.makeText(rootContext, "You have the latest version.", android.widget.Toast.LENGTH_SHORT).show()
+                        else -> updates.start(false, fresh)
+                    }
+                }
+            },
         )
     }
 }
@@ -289,7 +302,7 @@ private fun SignedIn(
         ) { padding ->
             Column(Modifier.padding(padding).fillMaxSize()) {
                 notice?.let { Banner(it) }
-                update?.let { (text, action) -> Banner(text, action.first, action.second) }
+                update?.let { (text, action) -> Banner(text, action.first.ifBlank { null }, action.second) }
                 if (me.readOnly) Banner("Your plan has lapsed: you can look, but not change anything. Pay on the web to unlock.")
                 NavHost(nav, startDestination = "home", modifier = Modifier.fillMaxSize()) {
                     composable("home") {

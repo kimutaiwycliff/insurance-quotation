@@ -83,6 +83,9 @@ function SignInForm() {
             {t("createAccount")}
           </Link>
         </p>
+        <Link href="/download" className="text-primary underline-offset-4 hover:underline">
+          Get the Android app
+        </Link>
       </div>
     </>
   );

@@ -410,6 +410,16 @@
       },
       "AndroidConfig": {
         "properties": {
+          "apk_sha256": {
+            "description": "SHA-256 of that APK (hex); the app refuses a download that differs",
+            "title": "Apk Sha256",
+            "type": "string"
+          },
+          "apk_url": {
+            "description": "The latest signed APK for direct installs; empty when not offered",
+            "title": "Apk Url",
+            "type": "string"
+          },
           "latest_version_code": {
             "description": "Newer than the installed one: offer an update",
             "title": "Latest Version Code",
@@ -429,7 +439,9 @@
         "required": [
           "min_version_code",
           "latest_version_code",
-          "store_url"
+          "store_url",
+          "apk_url",
+          "apk_sha256"
         ],
         "title": "AndroidConfig",
         "type": "object"

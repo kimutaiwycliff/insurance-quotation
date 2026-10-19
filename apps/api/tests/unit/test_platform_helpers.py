@@ -117,12 +117,18 @@ async def test_app_config_reports_update_rules() -> None:
         android_min_version_code=5,
         android_latest_version_code=3,  # never below the minimum
         android_store_url="https://play.google.com/store/apps/details?id=app.example",
+        android_apk_url="https://app.example/downloads/app-5.apk",
+        android_apk_sha256=" ABCDEF ",
         app_notice="",
         app_features="offline_notes, new_dashboard",  # type: ignore[arg-type]
     )
     response = Response()
     out = await app_config(response, settings)
     assert (out.android.min_version_code, out.android.latest_version_code) == (5, 5)
+    assert (out.android.apk_url, out.android.apk_sha256) == (
+        "https://app.example/downloads/app-5.apk",
+        "abcdef",
+    )
     assert out.notice is None
     assert out.features == ["offline_notes", "new_dashboard"]
     assert response.headers["Cache-Control"] == "public, max-age=300"

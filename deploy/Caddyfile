@@ -21,10 +21,21 @@
 }
 
 # The web app (BFF): everything people use, including /api/auth and public document pages.
+# /downloads/ serves the Android app's APKs from deploy/downloads on the VM (ADR-0026 amendment).
 app.{$DOMAIN} {
 	import security
-	encode zstd gzip
-	reverse_proxy web:3000
+	handle /downloads/* {
+		root * /srv
+		@apk path *.apk
+		header @apk Content-Type "application/vnd.android.package-archive"
+		header @apk Content-Disposition "attachment"
+		header @apk Cache-Control "public, max-age=300"
+		file_server
+	}
+	handle {
+		encode zstd gzip
+		reverse_proxy web:3000
+	}
 }
 
 # The API is reached directly by the Android app (every /api/v1 route needs its short-lived token, ADR-0026),

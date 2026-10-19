@@ -42,6 +42,8 @@ x-prod-app-env: &prod-app-env
   ANDROID_MIN_VERSION_CODE: ${ANDROID_MIN_VERSION_CODE:-1}
   ANDROID_LATEST_VERSION_CODE: ${ANDROID_LATEST_VERSION_CODE:-1}
   ANDROID_STORE_URL: ${ANDROID_STORE_URL:-}
+  ANDROID_APK_URL: ${ANDROID_APK_URL:-}
+  ANDROID_APK_SHA256: ${ANDROID_APK_SHA256:-}
   APP_NOTICE: ${APP_NOTICE:-}
   APP_FEATURES: ${APP_FEATURES:-}
 
@@ -59,6 +61,7 @@ services:
       CADDY_TLS_MODE: ${CADDY_TLS_MODE:-}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/downloads:/srv/downloads:ro
       - caddydata:/data
       - caddyconfig:/config
     depends_on:

@@ -8,17 +8,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import app.brokeros.android.ui.BrokerRoot
 import app.brokeros.android.ui.theme.BrokerTheme
-import app.brokeros.android.update.PlayUpdates
+import app.brokeros.android.update.Updater
+import app.brokeros.android.update.createUpdater
 
 class MainActivity : ComponentActivity() {
-    private lateinit var updates: PlayUpdates
+    private lateinit var updates: Updater
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        updates = PlayUpdates(this)
+        updates = createUpdater(this)
         val container = (application as BrokerApp).container
         setContent {
             BrokerTheme {
@@ -27,6 +30,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Back from "allow installs from this app": carry on with the update.
+        lifecycleScope.launch { updates.resume() }
     }
 
     override fun onDestroy() {
