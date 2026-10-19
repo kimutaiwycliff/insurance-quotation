@@ -50,7 +50,23 @@ the full product.
   - **Payments:** payments received, and M-Pesa payments to match (assign to a client and invoice, or set
     aside).
 - **Client pages** also have Quotes, Policies and Billing tabs.
+- **More → Agency:**
+  - **Plan & billing:** status, trial, usage against limits; plans by month or year with founding prices;
+    pay by M-Pesa prompt, followed live.
+  - **Agency profile:** name, KRA PIN, licence and expiry, contacts; renewal and invoice reminder emails;
+    eTIMS on or off.
+  - **Team:** members and roles; invite colleagues, change roles, remove, cancel invitations (through the
+    auth service, like the web).
+  - **Help & guide:** the web's guide, searchable (same synonyms and M-Pesa spellings). Its links open the
+    app's own screens where there is one.
+- **Notifications:** a bell with an unread count on every screen. Tapping a notification opens the quote,
+  invoice or client it is about.
+- **More → On the web:** settings that need a big screen open in the browser: designs, insurers and
+  products, items, numbering, M-Pesa setup, eTIMS settings, Excel import, two-factor.
 - **More → Account:** switch agency, check for updates, sign out.
+
+The help topics are generated from the web's (`apps/web/src/components/help/topics.ts`). After changing
+those, run `python3 scripts/generate_help.py` (needs Node 22.6+).
 - **Updates and remote config:** from `GET /api/v1/public/app-config`.
   - Versions below `ANDROID_MIN_VERSION_CODE` must update through Google Play before use.
   - Newer versions are offered as a background download.
@@ -78,9 +94,9 @@ Requirements: JDK 17 or newer (`JAVA_HOME`) and the Android SDK (`ANDROID_HOME`,
 app/src/main/java/app/brokeros/android/
   core/     endpoints, JWT expiry, phone links, Keystore-encrypted session storage
   data/     auth (Better Auth via the web proxy), session state machine, API client (ETag, idempotency),
-            feature calls and models (Crm.kt, Insurance.kt, Billing.kt)
+            feature calls and models (Crm.kt, Insurance.kt, Billing.kt, Account.kt)
   update/   app config (remote switches) and Google Play in-app updates
-  ui/       theme, shared kit (components/), sign-in, home, clients, leads, tasks, insurance/, money/, account
+  ui/       theme, shared kit (components/), sign-in, home, clients, leads, tasks, insurance/, money/, account/ (more, plan, team, profile, notifications), help/
 app/src/test/  unit tests (Ktor mock engine: no server needed)
 ```
 

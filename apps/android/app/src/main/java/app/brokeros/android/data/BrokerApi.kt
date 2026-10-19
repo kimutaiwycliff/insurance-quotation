@@ -96,8 +96,7 @@ class BrokerApi(
         if (!response.status.isSuccess()) throw AppException("The upload did not finish. Try again.", response.status.value)
     }
 
-    @PublishedApi
-    internal suspend fun send(method: HttpMethod, path: String, block: HttpRequestBuilder.() -> Unit): HttpResponse {
+    suspend fun send(method: HttpMethod, path: String, block: HttpRequestBuilder.() -> Unit): HttpResponse {
         var response = attempt(method, path, token(false), block)
         if (response.status.value == 401) response = attempt(method, path, token(true), block)
         if (response.status.isSuccess()) return response

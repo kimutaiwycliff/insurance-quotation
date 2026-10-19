@@ -8,6 +8,20 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import app.brokeros.android.core.appRoute
+import app.brokeros.android.data.unreadCount
+import app.brokeros.android.ui.account.NotificationsScreen
+import app.brokeros.android.ui.account.NotificationsViewModel
+import app.brokeros.android.ui.account.PlanScreen
+import app.brokeros.android.ui.account.PlanViewModel
+import app.brokeros.android.ui.account.ProfileScreen
+import app.brokeros.android.ui.account.ProfileViewModel
+import app.brokeros.android.ui.account.TeamScreen
+import app.brokeros.android.ui.account.TeamViewModel
+import app.brokeros.android.ui.help.HelpScreen
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -178,6 +192,11 @@ private val TITLES = mapOf(
     "document/{id}" to "Document",
     "document/{id}/edit" to "Edit draft",
     "document/new/{kind}?clientId={clientId}&clientName={clientName}" to "New document",
+    "plan" to "Plan & billing",
+    "profile" to "Agency profile",
+    "team" to "Team",
+    "help" to "Help & guide",
+    "notifications" to "Notifications",
 )
 
 private fun newDocumentRoute(kind: String, client: ClientRef? = null) =
@@ -200,7 +219,7 @@ private fun tabOf(route: String?): String? = when {
     route.startsWith("client") -> "clients"
     route.startsWith("lead") -> "leads"
     route.startsWith("quote") || route.startsWith("polic") || route.startsWith("document") ||
-        route in listOf("calculator", "renewals", "commission", "invoices", "sales-quotes", "payments") -> "more"
+        route in listOf("calculator", "renewals", "commission", "invoices", "sales-quotes", "payments", "plan", "profile", "team", "help", "notifications") -> "more"
     else -> TABS.firstOrNull { it.route == route }?.route
 }
 
@@ -224,6 +243,15 @@ private fun SignedIn(
     var agencies by remember { mutableIntStateOf(1) }
     LaunchedEffect(me.tenant.id) { agencies = runCatching { container.session.agencyCount() }.getOrDefault(1) }
     val toast: (String) -> Unit = { message -> scope.launch { snackbar.showSnackbar(message) } }
+    var unread by remember { mutableIntStateOf(0) }
+    val refreshUnread: () -> Unit = { scope.launch { unread = runCatching { api.unreadCount() }.getOrDefault(unread) } }
+    LaunchedEffect(me.tenant.id) {
+        while (true) {
+            unread = runCatching { api.unreadCount() }.getOrDefault(unread)
+            kotlinx.coroutines.delay(60_000)
+        }
+    }
+    val openLink: (String) -> Unit = { link -> appRoute(link)?.let { nav.navigate(it) } ?: context.open(container.endpoints.siteUrl + link) }
     val isTab = TABS.any { it.route == route }
 
     CompositionLocalProvider(LocalToast provides toast) {
@@ -234,6 +262,13 @@ private fun SignedIn(
                     navigationIcon = {
                         if (!isTab && route != null) {
                             IconButton(onClick = { nav.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { nav.navigate("notifications") { launchSingleTop = true } }) {
+                            BadgedBox(badge = { if (unread > 0) Badge { Text(if (unread > 99) "99+" else "$unread") } }) {
+                                Icon(Icons.Default.Notifications, contentDescription = if (unread > 0) "Notifications, $unread new" else "Notifications")
+                            }
                         }
                     },
                 )
@@ -429,6 +464,27 @@ private fun SignedIn(
                             DocumentEditor(api, quote = doc.value.isQuote, client = null, existing = doc) { nav.navigate("document/$id") { popUpTo("document/{id}") { inclusive = true } } }
                         }
                     }
+                    composable("plan") {
+                        PlanScreen(viewModel(factory = viewModelFactory { initializer { PlanViewModel(api) } }), canPay = me.can("org:update")) {
+                            scope.launch { container.session.restore() } // plan, features and read-only come from /me
+                        }
+                    }
+                    composable("profile") {
+                        ProfileScreen(viewModel(factory = viewModelFactory { initializer { ProfileViewModel(api) } }), canEdit = me.can("org:update"))
+                    }
+                    composable("team") {
+                        TeamScreen(
+                            viewModel(factory = viewModelFactory { initializer { TeamViewModel(api, container.auth, container.session) } }),
+                            myUserId = me.userId,
+                            canManage = me.role in listOf("owner", "admin"),
+                        )
+                    }
+                    composable("help") {
+                        HelpScreen(me, onGo = { nav.navigate(it) }, onOpenWeb = { context.open(container.endpoints.siteUrl + it) })
+                    }
+                    composable("notifications") {
+                        NotificationsScreen(viewModel(factory = viewModelFactory { initializer { NotificationsViewModel(api) } }), onOpenLink = openLink, onChanged = refreshUnread)
+                    }
                     composable("more") {
                         AccountScreen(
                             me = me,
@@ -446,6 +502,7 @@ private fun SignedIn(
                             },
                             onCheckUpdates = onCheckUpdates,
                             onOpenWeb = { context.open(container.endpoints.siteUrl) },
+                            onOpenWebPath = { context.open(container.endpoints.siteUrl + it) },
                             onSignOut = { scope.launch { container.session.signOut() } },
                         )
                     }

@@ -5,6 +5,18 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: Android app, agency and help (A5) (2026-10-19)
+- **Agency screens:**
+  - Plan & billing with M-Pesa checkout;
+  - agency profile (with reminders and eTIMS switches);
+  - team (invite, change role, remove, cancel invitations).
+- **Notifications:** a bell with an unread badge; notifications open the related screen.
+- **Help & guide:** generated from the web's topics (`scripts/generate_help.py`); same search, with links
+  into the app.
+- Web-only settings are listed under More → On the web. **The app now covers everything agents use on the
+  web except** designs and branding, catalogue and numbering setup, M-Pesa connection keys, Excel import and
+  two-factor setup.
+
 ### Added: Android app, money (A4) (2026-10-19)
 - **Invoices and sales quotes:**
   - billing summary; editor with items, quantity, discount and tax code (sections and optional extras on

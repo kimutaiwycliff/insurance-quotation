@@ -88,6 +88,10 @@ class SessionRepository(
         signedOut()
     }
 
+    /** Run an auth-service call that needs the session token (team management). */
+    suspend fun <T> withSession(block: suspend (sessionToken: String) -> T): T =
+        block(store.read() ?: throw AppException("Signed out", 401))
+
     /** A valid API token, minted when needed. Throws [AppException] when signed out. */
     suspend fun apiToken(forceRefresh: Boolean = false): String = lock.withLock {
         val cached = apiToken
