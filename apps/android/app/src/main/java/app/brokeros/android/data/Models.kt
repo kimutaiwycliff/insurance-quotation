@@ -69,20 +69,52 @@ data class Client(
     val id: String,
     @SerialName("display_name") val displayName: String,
     val kind: String = "individual",
+    @SerialName("first_name") val firstName: String? = null,
+    @SerialName("last_name") val lastName: String? = null,
+    @SerialName("other_names") val otherNames: String? = null,
+    @SerialName("company_name") val companyName: String? = null,
     val phone: String? = null,
     @SerialName("alt_phone") val altPhone: String? = null,
     val email: String? = null,
     @SerialName("kra_pin") val kraPin: String? = null,
+    @SerialName("id_type") val idType: String? = null,
+    @SerialName("id_number_hint") val idNumberHint: String? = null,
+    @SerialName("date_of_birth") val dateOfBirth: String? = null,
+    val gender: String? = null,
     val occupation: String? = null,
     val status: String = "active",
     val tags: List<String> = emptyList(),
     val notes: String? = null,
+    val source: String? = null,
     @SerialName("preferred_channel") val preferredChannel: String? = null,
+    @SerialName("marketing_consent") val marketingConsent: Boolean = false,
+    val address: Address? = null,
+    @SerialName("archived_at") val archivedAt: String? = null,
 )
 
-/** RFC 9457 problem from the API. */
 @Serializable
-data class Problem(val title: String = "", val detail: String? = null, val code: String = "")
+data class Address(
+    val line1: String? = null,
+    val town: String? = null,
+    val county: String? = null,
+    @SerialName("postal_code") val postalCode: String? = null,
+)
+
+/** Money as the API sends it: a decimal string and a currency (never a float). */
+@Serializable
+data class Money(val amount: String, val currency: String = "KES")
+
+/** RFC 9457 problem from the API, with per-field errors on validation failures. */
+@Serializable
+data class Problem(
+    val title: String = "",
+    val detail: String? = null,
+    val code: String = "",
+    val errors: List<FieldError> = emptyList(),
+) {
+    @Serializable
+    data class FieldError(val field: String = "", val message: String = "", val code: String = "")
+}
 
 /** Better Auth error body. */
 @Serializable

@@ -4,7 +4,10 @@ Read this first when resuming work. Update it at the end of every session (newes
 
 ## Current state (2026-10-19)
 - **Done (in review): document design gallery** on `feat/document-designs` (12 designs, options, logo removal; ADR-0014 amendment, migration 0014).
-- **In review: Android app, first slice** on `feat/android-app` (ADR-0026, `apps/android`, app-config endpoint).
+- **Done: Android app, first slice** (PR #16).
+- **In review: Android A2 (CRM), A3 (insurance) and A4 (money)** on `feat/android-crm`.
+- **Android plan to parity with the web:**
+  - A5: plan and billing, notifications, help, team and settings.
 - **Android next:**
   - renewals list and actions;
   - quotes, and M-Pesa prompts on invoices;
