@@ -1,0 +1,45 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+:root { --card: color-mix(in srgb, var(--primary) 6%, white); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.top h1 { font-size: 22pt; color: var(--primary); font-weight: 800; }
+.badge { background: var(--primary); color: var(--on-primary); border-radius: 14px; padding: 12px 18px; text-align: right;
+  min-width: 190px; }
+.badge .label { font-size: 8pt; opacity: .85; }
+.badge .amount { font-family: var(--font-display); font-weight: 800; font-size: 17pt; }
+.badge .number { font-size: 8pt; opacity: .85; margin-top: 2px; }
+.cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.cards > * { background: var(--card); border-radius: 12px; padding: 12px 14px; }
+.panel { background: var(--card); border-radius: 12px; padding: 6px 8px; }
+.lines thead th { color: var(--primary); border-bottom: 2px solid color-mix(in srgb, var(--primary) 25%, white); }
+.lines td { border-bottom: 1px solid color-mix(in srgb, var(--primary) 12%, white); }
+.lines tbody tr:last-child td { border-bottom: 0; }
+.totals { background: var(--card); border-radius: 12px; overflow: hidden; }
+.totals .grand td { border-top: 0; background: var(--accent); color: var(--on-accent); }
+section.block[aria-label="How to pay"], section.block[aria-label="Signature"] { background: var(--card); border-radius: 12px; padding: 12px 14px; }
+.h3 { font-size: 10pt; color: var(--primary); margin-bottom: 4px; }
+{% endblock %}
+{% block body %}
+<header class="top hdr">
+  <div class="brand-slot">{{ b.brandmark(doc, brand) }}<h1>{{ title }}</h1></div>
+  <div class="title-slot badge">
+    {% if doc.totals %}
+    <div class="label">{{ b.amount_due_label(doc) }}</div>
+    <div class="amount">{{ b.amount_due(doc) }}</div>
+    {% else %}<div class="amount">{{ title }}</div>{% endif %}
+    {% if doc.number %}<div class="number">{{ doc.number }}</div>{% endif %}
+  </div>
+</header>
+<div class="cards">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "To") }}<div>{{ b.meta(doc) }}</div></div>
+{{ b.details(doc) }}
+{% if doc.options %}
+<div class="block panel">{{ b.options(doc) }}</div>
+{% else %}
+<div class="block panel">{{ b.lines(doc) }}</div>
+{{ b.totals_table(doc) }}
+{% endif %}
+{% if opts.show_payment %}{{ b.payment(doc) }}{% endif %}
+{% if opts.show_signature %}{{ b.signature() }}{% endif %}
+{{ b.closing(doc, brand) }}
+{% endblock %}

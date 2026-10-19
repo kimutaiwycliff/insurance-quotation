@@ -6,7 +6,15 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from app.modules.rendering.fixtures import Variant
-from app.modules.rendering.view import DocType, HexColor
+from app.modules.rendering.view import (
+    DesignOptions,
+    DocType,
+    FontPair,
+    HexColor,
+    LogoAlign,
+    LogoSize,
+    Paper,
+)
 
 Text = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)]
 
@@ -40,6 +48,19 @@ class PaymentDefaults(BaseModel):
     )
 
 
+class DesignOptionsUpdate(BaseModel):
+    """Only the options sent change; the rest keep their saved values."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    logo_size: LogoSize | None = None
+    logo_align: LogoAlign | None = None
+    show_payment: bool | None = None
+    show_signature: bool | None = None
+    seal_watermark: bool | None = None
+    paper: Paper | None = None
+
+
 class BrandingOut(BaseModel):
     templates: dict[str, str] = Field(description="Template key per document type (effective)")
     primary_color: str | None
@@ -48,6 +69,7 @@ class BrandingOut(BaseModel):
     logo_document_id: uuid.UUID | None
     footer_text: str | None
     payment_instructions: PaymentDefaults
+    options: DesignOptions
     version: int
 
 
@@ -57,12 +79,13 @@ class BrandingUpdate(BaseModel):
     templates: dict[DocType, str] | None = None
     primary_color: HexColor | None = None
     accent_color: HexColor | None = None
-    font_pair: Literal["sans", "serif"] | None = None
-    logo_document_id: uuid.UUID | None = None
+    font_pair: FontPair | None = None
+    logo_document_id: uuid.UUID | None = Field(default=None, description="null removes the logo")
     footer_text: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None = (
         None
     )
     payment_instructions: PaymentDefaults | None = None
+    options: DesignOptionsUpdate | None = None
 
 
 class TemplatePreviewRequest(BaseModel):

@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { BrandingOutTemplates } from './brandingOutTemplates';
+import type { DesignOptions } from './designOptions';
 import type { PaymentDefaults } from './paymentDefaults';
 
 export interface BrandingOut {
@@ -12,6 +13,7 @@ export interface BrandingOut {
   font_pair: string | null;
   footer_text: string | null;
   logo_document_id: string | null;
+  options: DesignOptions;
   payment_instructions: PaymentDefaults;
   primary_color: string | null;
   /** Template key per document type (effective) */

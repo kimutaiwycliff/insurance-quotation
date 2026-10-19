@@ -64,10 +64,15 @@ class TestSniff:
 
 class TestTemplates:
     def test_catalog(self) -> None:
-        tiers = sorted(m.tier for m in engine.catalog().values())
-        assert tiers == ["free", "premium", "premium"]  # plan M2: 1 free + 2 premium
+        tiers = [m.tier for m in engine.catalog().values()]
+        assert len(tiers) == 12
+        assert sorted(k for k, m in engine.catalog().items() if m.tier == "free") == [
+            "classic",
+            "compact",
+            "minimal",
+        ]
 
-    @pytest.mark.parametrize("key", ["classic", "savanna", "executive"])
+    @pytest.mark.parametrize("key", sorted(engine.catalog()))
     @pytest.mark.parametrize("doc_type", ["quote", "invoice", "receipt", "credit_note"])
     def test_every_template_renders_every_document(self, key: str, doc_type: str) -> None:
         html = engine.render_html(key, sample_view(doc_type), BrandingView())  # type: ignore[arg-type]

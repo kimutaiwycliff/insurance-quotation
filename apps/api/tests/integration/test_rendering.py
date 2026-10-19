@@ -31,14 +31,22 @@ async def _preview(api: httpx.AsyncClient, org: Org, key: str, **body: object) -
 
 async def test_catalogue(api: httpx.AsyncClient, ready_org: Org) -> None:
     templates = (await api.get("/api/v1/templates", headers=ready_org.headers())).json()
-    assert {t["key"]: t["tier"] for t in templates} == {
-        "classic": "free",
-        "savanna": "premium",
-        "executive": "premium",
-    }
+    tiers = {t["key"]: t["tier"] for t in templates}
+    assert len(tiers) == 12
+    assert sorted(k for k, tier in tiers.items() if tier == "free") == [
+        "classic",
+        "compact",
+        "minimal",
+    ]
 
 
-@pytest.mark.parametrize("key", ["classic", "savanna", "executive"])
+DESIGNS = [
+    "card", "classic", "compact", "corporate", "executive", "kitenge",
+    "ledger", "minimal", "savanna", "seal", "sidebar", "statement",
+]  # fmt: skip
+
+
+@pytest.mark.parametrize("key", DESIGNS)
 @pytest.mark.parametrize("doc_type", ["quote", "invoice", "receipt", "credit_note"])
 async def test_every_template_renders_a_real_pdf(
     api: httpx.AsyncClient, ready_org: Org, key: str, doc_type: str
@@ -95,6 +103,56 @@ async def test_branding_changes_the_output(api: httpx.AsyncClient, ready_org: Or
         )
     ).text
     assert "#00AA00" in unsaved  # live preview of unsaved changes
+
+
+async def test_design_options_and_removing_the_logo(api: httpx.AsyncClient, ready_org: Org) -> None:
+    logo = await upload(api, ready_org, "logo.png", PNG_BYTES, category="branding")
+    headers = ready_org.headers()
+    etag = (await api.get("/api/v1/branding", headers=headers)).headers["ETag"]
+    saved = await api.patch(
+        "/api/v1/branding",
+        json={
+            "logo_document_id": logo["id"],
+            "font_pair": "editorial",
+            "options": {"logo_align": "center", "show_signature": True, "paper": "Letter"},
+        },
+        headers=headers | {"If-Match": etag},
+    )
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["options"] == {
+        "logo_size": "medium",
+        "logo_align": "center",
+        "show_payment": True,
+        "show_signature": True,
+        "seal_watermark": False,
+        "paper": "Letter",
+    }
+    html = (await _preview(api, ready_org, "statement", doc_type="invoice", format="html")).text
+    assert '<body class="logo-center">' in html
+    assert "Authorised signature" in html
+    assert "size: Letter" in html
+    assert "font-family:'Fraunces'" in html
+    assert "data:image/png;base64," in html
+
+    # Unsaved options show in the live preview; sending null resets one option to its default.
+    preview = await _preview(
+        api, ready_org, "classic", format="html", branding={"options": {"seal_watermark": True}}
+    )
+    assert 'class="seal-wm"' in preview.text
+    removed = await api.patch(
+        "/api/v1/branding",
+        json={"logo_document_id": None, "options": {"paper": None}},
+        headers=headers | {"If-Match": saved.headers["ETag"]},
+    )
+    assert removed.status_code == 200, removed.text
+    assert removed.json()["logo_document_id"] is None
+    assert removed.json()["options"]["paper"] is None
+    assert removed.json()["options"]["logo_align"] == "center"  # untouched options keep their value
+    html = (await _preview(api, ready_org, "statement", doc_type="invoice", format="html")).text
+    assert "data:image/png;base64," not in html
+    assert "Test Agency" in html  # the agency name stands in for the logo
+    pdf = (await _preview(api, ready_org, "seal", doc_type="invoice")).content
+    assert "Test Agency" in pdf_text(pdf)
 
 
 async def test_invalid_branding(api: httpx.AsyncClient, ready_org: Org) -> None:

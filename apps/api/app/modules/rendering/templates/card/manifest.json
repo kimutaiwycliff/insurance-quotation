@@ -1,0 +1,1 @@
+{"key": "card", "name": "Card", "description": "Soft rounded panels and a bold badge with the amount due. Friendly and modern.", "tier": "premium", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "geometric", "default_primary": "#1C6E8C", "default_accent": "#F4A261"}

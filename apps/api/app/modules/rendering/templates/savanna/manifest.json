@@ -3,7 +3,7 @@
   "name": "Savanna",
   "description": "Bold colour header and accent rules; strong, modern look for agencies with a brand colour.",
   "tier": "premium",
-  "version": 3,
+  "version": 4,
   "doc_types": [
     "quote",
     "invoice",

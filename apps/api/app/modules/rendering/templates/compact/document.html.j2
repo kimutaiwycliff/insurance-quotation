@@ -1,0 +1,29 @@
+{% extends "_base.html.j2" %}
+{% import "_blocks.html.j2" as b %}
+{% block style %}
+@page { margin: 10mm 10mm 14mm 10mm; }
+body { font-size: 8.3pt; line-height: 1.35; }
+td, th { padding: 3px 6px; }
+.logo { max-height: calc(var(--logo-h) * .75); }
+.agency-name { font-size: 11pt; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 6px;
+  border-bottom: 2px solid var(--primary); }
+.top h1 { font-size: 14pt; color: var(--primary); }
+.title-slot { display: flex; align-items: baseline; gap: 14px; text-align: right; }
+.title-slot .kv { grid-template-columns: max-content max-content; gap: 0 8px; }
+.strip { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 8px 0 4px; font-size: 8pt; }
+.block { margin-top: 10px; }
+.lines thead th { background: var(--wash); border-bottom: 1px solid var(--primary); }
+.lines td { border-bottom: .5pt solid var(--rule); }
+.totals td { padding: 2px 6px; }
+.totals .grand td { font-size: 10pt; }
+.h3 { font-size: 8.5pt; color: var(--primary); margin-bottom: 2px; }
+{% endblock %}
+{% block body %}
+<header class="top hdr">
+  <div class="brand-slot">{{ b.brandmark(doc, brand) }}</div>
+  <div class="title-slot"><h1>{{ title }}</h1>{{ b.meta(doc) }}</div>
+</header>
+<div class="strip">{{ b.party(doc.seller, "From") }}{{ b.party(doc.buyer, "To") }}</div>
+{{ b.main(doc, brand, opts) }}
+{% endblock %}

@@ -3,7 +3,7 @@
   "name": "Classic",
   "description": "Clean and simple: logo, clear table, totals. Works for every document.",
   "tier": "free",
-  "version": 3,
+  "version": 4,
   "doc_types": [
     "quote",
     "invoice",

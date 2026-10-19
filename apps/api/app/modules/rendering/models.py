@@ -27,10 +27,12 @@ class BrandingSettings(TenantScoped, Audited, Versioned, Base):
     templates: Mapped[dict[str, str]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
     primary_color: Mapped[str | None]
     accent_color: Mapped[str | None]
-    font_pair: Mapped[str | None]  # sans | serif; None = the template's own
+    font_pair: Mapped[str | None]  # view.FontPair; None = the template's own
     logo_document_id: Mapped[uuid.UUID | None]
     footer_text: Mapped[str | None]
     # PaymentInstructions without "reference" (that one is per document).
     payment_instructions: Mapped[dict[str, Any]] = mapped_column(
         JSONB, server_default=text("'{}'::jsonb")
     )
+    # view.DesignOptions fields that differ from the defaults (logo size and position, sections, paper).
+    options: Mapped[dict[str, Any]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))

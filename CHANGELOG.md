@@ -5,6 +5,20 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Added: document design gallery (2026-10-19)
+- **12 document designs**, up from 3:
+  - existing: Classic, Executive, Savanna;
+  - new free: Minimal, Compact;
+  - new premium: Ledger, Sidebar, Seal, Kitenge, Card, Statement, Corporate.
+- They are shown as a gallery of live thumbnails rendered with the agency's own colours and logo.
+- **Make it yours**:
+  - 8 colour presets, or the design's own colours (which can now be restored);
+  - 6 font pairings;
+  - logo size and position;
+  - How to pay box on or off, signature and stamp lines, an agency-seal watermark;
+  - A4 or Letter paper.
+- **Remove logo**: documents then show the agency name, or its seal in the Seal design.
+
 ### Added: in-app Help & guide (2026-10-16)
 - **Help & guide** page (`/help`, in the main menu):
   - searchable guide to every feature, with numbered steps, tips and a "Take me there" link;

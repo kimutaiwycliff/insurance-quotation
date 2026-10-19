@@ -1,0 +1,1 @@
+{"key": "compact", "name": "Compact", "description": "Tighter spacing and smaller type, so long invoices fit on fewer pages.", "tier": "free", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "sans", "default_primary": "#1F4E79", "default_accent": "#E8A33D"}

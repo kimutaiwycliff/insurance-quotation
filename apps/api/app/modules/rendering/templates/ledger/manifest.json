@@ -1,0 +1,1 @@
+{"key": "ledger", "name": "Ledger", "description": "Ruled columns and boxed details like an accounts book, with figures in a typewriter face.", "tier": "premium", "version": 1, "doc_types": ["quote", "invoice", "receipt", "credit_note"], "paper": "A4", "font_pair": "ledger", "default_primary": "#1E3A34", "default_accent": "#B7791F"}
