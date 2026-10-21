@@ -7,7 +7,7 @@ Status: built 2026-10-19 (public home `/` for signed-out visitors). Revisit once
 - **Visitor:** a licensed Kenyan insurance agent (about 15,000 of them, see `docs/PRICING.md`), usually on an
   Android phone and mobile data, often arriving from a WhatsApp group link. Second audience: SME owners who
   need quotes, invoices and M-Pesa collection (the Business plan).
-- **Job:** get them to start the 30-day trial (no card), or download the Android app. Sign-in stays one tap away.
+- **Job:** get them to start the 14-day trial (no card), or download the Android app. Sign-in stays one tap away.
 
 ## Research findings (October 2026)
 
@@ -45,7 +45,7 @@ on the documents section with the visitor-facing agency name. Nothing else compe
 ├───────────────────────────────┬───────────────────────────────┤
 │ Never miss a renewal again.   │  ┌ Comprehensive motor ──────┐│
 │ sub: what BrokerOS does       │  │ Mlima     87,933.75       ││
-│ [Start 30 days free] Pricing  │  │ Pwani ●   100,490.00  rec ││
+│ [Start 14 days free] Pricing  │  │ Pwani ●   100,490.00  rec ││
 │ No card. Pay by M-Pesa later. │  │ Baobab   106,768.13       ││
 │                               │  └───────────────────────────┘│
 │                               │   WhatsApp bubble → Accept     │
@@ -64,7 +64,7 @@ on the documents section with the visitor-facing agency name. Nothing else compe
 │ Android app: offline, reminders → /download                    │
 │ For businesses: invoices, VAT, credit notes, eTIMS reference   │
 ├───────────────────────────────────────────────────────────────┤
-│ Pricing: Free / Agent / Agency / Business, monthly ⇄ yearly,   │
+│ Pricing: Agent / Agency / Business, monthly ⇄ yearly,          │
 │ founding offer: first 100 paying agents 50% off for 12 months  │
 ├───────────────────────────────────────────────────────────────┤
 │ Questions (details/summary)                                    │

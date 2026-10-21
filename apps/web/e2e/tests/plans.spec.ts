@@ -13,7 +13,7 @@ test("a new agency on the trial picks a plan and pays by M-Pesa", async ({ page 
   const agent = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: "Agent" }) });
   await expect(agent.getByText("KES 750.00")).toBeVisible(); // founding price of KES 1,500
   await page.getByRole("radio", { name: "Yearly (2 months free)" }).click();
-  await expect(agent.getByText("KES 7,500.00")).toBeVisible();
+  await expect(agent.getByText("KES 15,000.00")).toBeVisible(); // the founding discount is monthly only
   await expectAccessible(page, "plans");
 
   await page.getByRole("radio", { name: "Monthly" }).click();

@@ -450,7 +450,7 @@ export const getSubscriptionPlansUrl = () => {
 }
 
 /**
- * Plans with prices for this agency now (the founding discount applies to the first 100 to pay).
+ * Plans with prices for this agency now (the founding discount: first 100 to pay, monthly only).
  * @summary Plans
  */
 export const subscriptionPlans = async ( options?: Parameters<typeof apiFetch>[1]): Promise<PlanOut[]> => {

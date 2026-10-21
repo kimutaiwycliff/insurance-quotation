@@ -43,7 +43,6 @@ const STATUS: Record<string, { label: string; tone: "default" | "secondary" | "d
   active: { label: "Active", tone: "default" },
   past_due: { label: "Payment due", tone: "destructive" },
   read_only: { label: "Read-only", tone: "destructive" },
-  free: { label: "Free plan", tone: "outline" },
 };
 
 const DONE = new Set(["paid", "cancelled", "failed", "expired"]);
@@ -74,15 +73,15 @@ function Summary({ sub }: { sub: SubscriptionOut }) {
   let line: string;
   if (sub.status === "trialing" && sub.trial_ends_at) {
     const days = daysUntil(sub.trial_ends_at);
-    line = `You have every Agency feature until ${formatDate(sub.trial_ends_at)} (${days} ${days === 1 ? "day" : "days"} left). After that you move to ${sub.paid_plan === "free" ? "the Free plan" : "your paid plan"} unless you choose a plan.`;
+    line = `You have every Agency feature until ${formatDate(sub.trial_ends_at)} (${days} ${days === 1 ? "day" : "days"} left). After that the account becomes read-only until you choose a plan. Nothing is deleted.`;
   } else if (sub.status === "active" && sub.period_end) {
     line = `Paid until ${formatDate(sub.period_end)}. Pay again before then to keep going; nothing is charged automatically.`;
   } else if (sub.status === "past_due" && sub.period_end) {
     line = `Your plan ended on ${formatDate(sub.period_end)}. Everything still works for a few days; pay now to avoid read-only mode.`;
-  } else if (sub.status === "read_only") {
-    line = "Your plan has lapsed. You can still see and download everything, but you cannot add or change anything until you pay.";
+  } else if (sub.status === "read_only" && sub.paid_plan === "trial") {
+    line = "Your free trial has ended. You can still see and download everything, but you cannot add or change anything until you choose a plan.";
   } else {
-    line = "The Free plan has no time limit. Upgrade when you need more.";
+    line = "Your plan has lapsed. You can still see and download everything, but you cannot add or change anything until you pay.";
   }
   return (
     <section aria-labelledby="current-plan" className="grid gap-4 rounded-lg border bg-card p-4 sm:p-5">
@@ -304,7 +303,7 @@ export function PlanPanel() {
       </div>
     );
   }
-  const current = sub.data.status === "trialing" ? (sub.data.paid_plan === "free" ? null : sub.data.paid_plan) : sub.data.plan;
+  const current = sub.data.paid_plan === "trial" ? null : sub.data.paid_plan; // nothing is "current" before the first payment
   return (
     <div className="grid gap-8">
       <Summary sub={sub.data} />
@@ -314,7 +313,7 @@ export function PlanPanel() {
             <h2 id="plans-heading" className="text-xl">Plans</h2>
             {sub.data.founding_places_left > 0 && !sub.data.founding_member && (
               <p className="max-w-prose text-sm text-muted-foreground">
-                Founding offer: half price for your first 12 months. {sub.data.founding_places_left} of the first 100 places are left.
+                Founding offer: half price on monthly payments for your first 12 months. {sub.data.founding_places_left} of the first 100 places are left.
               </p>
             )}
           </div>

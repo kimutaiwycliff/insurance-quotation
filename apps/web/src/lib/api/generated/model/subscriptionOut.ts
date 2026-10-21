@@ -15,12 +15,13 @@ export interface SubscriptionOut {
   founding_member: boolean;
   founding_places_left: number;
   limits: SubscriptionOutLimits;
+  /** The plan paid for, or trial when the agency has never paid */
   paid_plan: string;
   period_end: string | null;
   plan: string;
   plan_name: string;
   seats: number;
-  /** trialing, active, past_due, read_only or free */
+  /** trialing, active, past_due or read_only */
   status: string;
   trial_ends_at: string | null;
   usage: Usage;

@@ -68,14 +68,15 @@ class AgencyTest {
         assertEquals("b@example.com", team.invitations.single().email)
     }
 
-    @Test fun `the subscription reads trial, limits and usage`() {
+    @Test fun `the subscription reads the trial and usage`() {
         val s = ApiJson.decodeFromString(
             Subscription.serializer(),
-            """{"plan":"agency","plan_name":"Agency","paid_plan":"free","status":"trialing","trial_ends_at":"2026-11-18T00:00:00Z","limits":{"clients":50},
+            """{"plan":"agency","plan_name":"Agency","paid_plan":"trial","status":"trialing","trial_ends_at":"2026-11-02T00:00:00Z","limits":{},
                "seats":5,"usage":{"clients":3,"documents_this_month":1,"seats_used":1},"founding_places_left":97,"features":["insurance"],"billing_cycle":"monthly"}""",
         )
         assertEquals("trialing", s.status)
-        assertEquals(50, s.limits["clients"])
+        assertEquals("trial", s.paidPlan)
+        assertEquals(null, s.limits["clients"]) // no plan limits clients
         assertEquals(3, s.usage.clients)
     }
 }

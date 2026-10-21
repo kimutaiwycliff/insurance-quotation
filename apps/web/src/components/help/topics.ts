@@ -421,9 +421,10 @@ export const TOPICS: Topic[] = [
     id: "plan",
     area: "team",
     title: "Your plan and paying for it",
-    summary: "See your plan, what you have used this month, and pay by M-Pesa. Nothing renews by itself.",
+    summary:
+      "Every agency starts with a 14-day trial of everything. After it, the account is read-only until you choose a plan: nothing is deleted. Pay by M-Pesa; nothing renews by itself.",
     steps: ["Open Settings, then Plan & billing.", "Choose monthly or yearly (2 months free).", "Choose a plan and approve the M-Pesa prompt."],
-    tip: "The first 100 paying agencies get half price for 12 months.",
+    tip: "The first 100 paying agencies get half price for 12 months on monthly payments.",
     href: "/settings/plan",
     linkLabel: "Open Plan & billing",
     keywords: ["subscription", "price", "upgrade", "trial", "billing", "founding", "renew"],

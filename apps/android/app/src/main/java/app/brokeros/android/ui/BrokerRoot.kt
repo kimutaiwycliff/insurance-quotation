@@ -328,7 +328,7 @@ private fun SignedIn(
             Column(Modifier.padding(padding).fillMaxSize()) {
                 notice?.let { Banner(it) }
                 update?.let { (text, action) -> Banner(text, action.first.ifBlank { null }, action.second) }
-                if (me.readOnly) Banner("Your plan has lapsed: you can look, but not change anything. Pay on the web to unlock.")
+                if (me.readOnly) Banner("Your trial or plan has ended: you can look, but not change anything. Choose a plan to unlock.")
                 offlineSince?.let { Banner("You're offline. Showing what was saved ${app.brokeros.android.core.Dates.relative(java.time.Instant.ofEpochMilli(it).toString())}.") }
                 if (pending.isNotEmpty()) {
                     Banner("${pending.size} ${if (pending.size == 1) "change is" else "changes are"} waiting to send.", "Send now") { container.flush() }

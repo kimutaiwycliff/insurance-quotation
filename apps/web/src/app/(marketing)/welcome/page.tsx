@@ -20,7 +20,7 @@ import { Pricing } from "@/components/landing/pricing";
 import "./landing.css";
 
 const DESCRIPTION =
-  "BrokerOS is the office for Kenyan insurance agents: clients, comparison quotes, policies, renewal reminders and commission, with M-Pesa built in. Start 30 days free.";
+  "BrokerOS is the office for Kenyan insurance agents: clients, comparison quotes, policies, renewal reminders and commission, with M-Pesa built in. Start 14 days free.";
 
 /** Absolute canonical URL from the request (Caddy forwards Host and the scheme), so no extra setting is needed. */
 export async function generateMetadata(): Promise<Metadata> {
@@ -86,7 +86,7 @@ const BOARD = [
 const FAQ = [
   {
     q: "Do I need a card to start?",
-    a: "No. Every new account gets 30 days of the Agency plan, with no card. When you choose a plan you pay by M-Pesa. If you don't, you move to the Free plan and keep your data.",
+    a: "No. Every new account gets 14 days of the Agency plan, with no card. When you choose a plan you pay by M-Pesa. If you don't, the account becomes read-only: you can still see and download everything, and paying unlocks it again.",
   },
   {
     q: "Does my clients' money pass through BrokerOS?",
@@ -118,7 +118,6 @@ const jsonLd = {
   operatingSystem: "Web, Android",
   description: DESCRIPTION,
   offers: [
-    { "@type": "Offer", name: "Free", price: "0", priceCurrency: "KES" },
     { "@type": "Offer", name: "Agent", price: "1500", priceCurrency: "KES" },
     { "@type": "Offer", name: "Agency", price: "4500", priceCurrency: "KES" },
     { "@type": "Offer", name: "Business", price: "999", priceCurrency: "KES" },
@@ -202,7 +201,7 @@ export default function LandingPage() {
                 href="/sign-up"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-12 items-center rounded-md px-6 text-base font-bold"
               >
-                Start 30 days free
+                Start 14 days free
               </Link>
               <a
                 href="#pricing"
@@ -505,7 +504,7 @@ export default function LandingPage() {
                 <span>
                   <strong className="block">Founding members: half price for a year</strong>
                   <span className="text-muted-foreground text-sm">
-                    For the first 100 agents and agencies who subscribe.
+                    For the first 100 agents and agencies who subscribe, on monthly payments.
                   </span>
                 </span>
               </p>
@@ -558,7 +557,7 @@ export default function LandingPage() {
                 href="/sign-up"
                 className="bg-maize text-ink inline-flex h-12 items-center rounded-md px-6 font-bold hover:bg-[#ffc824]"
               >
-                Start 30 days free
+                Start 14 days free
               </Link>
               <Link
                 href="/sign-in"

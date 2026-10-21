@@ -121,7 +121,7 @@ fun AccountScreen(
                 Text("${me.tenant.name} · ${me.role.replaceFirstChar { it.uppercase() }}", style = MaterialTheme.typography.bodyMedium)
                 if (me.plan.isNotBlank()) Text("Plan: ${me.plan.replaceFirstChar { it.uppercase() }}", style = MaterialTheme.typography.bodyMedium)
                 if (me.readOnly) {
-                    Text("Your plan has lapsed, so the account is read-only. Pay on the web to keep working.", color = MaterialTheme.colorScheme.error)
+                    Text("Your trial or plan has ended, so the account is read-only. Choose a plan to keep working.", color = MaterialTheme.colorScheme.error)
                 }
             }
         }

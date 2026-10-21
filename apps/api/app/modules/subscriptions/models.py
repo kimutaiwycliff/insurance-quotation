@@ -15,14 +15,14 @@ class Subscription(TenantScoped, Base):
         UniqueConstraint("tenant_id", "id"),
         UniqueConstraint("tenant_id"),
         ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
-        CheckConstraint("plan IN ('free', 'agent', 'agency', 'business')", name="plan"),
+        CheckConstraint("plan IN ('trial', 'agent', 'agency', 'business')", name="plan"),
     )
 
-    plan: Mapped[str]  # the plan paid for (or "free"); a running trial grants the trial plan
+    plan: Mapped[str]  # the plan paid for, or "trial" before the first payment
     billing_cycle: Mapped[str] = mapped_column(server_default="monthly")  # monthly | yearly
     extra_seats: Mapped[int] = mapped_column(server_default=text("0"))
     trial_ends_at: Mapped[datetime | None]
-    current_period_end: Mapped[date | None]  # paid until (inclusive); None for free
+    current_period_end: Mapped[date | None]  # paid until (inclusive); None before the first payment
     founding_member: Mapped[bool] = mapped_column(server_default=text("false"))
     discount_percent: Mapped[int] = mapped_column(server_default=text("0"))
     discount_until: Mapped[date | None]

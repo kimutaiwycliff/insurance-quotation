@@ -1,4 +1,6 @@
-"""Plans, prices and what each includes (docs/PRICING.md, approved 2026-10-08).
+"""Plans, prices and what each includes (docs/PRICING.md, approved 2026-10-08; trial-only since 2026-10-19).
+
+There is no free plan: every agency starts with a 14-day trial of Agency, then pays or turns read-only.
 
 Prices are KES, VAT-inclusive. Changing a price here affects new payments only; a paid period keeps what was
 paid for. Features are checked by the API (``require_feature``); limits by the services that own the data.
@@ -38,7 +40,7 @@ class Plan:
     features: frozenset[Feature]
     limits: dict[Limit, int] = field(
         default_factory=dict
-    )  # absent = unlimited (seats: see included_seats)
+    )  # absent = unlimited (seats: see included_seats); kept for future limits
     public: bool = True
 
 
@@ -53,17 +55,6 @@ _AGENT = _PAID_COMMON | {
 PLANS: dict[str, Plan] = {
     p.code: p
     for p in (
-        Plan(
-            code="free",
-            name="Free",
-            tagline="For agents starting out",
-            monthly=Decimal(0),
-            yearly=Decimal(0),
-            included_seats=1,
-            extra_seat_monthly=None,
-            features=frozenset({Feature.INSURANCE}),
-            limits={Limit.CLIENTS: 50, Limit.DOCUMENTS_PER_MONTH: 10},
-        ),
         Plan(
             code="agent",
             name="Agent",
@@ -97,12 +88,14 @@ PLANS: dict[str, Plan] = {
     )
 }
 
-TRIAL_PLAN = "agency"  # 30 days of everything, team included
-TRIAL_DAYS = 30
+TRIAL = "trial"  # stored plan of an agency that has not paid yet (no plan of its own)
+TRIAL_PLAN = "agency"  # 14 days of everything, team included
+TRIAL_DAYS = 14
 GRACE_DAYS = 7  # after a paid period ends, before the account turns read-only
 FOUNDING_MEMBERS = 100  # the first paying tenants get the founding discount
 FOUNDING_DISCOUNT_PERCENT = 50
 FOUNDING_MONTHS = 12
+FOUNDING_CYCLES = frozenset({"monthly"})  # not combined with the yearly saving (2 months free)
 
 
 def price(plan: Plan, cycle: str, extra_seats: int) -> Decimal:

@@ -87,22 +87,21 @@ async def get_subscription(ctx: Read) -> SubscriptionOut:
 
 @router.get("/plans", operation_id="subscription_plans")
 async def plans(ctx: Read) -> list[PlanOut]:
-    """Plans with prices for this agency now (the founding discount applies to the first 100 to pay)."""
+    """Plans with prices for this agency now (the founding discount: first 100 to pay, monthly only)."""
     sub, _ = await service.current(ctx)
     out = []
     for plan in PLANS.values():
         prices = []
-        if plan.code != "free":
-            for cycle in ("monthly", "yearly"):
-                q = await service.quote_price(ctx.session, sub, plan.code, cycle, 0)
-                prices.append(
-                    PlanPrice(
-                        cycle=cycle,
-                        list_price=q.list_price,
-                        price=q.amount,
-                        discount_percent=q.discount_percent,
-                    )
+        for cycle in ("monthly", "yearly"):
+            q = await service.quote_price(ctx.session, sub, plan.code, cycle, 0)
+            prices.append(
+                PlanPrice(
+                    cycle=cycle,
+                    list_price=q.list_price,
+                    price=q.amount,
+                    discount_percent=q.discount_percent,
                 )
+            )
         out.append(
             PlanOut(
                 code=plan.code,

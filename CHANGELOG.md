@@ -5,6 +5,16 @@ commits follow Conventional Commits).
 
 ## [Unreleased]
 
+### Changed: trial-only pricing (2026-10-21)
+- **No free plan.** Every new agency gets a **14-day trial** of the Agency plan (was 30 days), with no card.
+  After it the account is **read-only** until it chooses a plan: everything can still be seen and downloaded,
+  nothing is deleted, and paying unlocks it straight away. Inviting team members is refused while read-only.
+- **Founding offer on monthly payments only:** half price for the first year no longer stacks with the yearly
+  saving (2 months free).
+- **Migration 0015:** unpaid agencies are stored as plan `trial`; agencies on the old Free plan whose trial
+  had ended get a fresh 14-day trial.
+- Web, landing page, Android app and help updated; design badges now read "Standard" and "Premium".
+
 ### Added: public landing page (2026-10-19)
 - **`/` for visitors:** signed-out visitors see the landing page at `/`; signed-in users still get their dashboard.
   App pages still send visitors to sign-in.

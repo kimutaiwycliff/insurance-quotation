@@ -36,8 +36,8 @@ class Usage(BaseModel):
 class SubscriptionOut(BaseModel):
     plan: str
     plan_name: str
-    paid_plan: str
-    status: str = Field(description="trialing, active, past_due, read_only or free")
+    paid_plan: str = Field(description="The plan paid for, or trial when the agency has never paid")
+    status: str = Field(description="trialing, active, past_due or read_only")
     billing_cycle: str
     trial_ends_at: datetime | None
     period_end: date | None
