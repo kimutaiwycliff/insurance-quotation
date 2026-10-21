@@ -19,8 +19,9 @@ Our own plans and billing (docs/PRICING.md, ADR-0025).
 Other modules use it only through `service.py`: `Feature`, `Limit`, `check_feature`, `check_limit`,
 `entitlements`, `start_trial`. Route gating is `app.platform.deps.require_feature`.
 
-Status by date: trialing until `trial_ends_at`; active until `current_period_end`; past_due for
-`GRACE_DAYS` (full access); then read_only. Free never lapses.
+Status by date: trialing until `trial_ends_at` (14 days of Agency), then read_only until the first payment
+(there is no free plan); once paid, active until `current_period_end`, past_due for `GRACE_DAYS` (full
+access), then read_only. The founding discount applies to monthly payments only.
 
 Config: `PLATFORM_MPESA_ENVIRONMENT` (`simulator` locally; refused in production), shortcode, keys,
 passkey and `PLATFORM_MPESA_CALLBACK_SECRET`; see `.env.example`.

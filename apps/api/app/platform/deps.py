@@ -63,7 +63,7 @@ class Principal:
 class SubscriptionInactiveError(AppError):
     status = HTTPStatus.PAYMENT_REQUIRED
     code = "subscription_inactive"
-    title = "Your subscription has lapsed: renew it in Settings → Plan & billing to make changes"
+    title = "Your trial or subscription has ended: choose a plan in Settings → Plan & billing to make changes"
 
 
 class FeatureNotInPlanError(AppError):

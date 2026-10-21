@@ -7,7 +7,7 @@ import { useSubscriptionGet } from "@/lib/api/generated/subscription/subscriptio
 import { daysUntil, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const TRIAL_WARNING_DAYS = 7;
+const TRIAL_WARNING_DAYS = 5;
 
 /** One line above every page when the plan needs attention: trial ending, payment due, or read-only. */
 export function PlanBanner() {
@@ -19,7 +19,10 @@ export function PlanBanner() {
   let message: string | null = null;
   let urgent = false;
   if (me.read_only || data?.status === "read_only") {
-    message = "Your plan has lapsed, so the account is read-only. You can see and download everything but not add or change anything.";
+    message =
+      data?.paid_plan === "trial"
+        ? "Your free trial has ended, so the account is read-only. Choose a plan to keep adding and changing things; nothing is deleted."
+        : "Your plan has lapsed, so the account is read-only. You can see and download everything but not add or change anything.";
     urgent = true;
   } else if (data?.status === "past_due" && data.period_end) {
     message = `Your plan ended on ${formatDate(data.period_end)}. Pay within a few days to keep adding and changing things.`;

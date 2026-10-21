@@ -1,6 +1,7 @@
 # Pricing proposal (decision D8)
 
-Status: **approved by the product owner on 2026-10-08** (to be revisited when real usage data warrants it).
+Status: **approved by the product owner on 2026-10-08**; **changed on 2026-10-19 to trial-only** (no free plan,
+14-day trial, founding discount on monthly payments only; see "Trial-only since 2026-10-19" below).
 Researched 2026-10-08. Prices are monthly, in KES, paid by
 M-Pesa, VAT-inclusive.
 
@@ -30,20 +31,20 @@ M-Pesa, VAT-inclusive.
 
 ## Recommended plans
 
-| | **Free** | **Agent** | **Agency** | **Business** |
-|---|---|---|---|---|
-| For | Agents starting out, trying us | One working agent | Agencies with a team | SMEs: quotes and invoices only |
-| Price | KES 0 | **KES 1,500/mo** | **KES 4,500/mo**, 5 users included, then KES 700 per extra user | **KES 999/mo**, 3 users |
-| Yearly (2 months free) | — | KES 15,000 | KES 45,000 | KES 9,990 |
-| Clients | 50 | Unlimited | Unlimited | Unlimited |
-| Insurance quotes, policies, renewals board | ✓ | ✓ | ✓ | — |
-| Renewal reminders to clients (email, WhatsApp link) | Agent reminders only | ✓ | ✓ | — |
-| Multi-insurer comparison quotes, commission tracking, import of the book | — | ✓ | ✓ | — |
-| Invoices, sales quotes, receipts, M-Pesa payments | 10 a month | ✓ | ✓ | ✓ |
-| Own logo and colours | Plain, with "Made with …" | ✓ | ✓, all templates | ✓ |
-| Team roles, agents see only their own clients | — | — | ✓ | ✓ |
-| eTIMS (manual reference now, integration later) | — | ✓ | ✓ | ✓ |
-| Support | Help centre | WhatsApp | WhatsApp with priority, onboarding call | WhatsApp |
+| | **Agent** | **Agency** | **Business** |
+|---|---|---|---|
+| For | One working agent | Agencies with a team | SMEs: quotes and invoices only |
+| Price | **KES 1,500/mo** | **KES 4,500/mo**, 5 users included, then KES 700 per extra user | **KES 999/mo**, 3 users |
+| Yearly (2 months free) | KES 15,000 | KES 45,000 | KES 9,990 |
+| Clients | Unlimited | Unlimited | Unlimited |
+| Insurance quotes, policies, renewals board | ✓ | ✓ | — |
+| Renewal reminders to clients (email, WhatsApp link) | ✓ | ✓ | — |
+| Multi-insurer comparison quotes, commission tracking, import of the book | ✓ | ✓ | — |
+| Invoices, sales quotes, receipts, M-Pesa payments | ✓ | ✓ | ✓ |
+| Own logo and colours | ✓ | ✓, all templates | ✓ |
+| Team roles, agents see only their own clients | — | ✓ | ✓ |
+| eTIMS (manual reference now, integration later) | ✓ | ✓ | ✓ |
+| Support | WhatsApp | WhatsApp with priority, onboarding call | WhatsApp |
 
 **Why these numbers:**
 - **Agent, KES 1,500:**
@@ -54,18 +55,22 @@ M-Pesa, VAT-inclusive.
   features (roles, own-client scoping, a dashboard per agent) are what principals pay for.
 - **Business, KES 999:** matches the Kenyan reference price (Zoho Standard, Risiti). It wins on M-Pesa
   collection, tracked links and reminders rather than on price.
-- **Free tier, not just a trial:**
-  - Agents talk to each other: a free agent with 50 clients is a word-of-mouth channel and becomes a paying
-    customer the day they outgrow the cap.
-  - Running a free tenant costs little: Postgres rows and a few PDFs.
-  - Give new sign-ups 30 days of **Agency** free (everything, including the team), then they drop to Free
-    automatically unless they choose a plan. No card is needed, which matches "cards coming soon". (Changed
-    on 2026-10-09 from an Agent trial so agencies can try the team features.)
+- **No free plan, a 14-day trial (decided 2026-10-19, replacing the Free plan and 30-day trial):**
+  - New sign-ups get 14 days of **Agency** (everything, including the team) with no card. After that the
+    account is **read-only** until they pay: everything can still be seen and downloaded, nothing is deleted,
+    and paying unlocks it straight away.
+  - Why: freemium converts about 3–4% of free users, opt-in trials about 14–25%, and trials pay off in weeks
+    rather than months ([Dodo Payments](https://dodopayments.com/blogs/saas-free-trial-vs-freemium),
+    [Fungies](https://fungies.io/saas-free-trial-vs-freemium-2026)). A 50-client free plan covered a new
+    agent's whole book, and 10 free invoices a month covered many small businesses, so neither had a reason
+    to pay. A free plan also brings support load with no revenue.
+  - What we give up: the word-of-mouth of free users. The trial, the founding offer and referrals carry that.
+  - Agencies on the old Free plan whose trial had ended got a fresh 14-day trial when this changed.
 
 ## Launch offers (first 6 months)
 
 - **Founding members:** the first 100 paying agents get 50% off for 12 months: Agent at KES 750, Agency at
-  KES 2,250. This creates urgency, early references and testimonials.
+  KES 2,250. **Monthly payments only:** it does not stack with the yearly saving (2 months free). This creates urgency, early references and testimonials.
 - **Referrals:** one month free for both sides when a referred agent pays for their first month. Agents sit
   in WhatsApp groups per insurer and per town, which is exactly where referrals spread.
 - **Insurer and agency partnerships:** a principal agency or an insurer's agency team buys 20+ seats at
@@ -102,8 +107,8 @@ Running costs at this scale are small:
 1. Show the plans to **10–15 agents** (mix of new and established) and **5 principal agencies**. Ask what
    they pay now for tools, airtime and assistants, and whether they would pay KES 1,500. Watch for
    KES 1,000 as a psychological ceiling.
-2. Launch the founding offer with the free tier, and measure:
-   - Free to paid within 60 days (target 15% or more);
+2. Launch the founding offer with the 14-day trial, and measure:
+   - trial to paid within 30 days of sign-up (target 15% or more);
    - churn after month 3 (target under 5% a month);
    - which features paying agents use (renewals and reminders are expected to drive retention).
 3. Revisit after 3 months of real data. Raising the price for new customers is easier than lowering it, so

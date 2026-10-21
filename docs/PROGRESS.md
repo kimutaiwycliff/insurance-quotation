@@ -2,7 +2,10 @@
 
 Read this first when resuming work. Update it at the end of every session (newest entry on top).
 
-## Current state (2026-10-19)
+## Current state (2026-10-21)
+- **In review: trial-only pricing** on `feat/trial-only-pricing`: Free plan removed, 14-day trial, then
+  read-only until paid (migration 0015); founding discount monthly only. API, web, landing page, Android,
+  help and docs updated.
 - **In review: public landing page** on `feat/landing-page`: `/` shows it to signed-out visitors (proxy
   rewrite to `/welcome`), signed-in users still get the dashboard. Research, plan and motion budget in
   `docs/LANDING_PAGE.md`; E2E in `e2e/tests/landing.spec.ts`.
@@ -80,6 +83,7 @@ Read this first when resuming work. Update it at the end of every session (newes
 ## Decisions made
 | Date | Decision | Where |
 |---|---|---|
+| 2026-10-19 | Trial-only pricing: no Free plan; 14-day Agency trial, then read-only until paid; founding discount on monthly payments only | ADR-0025 amendment, docs/PRICING.md |
 | 2026-10-09 | Test hosting on an Oracle Cloud Always Free ARM VM (same Compose stack as production); Brevo for email; restic backups to Oracle Object Storage | ADR-0020 amendment |
 | 2026-10-09 | Plans enforced by the API (402 `plan_feature` / `plan_limit` / `subscription_inactive`); 30-day Agency trial; 7-day grace then read-only; billing by M-Pesa prompt, no auto-renew | ADR-0025 |
 | 2026-10-08 | Payments by M-Pesa Daraja only (tenant's own shortcode); cards "coming soon"; Paystack on hold | ADR-0015 |
@@ -146,6 +150,11 @@ Read this first when resuming work. Update it at the end of every session (newes
   `return` inside `async for` silently rolled the transaction back.
 
 ## Session log
+### 2026-10-21: trial-only pricing
+Owner decided: no free tier, a 14-day trial only, founding discount not combined with yearly. Unpaid
+tenants are plan `trial`; after the trial they keep the Agency features for reading but cannot write or
+invite. Old Free tenants with an ended trial got a fresh 14 days in migration 0015.
+
 ### 2026-10-19: landing page
 Researched 2026 landing trends (product-in-the-hero, restrained motion, CSS scroll-driven animation) and built `/` for visitors: hero demo of a WhatsApp quote being accepted and stamped, the sales sequence, renewals board, commission slip, documents, Android, Business plan, pricing with yearly switch and founding offer, questions. Lighthouse mobile: accessibility 100, best practices 100.
 

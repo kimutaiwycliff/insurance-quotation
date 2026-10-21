@@ -18,9 +18,9 @@ test("signed-out visitors see the landing page at / and can start a trial", asyn
 
   // Questions open on demand.
   await page.getByText("Do I need a card to start?").click();
-  await expect(page.getByText("Every new account gets 30 days of the Agency plan")).toBeVisible();
+  await expect(page.getByText("Every new account gets 14 days of the Agency plan")).toBeVisible();
 
-  await page.getByRole("main").getByRole("link", { name: "Start 30 days free" }).first().click();
+  await page.getByRole("main").getByRole("link", { name: "Start 14 days free" }).first().click();
   await expect(page).toHaveURL(/\/sign-up/);
 });
 

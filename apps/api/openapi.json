@@ -13139,6 +13139,7 @@
             "type": "object"
           },
           "paid_plan": {
+            "description": "The plan paid for, or trial when the agency has never paid",
             "title": "Paid Plan",
             "type": "string"
           },
@@ -13167,7 +13168,7 @@
             "type": "integer"
           },
           "status": {
-            "description": "trialing, active, past_due, read_only or free",
+            "description": "trialing, active, past_due or read_only",
             "title": "Status",
             "type": "string"
           },
@@ -22533,7 +22534,7 @@
     },
     "/api/v1/subscription/plans": {
       "get": {
-        "description": "Plans with prices for this agency now (the founding discount applies to the first 100 to pay).",
+        "description": "Plans with prices for this agency now (the founding discount: first 100 to pay, monthly only).",
         "operationId": "subscription_plans",
         "responses": {
           "200": {

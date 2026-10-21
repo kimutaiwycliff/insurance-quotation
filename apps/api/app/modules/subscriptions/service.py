@@ -1,13 +1,13 @@
 """Subscriptions (Plan A1.3 R2.5, docs/PRICING.md): what a tenant may use, and paying us for it by M-Pesa.
 
-- **Effective plan:** a running trial grants the trial plan (Agent) for 30 days; a paid plan holds until
-  ``current_period_end``, then a 7-day grace period (past due, full access), then **read-only** (nothing is
-  deleted; paying again restores it). Free never becomes read-only: it has limits instead.
+- **Effective plan:** a running trial grants the trial plan (Agency) for 14 days, then the account is
+  **read-only** until it pays (there is no free plan). A paid plan holds until ``current_period_end``, then
+  a 7-day grace period (past due, full access), then read-only. Nothing is ever deleted; paying restores it.
 - **Enforcement:** features through ``require_feature`` on routes; limits (clients, documents a month,
   seats) by the module that owns the data, which passes its own count to ``check_limit``.
 - **Paying:** an STK Push to the payer's phone from the **platform's** own shortcode; a payment counts only
   after STK Query confirms it, then the period is extended. The first 100 paying tenants get the founding
-  discount (50% for 12 months).
+  discount (50% for 12 months, on monthly payments only).
 """
 
 import math
@@ -29,11 +29,13 @@ from app.core.phone import InvalidPhoneError, to_e164
 from app.integrations.mpesa import Credentials, DarajaError, client_for, simulated_receipt
 from app.modules.subscriptions.models import Subscription, SubscriptionPayment
 from app.modules.subscriptions.plans import (
+    FOUNDING_CYCLES,
     FOUNDING_DISCOUNT_PERCENT,
     FOUNDING_MEMBERS,
     FOUNDING_MONTHS,
     GRACE_DAYS,
     PLANS,
+    TRIAL,
     TRIAL_DAYS,
     TRIAL_PLAN,
     Feature,
@@ -41,7 +43,7 @@ from app.modules.subscriptions.plans import (
     Plan,
     price,
 )
-from app.platform.deps import TenantContext
+from app.platform.deps import SubscriptionInactiveError, TenantContext
 
 __all__ = [
     "Entitlements",
@@ -80,7 +82,7 @@ class BillingError(AppError):
 class Entitlements:
     plan: str  # the effective plan (the trial plan during a trial)
     paid_plan: str
-    status: str  # trialing | active | past_due | read_only | free
+    status: str  # trialing | active | past_due | read_only
     features: frozenset[str]
     limits: dict[str, int] = field(default_factory=dict)
     seats: int = 1
@@ -96,19 +98,18 @@ class Entitlements:
 
 def _effective(sub: Subscription, now: datetime) -> Entitlements:
     today = now.date()
-    paid = PLANS[sub.plan]
-    if sub.plan != "free" and sub.current_period_end is not None:
+    if sub.plan != TRIAL and sub.current_period_end is not None:
         if today <= sub.current_period_end:
             status = "active"
         elif today <= sub.current_period_end + timedelta(days=GRACE_DAYS):
             status = "past_due"
         else:
             status = "read_only"
-        plan = paid
-    elif sub.trial_ends_at is not None and now < sub.trial_ends_at:
-        status, plan = "trialing", PLANS[TRIAL_PLAN]
+        plan = PLANS[sub.plan]
     else:
-        status, plan = "free", PLANS["free"]
+        # Never paid: the trial plan while it runs, then read-only (everything stays readable).
+        running = sub.trial_ends_at is not None and now < sub.trial_ends_at
+        status, plan = ("trialing" if running else "read_only"), PLANS[TRIAL_PLAN]
     return Entitlements(
         plan=plan.code,
         paid_plan=sub.plan,
@@ -129,7 +130,7 @@ async def start_trial(session: AsyncSession, tenant_id: uuid.UUID) -> None:
         insert(Subscription)
         .values(
             tenant_id=tenant_id,
-            plan="free",
+            plan=TRIAL,
             trial_ends_at=datetime.now(UTC) + timedelta(days=TRIAL_DAYS),
         )
         .on_conflict_do_nothing()
@@ -169,6 +170,8 @@ async def check_limit(
 ) -> None:
     """Refuse adding one more of ``limit`` when ``current`` already reaches the plan's allowance."""
     granted = await entitlements(session, tenant_id)
+    if granted.read_only:  # e.g. inviting a member through the auth service after the trial ended
+        raise SubscriptionInactiveError()
     allowed = granted.seats if limit is Limit.SEATS else granted.limits.get(str(limit))
     if allowed is not None and current >= allowed:
         name = PLANS[granted.plan].name
@@ -200,15 +203,17 @@ async def quote_price(
     session: AsyncSession, sub: Subscription, plan_code: str, cycle: str, extra_seats: int
 ) -> PriceQuote:
     plan = PLANS.get(plan_code)
-    if plan is None or plan.code == "free":
-        raise BillingError("Choose a paid plan")
+    if plan is None:
+        raise BillingError("Choose a plan")
     if extra_seats and plan.extra_seat_monthly is None:
         raise BillingError(f"The {plan.name} plan has a fixed number of users")
     list_price = price(plan, cycle, extra_seats)
     today = datetime.now(UTC).date()
     founding = sub.founding_member or await _founding_open(session)
     discount = 0
-    if sub.founding_member and sub.discount_until and today <= sub.discount_until:
+    if cycle not in FOUNDING_CYCLES:
+        pass  # yearly already saves 2 months; the founding discount does not stack on it
+    elif sub.founding_member and sub.discount_until and today <= sub.discount_until:
         discount = sub.discount_percent
     elif not sub.founding_member and founding:
         discount = FOUNDING_DISCOUNT_PERCENT

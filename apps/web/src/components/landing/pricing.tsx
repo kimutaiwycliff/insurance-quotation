@@ -11,18 +11,6 @@ type Cycle = "monthly" | "yearly";
 // Mirrors apps/api/app/modules/subscriptions/plans.py (docs/PRICING.md). KES, VAT-inclusive.
 const PLANS = [
   {
-    name: "Free",
-    who: "For agents starting out",
-    monthly: 0,
-    yearly: 0,
-    seats: "1 user, up to 50 clients",
-    features: [
-      "Quotes, policies and the renewals board",
-      "10 invoices or receipts a month",
-      "Help centre",
-    ],
-  },
-  {
     name: "Agent",
     who: "For one working agent",
     monthly: 1500,
@@ -99,7 +87,7 @@ export function Pricing() {
         ))}
       </div>
 
-      <ul className="bg-border grid gap-px overflow-hidden rounded-xl border md:grid-cols-2 xl:grid-cols-4">
+      <ul className="bg-border grid gap-px overflow-hidden rounded-xl border md:grid-cols-3">
         {PLANS.map((plan) => {
           const amount = cycle === "monthly" ? plan.monthly : plan.yearly;
           const highlighted = "trial" in plan;
@@ -116,11 +104,9 @@ export function Pricing() {
                 <p className="text-muted-foreground text-sm">{plan.who}</p>
               </div>
               <p key={cycle} className="lp-price">
-                <span className="tabular font-heading text-3xl font-bold">
-                  {amount === 0 ? "KES 0" : kes(amount)}
-                </span>{" "}
+                <span className="tabular font-heading text-3xl font-bold">{kes(amount)}</span>{" "}
                 <span className="text-muted-foreground text-sm">
-                  {amount === 0 ? "forever" : cycle === "monthly" ? "a month" : "a year"}
+                  {cycle === "monthly" ? "a month" : "a year"}
                 </span>
               </p>
               {"founding" in plan && cycle === "monthly" && (
@@ -143,7 +129,7 @@ export function Pricing() {
               </ul>
               {highlighted && (
                 <p className="mt-auto text-sm font-bold">
-                  Every new account gets 30 days of Agency free.
+                  Every new account gets 14 days of Agency free.
                 </p>
               )}
             </li>
@@ -156,11 +142,12 @@ export function Pricing() {
           href="/sign-up"
           className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-12 items-center rounded-md px-6 font-bold"
         >
-          Start 30 days free
+          Start 14 days free
         </Link>
         <p className="text-muted-foreground max-w-prose text-sm">
-          No card needed. Pay by M-Pesa when you&apos;re ready; prices include VAT. After the trial
-          you move to Free unless you choose a plan, and your data stays.
+          No card needed. Pay by M-Pesa when you&apos;re ready; prices include VAT. If you
+          don&apos;t choose a plan, the account becomes read-only after the trial and your data
+          stays.
         </p>
       </div>
     </div>

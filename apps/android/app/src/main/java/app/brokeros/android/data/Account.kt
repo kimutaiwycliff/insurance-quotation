@@ -12,8 +12,8 @@ data class Usage(val clients: Int = 0, @SerialName("documents_this_month") val d
 data class Subscription(
     val plan: String,
     @SerialName("plan_name") val planName: String = "",
-    @SerialName("paid_plan") val paidPlan: String = "free",
-    val status: String = "free",
+    @SerialName("paid_plan") val paidPlan: String = "trial",
+    val status: String = "trialing",
     @SerialName("trial_ends_at") val trialEndsAt: String? = null,
     @SerialName("period_end") val periodEnd: String? = null,
     @SerialName("founding_member") val foundingMember: Boolean = false,

@@ -116,11 +116,12 @@ fun PlanScreen(viewModel: PlanViewModel, canPay: Boolean, onPaid: () -> Unit) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(sub.planName.ifBlank { sub.plan }, style = MaterialTheme.typography.headlineSmall)
                     Text(when (sub.status) {
-                        "trialing" -> "Free trial: every Agency feature until ${Dates.date(sub.trialEndsAt)} (${Dates.relative(sub.trialEndsAt)})."
+                        "trialing" -> "Free trial: every Agency feature until ${Dates.date(sub.trialEndsAt)} (${Dates.relative(sub.trialEndsAt)}). After that the account becomes read-only until you choose a plan."
                         "active" -> "Paid until ${Dates.date(sub.periodEnd)}. Nothing renews by itself: pay again before then."
                         "past_due" -> "Your plan ended on ${Dates.date(sub.periodEnd)}. Pay now to avoid read-only mode."
-                        "read_only" -> "Your plan has lapsed. You can see everything but not change anything until you pay."
-                        else -> "The Free plan has no time limit. Upgrade when you need more."
+                        "read_only" -> if (sub.paidPlan == "trial") "Your free trial has ended. You can see everything but not change anything until you choose a plan."
+                            else "Your plan has lapsed. You can see everything but not change anything until you pay."
+                        else -> ""
                     })
                     if (sub.foundingMember) Text("Founding member: ${sub.discountPercent}% off", fontWeight = FontWeight.SemiBold)
                 }
@@ -129,9 +130,9 @@ fun PlanScreen(viewModel: PlanViewModel, canPay: Boolean, onPaid: () -> Unit) {
             Detail("Documents issued this month", "${sub.usage.documentsThisMonth}" + (sub.limits["documents_per_month"]?.let { " of $it" } ?: ""))
             Detail("Team seats", "${sub.usage.seatsUsed} of ${sub.seats}")
             SectionTitle("Plans")
-            if (sub.foundingPlacesLeft > 0 && !sub.foundingMember) Text("Founding offer: half price for your first 12 months. ${sub.foundingPlacesLeft} of the first 100 places are left.")
+            if (sub.foundingPlacesLeft > 0 && !sub.foundingMember) Text("Founding offer: half price on monthly payments for your first 12 months. ${sub.foundingPlacesLeft} of the first 100 places are left.")
             Choices(null, listOf("monthly", "yearly"), cycle, { cycle = it ?: "monthly" })
-            val current = if (sub.status == "trialing") sub.paidPlan.takeIf { it != "free" } else sub.plan
+            val current = sub.paidPlan.takeIf { it != "trial" } // nothing is "your plan" before the first payment
             plans.forEach { plan ->
                 val price = plan.prices.firstOrNull { it.cycle == cycle }
                 val free = price == null || (price.listPrice.toBigDecimalOrNull()?.signum() ?: 0) == 0

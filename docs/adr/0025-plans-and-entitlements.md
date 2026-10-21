@@ -33,6 +33,15 @@ decides what a tenant may do, enforced by the API (the web only hides what the A
 - **Founding members**: the first 100 tenants to pay keep 50% off for 12 months from their first payment.
   The count is a SECURITY DEFINER function, so it can count across tenants without exposing rows.
 
+## Amendment (2026-10-19): trial-only
+- **No free plan.** New tenants get a **14-day Agency trial**, then become **read_only** until they pay.
+  Unpaid tenants are stored as plan `trial` (migration 0015; old `free` rows were renamed and, if their trial
+  had ended, given a fresh 14 days). "Free never expires" no longer applies.
+- After the trial, reads keep the trial plan's features so everything stays visible; writes, and seat checks
+  for invitations, are refused with 402 `subscription_inactive`.
+- The founding discount applies to **monthly** payments only (`FOUNDING_CYCLES`).
+- `Limit` and `check_limit` stay for seats and future limits; no plan sets client or document limits now.
+
 ## Consequences
 - One code path for every gate; the web reads `me.features` to hide navigation and shows plan pages
   instead of errors.

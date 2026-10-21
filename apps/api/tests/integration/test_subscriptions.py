@@ -1,5 +1,5 @@
-"""Plans (docs/PRICING.md): trial, prices with the founding discount, paying by M-Pesa (simulator), Free limits,
-read-only after a lapsed period, seats."""
+"""Plans (docs/PRICING.md): the 14-day trial, prices with the founding discount (monthly only), paying by M-Pesa
+(simulator), read-only after the trial or a lapsed period, seats."""
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -31,23 +31,25 @@ async def _client(api: httpx.AsyncClient, org: Org, n: int) -> httpx.Response:
 async def test_trial_prices_and_paying_by_mpesa(api: httpx.AsyncClient, ready_org: Org) -> None:
     h = ready_org.headers()
     me = (await api.get("/api/v1/me", headers=h)).json()
-    assert (me["plan"], me["read_only"]) == ("agency", False)  # 30 days of everything
+    assert (me["plan"], me["read_only"]) == ("agency", False)  # 14 days of everything
     assert "commission" in me["features"]
     sub = (await api.get("/api/v1/subscription", headers=h)).json()
     assert sub["status"] == "trialing"
-    assert sub["paid_plan"] == "free"
-    assert 29 <= (datetime.fromisoformat(sub["trial_ends_at"]) - datetime.now(UTC)).days <= 30
+    assert sub["paid_plan"] == "trial"
+    assert 13 <= (datetime.fromisoformat(sub["trial_ends_at"]) - datetime.now(UTC)).days <= 14
     assert sub["usage"] == {"clients": 0, "documents_this_month": 0, "seats_used": 1}
 
     plans = {p["code"]: p for p in (await api.get("/api/v1/subscription/plans", headers=h)).json()}
-    assert set(plans) == {"free", "agent", "agency", "business"}
+    assert set(plans) == {"agent", "agency", "business"}  # no free plan
     agent = {p["cycle"]: p for p in plans["agent"]["prices"]}
     assert (agent["monthly"]["list_price"], agent["monthly"]["price"]) == (
         "1500",
         "750",
     )  # founding 50%
-    assert agent["yearly"]["list_price"] == "15000"
-    assert plans["free"]["limits"] == {"clients": 50, "documents_per_month": 10}
+    assert (agent["yearly"]["price"], agent["yearly"]["discount_percent"]) == (
+        "15000",
+        0,
+    )  # the founding discount does not stack on the yearly saving
     assert "insurance" not in plans["business"]["features"]
 
     paid = await api.post(
@@ -89,49 +91,38 @@ async def test_trial_prices_and_paying_by_mpesa(api: httpx.AsyncClient, ready_or
     assert "team" not in me["features"]
 
 
-async def test_free_plan_features_and_limits(
+async def test_ended_trial_is_read_only_until_paid(
     api: httpx.AsyncClient, ready_org: Org, owner_conn: psycopg.AsyncConnection
 ) -> None:
     h = ready_org.headers()
+    assert (await _client(api, ready_org, 1)).status_code == 201
     await _sql(
         owner_conn,
         ready_org,
         "UPDATE app.subscriptions SET trial_ends_at = now() - interval '1 day'",
     )
     me = (await api.get("/api/v1/me", headers=h)).json()
-    assert me["plan"] == "free"
-    assert (await api.get("/api/v1/insurers", headers=h)).status_code == 200  # insurance is in Free
-    blocked = await api.get("/api/v1/commissions/summary", headers=h)
-    assert (blocked.status_code, blocked.json()["code"]) == (402, "plan_feature")
-    assert (
-        await api.patch("/api/v1/branding", json={"primary_color": "#123456"}, headers=h)
-    ).status_code == 402
-    etag = (await api.get("/api/v1/organization", headers=h)).headers["ETag"]
-    emails = await api.patch(
-        "/api/v1/organization", json={"renewal_client_emails": True}, headers=h | {"If-Match": etag}
+    assert (me["plan"], me["read_only"]) == ("agency", True)
+    sub = (await api.get("/api/v1/subscription", headers=h)).json()
+    assert (sub["status"], sub["paid_plan"]) == ("read_only", "trial")
+    # Everything stays readable, including paid features; nothing can be changed.
+    assert (await api.get("/api/v1/clients", headers=h)).status_code == 200
+    assert (await api.get("/api/v1/commissions/summary", headers=h)).status_code == 200
+    refused = await _client(api, ready_org, 2)
+    assert (refused.status_code, refused.json()["code"]) == (402, "subscription_inactive")
+
+    paid = await api.post(
+        "/api/v1/subscription/checkout",
+        json={"plan": "agent", "cycle": "yearly", "phone": "0712 345 678"},
+        headers=h,
     )
-    assert emails.json()["code"] == "plan_feature"
-
-    for n in range(50):
-        assert (await _client(api, ready_org, n)).status_code == 201
-    over = await _client(api, ready_org, 50)
-    assert (over.status_code, over.json()["code"]) == (402, "plan_limit")
-    assert "50 clients" in over.json()["detail"]
-
-    client_id = (await api.get("/api/v1/clients", params={"limit": 1}, headers=h)).json()["items"][
-        0
-    ]["id"]
-    line = {"description": "Service", "quantity": "1", "unit_price": "100", "tax_code": "exempt"}
-    for n in range(11):
-        draft = (
-            await api.post(
-                "/api/v1/invoices", json={"client_id": client_id, "lines": [line]}, headers=h
-            )
-        ).json()
-        issued = await api.post(
-            f"/api/v1/billing-documents/{draft['id']}/issue", json={}, headers=h
-        )
-        assert issued.status_code == (200 if n < 10 else 402), (n, issued.text)
+    assert paid.status_code == 201, paid.text  # paying works while read-only
+    assert (paid.json()["amount"], paid.json()["discount_percent"]) == ("15000", 0)
+    with time_machine.travel(datetime.now(ZoneInfo("Africa/Nairobi")) + timedelta(seconds=15)):
+        await api.get(f"/api/v1/subscription/payments/{paid.json()['id']}", headers=h)
+    sub = (await api.get("/api/v1/subscription", headers=ready_org.headers())).json()
+    assert (sub["plan"], sub["status"], sub["founding_member"]) == ("agent", "active", False)
+    assert (await _client(api, ready_org, 3)).status_code == 201
 
 
 async def test_lapsed_subscription_is_read_only_until_renewed(
@@ -180,12 +171,20 @@ async def test_seats_are_checked_before_invitations(
         ready_org,
         "UPDATE app.subscriptions SET trial_ends_at = now() - interval '1 day'",
     )
-    full = await api.post("/internal/v1/seats/check", json=body, headers=service_headers)
-    assert (full.status_code, full.json()["code"]) == (
+    ended = await api.post("/internal/v1/seats/check", json=body, headers=service_headers)
+    assert (ended.status_code, ended.json()["code"]) == (
         402,
-        "plan_limit",
-    )  # Free: one seat, the owner's
+        "subscription_inactive",
+    )  # nobody new joins after the trial ends
     owner = {"org_id": ready_org.org_id, "user_id": ready_org.owner_id}
     assert (
         await api.post("/internal/v1/seats/check", json=owner, headers=service_headers)
     ).status_code == 204
+    await _sql(
+        owner_conn,
+        ready_org,
+        "UPDATE app.subscriptions SET plan = 'agent', current_period_end = %s",
+        datetime.now(UTC).date() + timedelta(days=20),
+    )
+    full = await api.post("/internal/v1/seats/check", json=body, headers=service_headers)
+    assert (full.status_code, full.json()["code"]) == (402, "plan_limit")  # Agent: one seat
