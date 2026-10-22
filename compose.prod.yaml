@@ -50,7 +50,7 @@ x-prod-app-env: &prod-app-env
 services:
   caddy:
     <<: *restart
-    image: caddy:2.10.2-alpine
+    image: caddy:2.11.6-alpine
     ports:
       - "80:80"
       - "443:443"
