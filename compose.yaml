@@ -136,7 +136,7 @@ services:
 
   # HTML -> PDF. Internal only; hardened against SSRF (SPEC_REVIEW §4.5).
   gotenberg:
-    image: gotenberg/gotenberg:8.37.0
+    image: gotenberg/gotenberg:8.38.1
     command:
       - gotenberg
       - --chromium-deny-private-ips=true
