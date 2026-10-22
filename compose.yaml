@@ -100,7 +100,7 @@ services:
 
   # S3-compatible storage (MinIO is archived; see ADR-0005).
   storage:
-    image: rustfs/rustfs:1.0.1
+    image: rustfs/rustfs:1.0.3
     environment:
       RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY_ID:-devaccesskey}
       RUSTFS_SECRET_KEY: ${S3_SECRET_ACCESS_KEY:-devsecretkey}
